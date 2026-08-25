@@ -2,7 +2,7 @@
 
 **Proyecto:** ProyectoTCG (nombre en clave: *TriplePack*)
 **Fecha de inicio:** 2026-08-25
-**Estado global:** `FASE 2 — INGESTA` · **H1 completado** · siguiente frente: H2
+**Estado global:** `FASE 3 — API Y PRODUCTO` · **H1 y H2 completados** · siguiente frente: H3/H4
 **Repositorio:** `C:\ProyectoTCG` — Git inicializado en `main`, commit inicial `bc7eb7c` (2026-08-25)
 
 ## Estado por área
@@ -11,9 +11,9 @@
 |---|---|---|
 | Arquitectura | Definida a nivel macro (ADR-002..005) | Agente Arquitectura |
 | Base de datos | **H1 cerrado**: DDL + seeds verificados en MySQL 8.0.42 (T-006/007/008) | Agente Base de Datos |
-| Backend | `GameAdapter` + `RateLimitedClient` + **los 3 adaptadores**. Falta el job de imágenes | Agente Backend |
+| Backend | Ingesta completa: 3 adaptadores + cliente + job de imágenes | Agente Backend |
 | Frontend | Esqueleto Vite+React compilando y consumiendo `@tcg/shared` | Agente Frontend |
-| Ingesta de APIs | **3 de 3 conectores**, los tres verificados juntos en un mismo esquema MySQL | Agente Backend |
+| Ingesta de APIs | **H2 cerrado.** Falta el orquestador que una las piezas (bloqueado por ADR-006) | Agente Backend |
 | QA | Sin iniciar | Agente QA |
 | Seguridad | Auditoría de dependencias: 0 vulnerabilidades (S004) | Agente Seguridad |
 
@@ -32,10 +32,11 @@ ningún ORM de Node modela hoy columnas generadas ni índices multivaluados, que
    impresiones** en 1048 sets. El volcado completo se procesa en **12,5 s con 210 MB de pico**,
    así que el volumen de *datos* está resuelto (P-004 cerrado). El coste real que queda es la
    descarga de **imágenes** (T-014), no los datos.
-2. **R-02 — Hotlinking y ritmo de peticiones.** YGOPRODeck **blacklistea la IP** por hotlinking de
-   imágenes y por exceso de peticiones. **Mitigado a medias en S005**: `RateLimitedClient` (T-009)
-   controla ya el ritmo con márgenes conservadores y cortocircuito. La mitad de las imágenes sigue
-   abierta hasta T-014.
+2. **R-02 — Hotlinking y ritmo de peticiones.** **MITIGADO POR COMPLETO en S010.** Sus dos mitades
+   están cerradas: el *ritmo* con `RateLimitedClient` (T-009, P-002) y el *hotlinking* con el job
+   `image-harvest` (T-014, P-001), que descarga una vez, re-hospeda y tiene tres salvaguardas contra
+   la redescarga. El invariante "el frontend nunca recibe una URL externa" está codificado en
+   `isSafeLocalPath()` y cubierto por tests.
 3. **R-03 — Fidelidad de los sobres.** **MITIGADO por completo en S008.** Tiene dos mitades y
    ambas están cerradas:
    - *Qué rarezas salen* → P-003, cerrado en S003 y validado por Monte Carlo.

@@ -2,7 +2,7 @@
 
 > **Rol:** Arquitecto Principal y Orquestador de Proyectos de Software.
 > **Producto:** Simulador de Apertura de Sobres + Constructor de Mazos unificado para MTG, Yu-Gi-Oh! y Pokémon TCG.
-> **Estado del Vault:** ACTIVO — última sesión S009 (2026-08-25)
+> **Estado del Vault:** ACTIVO — última sesión S010 (2026-08-25)
 
 ---
 
@@ -55,7 +55,8 @@ C:\ProyectoTCG\
 │   ├── 2026-08-25_S006_YgoprodeckAdapter.md
 │   ├── 2026-08-25_S007_ScryfallAdapter.md
 │   ├── 2026-08-25_S008_InBoosters.md
-│   └── 2026-08-25_S009_PokemonAdapter_RedisQuota.md
+│   ├── 2026-08-25_S009_PokemonAdapter_RedisQuota.md
+│   └── 2026-08-25_S010_ImageHarvest.md
 │
 ├── db\                          <- esquema (fuera del Vault documental)
 │   ├── README.md

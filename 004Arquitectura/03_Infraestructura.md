@@ -39,8 +39,16 @@ JWT_SECRET=***
 
 ## Presupuestos operativos
 
-- **Almacenamiento de imágenes:** ~110.000 prints × ~60 KB (WebP small) ≈ **6–7 GB**;
-  con `large` (745px) ≈ 25–30 GB. **Decisión v1:** guardar sólo `small` + generar `large`
-  bajo demanda con caché. Registrado como riesgo de coste.
+- **Almacenamiento de imágenes:** ~~estimado~~ → **MEDIDO en S010 (T-014)**. La estimación de
+  ~60 KB por imagen era pesimista: la media real de WebP a 245 px, calidad 82, es de **~18 KB**.
+
+  | | Estimado (S001) | Medido (S010) |
+  |---|---|---|
+  | Por imagen | ~60 KB | **~18 KB** |
+  | 110.000 prints | 6–7 GB | **~1,9 GB** |
+  | Reducción frente al original | — | **94,8 %** |
+
+  **Decisión v1 sin cambios:** guardar sólo `small` + generar `large` bajo demanda con caché. Pero
+  el almacenamiento deja de ser un riesgo de coste: 1,9 GB cabe en cualquier sitio.
 - **Ingesta inicial completa:** estimada en 6–10 h dominada por la descarga de imágenes,
   no por los datos (los datos: MTG ~5 min con bulk, YGO ~2 min, PTCG ~30 min).

@@ -11,7 +11,8 @@
 | Backend | **Node.js + TypeScript** | ✅ CONFIRMADO (ADR-001, S002) |
 | Base de datos | MySQL 8.0.17+ (InnoDB, `utf8mb4_0900_ai_ci`) | ✅ CONFIRMADO |
 | Caché / colas | Redis 7 | PROPUESTO |
-| Cliente HTTP externo | `undici` + cola con límite de tasa | PROPUESTO |
+| Cliente HTTP externo | `fetch` de Node + cola con límite de tasa propia | ✅ IMPLEMENTADO (T-009) |
+| Proceso de imágenes | `sharp` (libvips 8.18.3) → WebP | ✅ IMPLEMENTADO (T-014) |
 | Testing unitario | Vitest (front y back) | PROPUESTO |
 | Testing E2E | **Cypress** | CONFIRMADO (requisito del usuario) |
 | Contenedores | Docker Compose (mysql, redis, api, web) | PROPUESTO |

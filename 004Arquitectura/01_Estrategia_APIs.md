@@ -116,6 +116,11 @@ ingesta datos ──► card_prints.image_source_url
 Invariante innegociable: **el frontend jamás recibe una URL de un dominio externo.** Se aplica
 a los tres juegos por uniformidad, aunque sólo YGOPRODeck lo exija formalmente.
 
+> **IMPLEMENTADO en T-014 (S010).** `apps/api/src/images/`. El invariante no se confía a la
+> disciplina: `isSafeLocalPath()` lo comprueba y hay tests que lo aplican a todas las rutas que el
+> job genera. Tres salvaguardas contra la redescarga (disco antes que red, disco antes que BD, tope
+> por ejecución). Medido: 94,8 % de reducción de tamaño y 0 redescargas en la segunda ejecución.
+
 ## Cadencia de sincronización
 
 | Job | Frecuencia | Alcance |

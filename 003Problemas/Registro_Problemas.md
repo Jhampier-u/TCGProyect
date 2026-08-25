@@ -1,13 +1,13 @@
 # Registro de Problemas
 
-**Última actualización:** 2026-08-25 (S009) · **Abiertos:** 5 · **Cerrados:** 10
+**Última actualización:** 2026-08-25 (S010) · **Abiertos:** 4 · **Cerrados:** 11
 
 Severidad: 🔴 crítica · 🟠 alta · 🟡 media · ⚪ baja
 
 ---
 
-## P-001 🔴 · YGOPRODeck blacklistea la IP por hotlinking de imágenes
-**Estado:** ABIERTO — mitigación diseñada, sin implementar
+## P-001 ✅ CERRADO · YGOPRODeck blacklistea la IP por hotlinking de imágenes
+**Estado:** CERRADO el 2026-08-25 (S010) — implementado y verificado en T-014
 **Origen:** Guía oficial de la API v7 de YGOPRODeck.
 **Detalle:** la documentación es explícita: descargar cada imagen **una sola vez**, re-hospedarla
 y no enlazar en caliente. El incumplimiento resulta en **blacklist de IP**. Un frontend que
@@ -15,7 +15,30 @@ renderice 30 cartas por sobre apuntando a su CDN dispara esto en minutos.
 **Impacto:** pérdida total del acceso a YGO. Recuperación incierta.
 **Mitigación:** pipeline `image-harvest` obligatorio (T-014) + invariante "el front nunca recibe
 URL externa" (`004Arquitectura/01_Estrategia_APIs.md`).
-**Verificación:** test de QA que falle si algún `image_local_path` servido contiene `http`.
+**RESUELTO en S010 (T-014).** El job `image-harvest` descarga una vez, convierte a WebP y
+re-hospeda. Tres salvaguardas independientes contra pedir dos veces la misma imagen:
+
+1. **Se consulta el disco antes de descargar.** Si el fichero ya está, no se pide al origen — ni
+   siquiera aunque la base de datos diga que falta.
+2. **Disco primero, base de datos después.** Si el proceso muere entre ambos pasos, la salvaguarda 1
+   evita la segunda descarga. Al revés, una fila apuntaría a un fichero inexistente.
+3. **Tope de descargas por ejecución** (5.000 por defecto). No es una optimización: es un freno de
+   mano. Un fallo que impidiera persistir `image_local_path` convertiría el job en un bucle que pide
+   las mismas imágenes indefinidamente, y contra YGOPRODeck eso es una lista negra permanente.
+
+**Verificado con descargas reales de los tres orígenes** (muestra deliberadamente pequeña: 2 por
+juego, porque verificar el pipeline no justifica pedir más de lo imprescindible):
+
+| Medición | Resultado |
+|---|---|
+| Primera ejecución | 6 descargadas, 0 fallidas, 3,2 s |
+| **Segunda ejecución** | **0 descargas, 6 omitidas** — la salvaguarda funciona |
+| Reducción de tamaño | 2.102 KB → 109 KB (**94,8 %**) |
+| Rutas locales y relativas | 6 de 6 · ninguna contiene `http` |
+
+**El invariante está codificado, no confiado:** `isSafeLocalPath()` rechaza `http://`, `//cdn/`,
+rutas absolutas, unidades de Windows y `..`. Hay un test que lo aplica a todas las rutas que el job
+genera. Debería usarse también en el serializador de la API cuando exista (H3).
 
 ---
 

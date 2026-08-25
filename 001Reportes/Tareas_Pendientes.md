@@ -1,6 +1,6 @@
 # Tareas Pendientes
 
-**Última actualización:** 2026-08-25 (S009) · **Total abiertas:** 5
+**Última actualización:** 2026-08-25 (S010) · **Total abiertas:** 5
 
 Leyenda de prioridad: 🔴 crítica · 🟠 alta · 🟡 media · ⚪ baja
 
@@ -16,16 +16,20 @@ Leyenda de prioridad: 🔴 crítica · 🟠 alta · 🟡 media · ⚪ baja
 
 Sin tareas abiertas. T-006, T-007 y T-008 cerradas y verificadas en MySQL 8.0.42.
 
-## Hito H2 — Ingesta
+## Hito H2 — Ingesta ✅ COMPLETADO
 
-| ID | Tarea | Agente | Prio | Depende de |
-|---|---|---|---|---|
-| T-014 | Job `image-harvest`: descarga, WebP, almacenamiento local | Backend | 🔴 | ✅ desbloqueada — **última de H2** |
+Sin tareas abiertas. Los 3 adaptadores, el cliente con límite de tasa y el job de imágenes están
+hechos y verificados contra los orígenes reales.
+
+**Queda por construir el orquestador de ingesta** que una las piezas (leer sets → upsert →
+`sets.ingested_at` → encolar imágenes). No se ha creado tarea porque depende de **ADR-006**: sin
+decidir ORM/migrador no hay capa de persistencia que escribir.
 
 ## Deuda técnica detectada en S004
 
 | ID | Tarea | Agente | Prio |
 |---|---|---|---|
+| T-019 | `card_prints.image_failed_at` o similar. Hoy una URL de imagen permanentemente rota se reintenta en cada ejecución del job, para siempre (ver S010) | Base de Datos | 🟡 |
 | T-016 | Test que detecte *drift* entre `GAME_IDS` de `@tcg/shared` y el seed SQL de `games`. Hoy la correspondencia 1=MTG/2=YGO/3=PTCG vive en dos sitios sin nada que la verifique | QA | 🟡 |
 
 ## Contrato adicional derivado de T-018

@@ -1,6 +1,6 @@
 # Tareas Realizadas
 
-**Última actualización:** 2026-08-25 (S009)
+**Última actualización:** 2026-08-25 (S010)
 
 | ID | Tarea | Agente | Fecha | Sesión | Evidencia |
 |---|---|---|---|---|---|
@@ -30,3 +30,5 @@
 | T-013 | `PokemonTcgAdapter`: paginación, clave de API, normalización de `hp` y ataques | Backend | 2026-08-25 | S009 | `apps/api/src/adapters/pokemontcg/` |
 | T-017 | `RedisQuotaStore`: cuota diaria persistida, con la fecha en la clave y TTL a medianoche UTC | Backend | 2026-08-25 | S009 | `apps/api/src/http/redis-quota.ts` |
 | T-013v | Verificación: 27 tests + ingesta real de `sv1` + **los 3 juegos en un solo esquema MySQL** | QA | 2026-08-25 | S009 | Ver S009 en `005Registro` |
+| T-014 | Job `image-harvest`: descarga única, conversión a WebP, almacenamiento local con 3 salvaguardas | Backend | 2026-08-25 | S010 | `apps/api/src/images/` |
+| T-014v | Verificación: 13 tests + cosecha real de los 3 orígenes (94,8 % de reducción, 0 redescargas) | QA / Seguridad | 2026-08-25 | S010 | Ver S010 en `005Registro` |
