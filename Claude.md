@@ -2,7 +2,7 @@
 
 > **Rol:** Arquitecto Principal y Orquestador de Proyectos de Software.
 > **Producto:** Simulador de Apertura de Sobres + Constructor de Mazos unificado para MTG, Yu-Gi-Oh! y Pokémon TCG.
-> **Estado del Vault:** ACTIVO — última sesión S014 (2026-08-25)
+> **Estado del Vault:** ACTIVO — última sesión S015 (2026-08-25)
 
 ---
 
@@ -60,7 +60,8 @@ C:\ProyectoTCG\
 │   ├── 2026-08-25_S011_ADR006_Orquestador.md
 │   ├── 2026-08-25_S012_MotorDeSobres.md
 │   ├── 2026-08-25_S013_ApiCatalogo.md
-│   └── 2026-08-25_S014_CuentasYColeccion.md
+│   ├── 2026-08-25_S014_CuentasYColeccion.md
+│   └── 2026-08-25_S015_PlantillaYgoModerna.md
 │
 ├── db\                          <- esquema (fuera del Vault documental)
 │   ├── README.md
@@ -69,7 +70,8 @@ C:\ProyectoTCG\
 │       ├── 0002_seed_games_rarities.sql
 │       ├── 0003_seed_pack_templates.sql
 │       ├── 0004_add_in_boosters.{up,down}.sql
-│       └── 0005_widen_set_external_id.{up,down}.sql
+│       ├── 0005_widen_set_external_id.{up,down}.sql
+│       └── 0006_ygo_modern_booster.{up,down}.sql
 │
 ├── packages\shared\             <- @tcg/shared: contrato de dominio
 │   └── src\

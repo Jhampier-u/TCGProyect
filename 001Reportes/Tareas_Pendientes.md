@@ -26,7 +26,7 @@ hechos y verificados contra los orígenes reales.
 
 | ID | Tarea | Agente | Prio |
 |---|---|---|---|
-| T-024 | Plantilla de sobre propia para los sets de Yu-Gi-Oh! de la era Quarter Century. **Medido en S014: topa la completitud en el 80 %** — 25 de 125 impresiones son inalcanzables y el coleccionista no puede cerrar ningún set moderno (ver **P-019**) | Base de Datos | 🟠 |
+| T-034 | Plantillas por época para los sets de Yu-Gi-Oh! **anteriores a 2020**. Hoy topan la completitud en ~70,7 % (ver **P-021**). La tabla histórica de Yugipedia ya está capturada en P-019; el blóqueo real es que hace falta un paso de asignación de plantilla posterior a la ingesta | Base de Datos / Backend | ⚪ |
 | T-022 | Guion `db:migrate` que cree la base de datos si falta y ejecute el migrador. Hoy ese paso previo es manual (ver S011) | Backend | 🟡 |
 | T-023 | Revisar el orden de `findPendingSets`: `released_at DESC` hace que una ejecución acotada procese primero sets **futuros** y promocionales en vez de los jugables (ver S011) | Backend | ⚪ |
 | T-019 | `card_prints.image_failed_at` o similar. Hoy una URL de imagen permanentemente rota se reintenta en cada ejecución del job, para siempre (ver S010) | Base de Datos | 🟡 |

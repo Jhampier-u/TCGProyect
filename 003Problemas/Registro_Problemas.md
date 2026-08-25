@@ -1,6 +1,6 @@
 # Registro de Problemas
 
-**Última actualización:** 2026-08-25 (S014) · **Abiertos:** 5 · **Cerrados:** 14
+**Última actualización:** 2026-08-25 (S015) · **Abiertos:** 5 · **Cerrados:** 15
 
 Severidad: 🔴 crítica · 🟠 alta · 🟡 media · ⚪ baja
 
@@ -503,8 +503,8 @@ con un pool sin `rare`.
 
 ---
 
-## P-019 🟠 · La plantilla por defecto de Yu-Gi-Oh! no encaja con los sets modernos
-**Estado:** ABIERTO — **severidad elevada en S014**: rompe la promesa al coleccionista
+## P-019 ✅ CERRADO · La plantilla por defecto de Yu-Gi-Oh! no encajaba con los sets modernos
+**Estado:** CERRADO el 2026-08-25 (S015) — migración 0006
 **Origen:** tanda de sobres contra *Supreme Darkness* (S012).
 
 **Detalle.** La plantilla sembrada en T-008 (7 comunes + 1 `rare` + 1 *hit*) describe el Core Booster

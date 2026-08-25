@@ -52,6 +52,7 @@ mysql -u root -p < db/migrations/0001_initial_schema.down.sql
 | `0003_seed_pack_templates.sql` | 3 plantillas, 33 slots | ✅ verificada, idempotente |
 | `0004_add_in_boosters.{up,down}.sql` | `in_boosters` + índice del pool rehecho | ✅ verificada (ciclo up/down/up) |
 | `0005_widen_set_external_id.{up,down}.sql` | `sets.external_id` → VARCHAR(255) (P-017) | ✅ verificada |
+| `0006_ygo_modern_booster.{up,down}.sql` | Plantilla de sobre YGO vigente desde 2020 + QCSR (P-019) | ✅ verificada con 2.000 sobres |
 
 ## Cómo se aplican (desde S011)
 
