@@ -26,13 +26,15 @@ Toda interacción sigue este ciclo, sin excepciones:
 
 ```
 C:\ProyectoTCG\
+├── README.md                    <- puesta en marcha (lo primero al clonar)
 ├── Claude.md                    <- este archivo (Orquestador)
 ├── 00Master\                    <- contexto absoluto, verdad única
 │   ├── 00_Contexto_Global.md
 │   ├── 01_Producto.md
 │   ├── 02_Stack_Tecnologico.md
 │   ├── 03_Hitos.md
-│   └── 04_Diccionario_Datos.md
+│   ├── 04_Diccionario_Datos.md
+│   └── 05_Continuar_Aqui.md   <- PUNTO DE ENTRADA para retomar
 ├── 001Reportes\
 │   ├── Tareas_Realizadas.md
 │   ├── Tareas_Pendientes.md
@@ -99,6 +101,7 @@ C:\ProyectoTCG\
 │       │                       connection · migrator · catalog-repository
 │       │                       catalog-query-repository (H3) · pack-repository (H4)
 │       │                       collection-repository (H6)
+│       ├── cli\                ingest.ts: CLI para poblar el catalogo
 │       ├── ingest\             IngestService: el orquestador (T-021)
 │       ├── images\             image-harvest: descarga unica + WebP (T-014)
 │       │                       harvester · sharp-encoder · file-store

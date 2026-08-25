@@ -1,6 +1,6 @@
 # Tareas Realizadas
 
-**Última actualización:** 2026-08-25 (S017)
+**Última actualización:** 2026-08-25 (S018)
 
 | ID | Tarea | Agente | Fecha | Sesión | Evidencia |
 |---|---|---|---|---|---|
@@ -56,3 +56,5 @@
 | T-038v | Verificación en navegador real: ciclo completo y 0 URLs externas en el HTML renderizado | QA / Seguridad | 2026-08-25 | S016 | Ver S016 en `005Registro` |
 | T-039 | **Animación de apertura**: revelado carta a carta, orden por escasez, foil y reversos en CSS | Frontend | 2026-08-25 | S017 | `apps/web/src/components/PackReveal.tsx` |
 | T-039v | Verificación: 6 tests del orden de revelado + comprobación en navegador de estado, orden y foil | QA | 2026-08-25 | S017 | Ver S017 en `005Registro` |
+| T-041 | CLI de ingesta (`npm run ingest`). Sin él, un clon nuevo no tenía forma de poblar la base | Backend | 2026-08-25 | S018 | `apps/api/src/cli/ingest.ts` |
+| T-042 | `README.md` y `00Master/05_Continuar_Aqui.md`: punto de entrada y de retorno del proyecto | Documentador | 2026-08-25 | S018 | raíz y `00Master/` |

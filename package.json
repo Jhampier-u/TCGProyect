@@ -17,7 +17,9 @@
     "clean": "tsc --build --clean",
     "test": "vitest run",
     "test:watch": "vitest",
-    "dev:web": "npm run dev --workspace @tcg/web"
+    "dev:web": "npm run dev --workspace @tcg/web",
+    "dev:api": "node apps/api/dist/index.js",
+    "ingest": "node apps/api/dist/cli/ingest.js"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",
