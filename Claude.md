@@ -84,6 +84,14 @@ C:\ProyectoTCG\
 │       ├── http\               RateLimitedClient: unica salida a las 3 APIs
 │       │                       types · policies · errors · client
 │       │                       quota (memoria) · redis-quota (T-017)
+│       ├── db\                 mysql2 + SQL plano (ADR-006, T-020)
+│       │                       connection · migrator · catalog-repository
+│       │                       pack-repository (H4)
+│       ├── ingest\             IngestService: el orquestador (T-021)
+│       ├── images\             image-harvest: descarga unica + WebP (T-014)
+│       │                       harvester · sharp-encoder · file-store
+│       ├── packs\              motor de sobres (H4)
+│       │                       prng (xoshiro128**) · pack-service
 │       └── adapters\
 │           ├── ygoprodeck\     YgoprodeckAdapter (T-012)
 │           ├── scryfall\       ScryfallAdapter + lector JSONL gz (T-011)
