@@ -148,3 +148,19 @@ open(templateId, seed) -> slots.map(slot => pickRarity(rng) -> pickPrintOfRarity
 ```
 
 **Consecuencia:** afinar la fidelidad de un sobre es un `UPDATE` en la BD, no un despliegue.
+
+**IMPLEMENTADO en S012** (`apps/api/src/packs/`). Precisiones sobre este boceto:
+
+1. **PRNG: xoshiro128\*\***, no mulberry32. La semilla persistida son 128 bits y mulberry32 tiene
+   estado de 32: habría que tirar tres cuartas partes de la entropía.
+2. **El orden de consumo del PRNG es parte del contrato.** Por slot: una llamada para la rareza, una
+   para la impresión, una para el foil. **Siempre las tres**, aunque `foil_chance` sea 0. Cambiarlo
+   invalida todas las aperturas anteriores.
+3. **Respaldo cuando el set no tiene una rareza.** Otras del mismo slot por peso, luego cualquiera
+   del set por escasez. Se registra la rareza **entregada**, no la pedida (P-018): si no, `open()` y
+   `replay()` se contradicen y RN-01 deja de significar nada.
+4. La reproducción lee `pack_opening_cards`, **nunca** re-ejecuta el PRNG (P-005). Verificado
+   modificando la plantilla después de abrir.
+
+**Validado con 3.000 sobres reales:** super 74,87 % / ultra 16,77 % / secret 8,37 %, frente a los
+75 / 16,67 / 8,33 publicados por Konami.

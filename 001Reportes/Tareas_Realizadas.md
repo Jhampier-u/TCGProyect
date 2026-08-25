@@ -1,6 +1,6 @@
 # Tareas Realizadas
 
-**Última actualización:** 2026-08-25 (S011)
+**Última actualización:** 2026-08-25 (S012)
 
 | ID | Tarea | Agente | Fecha | Sesión | Evidencia |
 |---|---|---|---|---|---|
@@ -36,3 +36,6 @@
 | T-020 | Capa de datos: `Database`, `Migrator` propio, `CatalogRepository` con upserts por lotes | Base de Datos / Backend | 2026-08-25 | S011 | `apps/api/src/db/` |
 | T-021 | **`IngestService`**: orquestador con camino masivo/incremental, checkpoint y aislamiento de fallos | Backend | 2026-08-25 | S011 | `apps/api/src/ingest/` |
 | T-021v | Verificación extremo a extremo: migrador + 3 adaptadores + cosecha de imágenes contra MySQL real | QA | 2026-08-25 | S011 | Ver S011 en `005Registro` |
+| T-025 | **`PackService`**: motor de sobres determinista con xoshiro128**, respaldo de pool y RN-01/RN-02 | Backend | 2026-08-25 | S012 | `apps/api/src/packs/` |
+| T-026 | `PackRepositoryMysql`: pool precargado, persistencia transaccional, reproducción desde lo guardado | Base de Datos | 2026-08-25 | S012 | `apps/api/src/db/pack-repository.ts` |
+| T-025v | Verificación: 22 tests + 3.000 sobres reales contra MySQL con las distribuciones contrastadas | QA | 2026-08-25 | S012 | Ver S012 en `005Registro` |

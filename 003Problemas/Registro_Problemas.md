@@ -1,6 +1,6 @@
 # Registro de Problemas
 
-**Última actualización:** 2026-08-25 (S011) · **Abiertos:** 4 · **Cerrados:** 12
+**Última actualización:** 2026-08-25 (S012) · **Abiertos:** 5 · **Cerrados:** 13
 
 Severidad: 🔴 crítica · 🟠 alta · 🟡 media · ⚪ baja
 
@@ -469,3 +469,65 @@ de truncar en silencio. Perder la clave natural de 16 sets sería peor que no po
 **Lección:** es el quinto problema de longitud/unicidad de clave (P-009, P-010, P-013, P-015 y éste).
 Y el primero que sólo aparece **a escala**: probar con una muestra elegida a mano no ejercita el
 mismo camino que procesar el catálogo entero.
+
+---
+
+## P-018 ✅ CERRADO · El motor registraba la rareza PEDIDA, no la entregada
+**Estado:** CERRADO el 2026-08-25 (S012)
+**Origen:** primera tanda de sobres contra el catálogo real.
+
+**Detalle.** Cuando el set no tiene ninguna carta de la rareza que el slot pide, el motor recurre a
+otra (respaldo diseñado a propósito). Pero registraba en `OpenedCard.rarityCode` la rareza **pedida**,
+no la de la carta realmente entregada.
+
+Caso real que lo destapó: *Supreme Darkness* **no tiene ninguna carta `rare`**, pero la plantilla por
+defecto de Yu-Gi-Oh! pide una en el slot 7. El motor entregaba una `common` y la etiquetaba `rare`.
+
+**Impacto: `open()` y `replay()` se contradecían.**
+
+| Vía | Qué decía |
+|---|---|
+| `open()` | `rare` — la rareza que el slot pedía |
+| `replay()` | `common` — lee `card_prints.rarity_id`, la real |
+
+RN-01 promete que una apertura es reproducible y auditable. Si las dos vías no coinciden, esa promesa
+no significa nada. Además la UI habría mostrado una etiqueta de rareza falsa.
+
+**Solución:** `#poolFor` devuelve la rareza **efectivamente usada** junto con los candidatos, y el
+motor registra ésa. Verificado contra la base de datos: `open()` y la consulta a `card_prints`
+coinciden en `common` para el slot 7.
+
+**Por qué no lo detectaron los tests unitarios:** todos usaban pools con las cinco rarezas presentes,
+así que el respaldo nunca se activaba en el camino que registra la rareza. Añadido test de regresión
+con un pool sin `rare`.
+
+---
+
+## P-019 🟡 · La plantilla por defecto de Yu-Gi-Oh! no encaja con los sets modernos
+**Estado:** ABIERTO — es la limitación 3 de P-008 materializada
+**Origen:** tanda de sobres contra *Supreme Darkness* (S012).
+
+**Detalle.** La plantilla sembrada en T-008 (7 comunes + 1 `rare` + 1 *hit*) describe el Core Booster
+clásico. Los sets modernos han cambiado:
+
+| Rareza en *Supreme Darkness* | Impresiones | ¿La pide la plantilla? |
+|---|---|---|
+| `common` | 50 | Sí |
+| `super_rare` | 26 | Sí |
+| **`quarter_century_secret_rare`** | **25** | **No** |
+| `ultra_rare` | 14 | Sí |
+| `secret_rare` | 10 | Sí |
+| `rare` | **0** | Sí — y no existe |
+
+Dos consecuencias medidas sobre 3.000 sobres:
+1. El slot 7 pide `rare`, no hay ninguna, y el respaldo entrega una `common`: **8 comunes por sobre**
+   en vez de 7.
+2. Las **25 Quarter Century Secret Rare son inalcanzables**: la plantilla nunca las pide. Sólo se
+   llegan a ver 100 de las 125 impresiones del pool.
+
+**No es un fallo del motor** — el motor hace exactamente lo que la plantilla dice, y avisa cuando
+recurre al respaldo. Es que la plantilla por defecto no describe este set.
+
+**Solución: un `INSERT`, no un despliegue.** Es justo el caso de uso para el que ADR-005 hizo esto
+configurable por datos. Hace falta una plantilla con `set_id` propio para los sets de la era Quarter
+Century. Registrado como **T-024**.

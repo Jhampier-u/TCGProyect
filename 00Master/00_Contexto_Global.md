@@ -2,7 +2,7 @@
 
 **Proyecto:** ProyectoTCG (nombre en clave: *TriplePack*)
 **Fecha de inicio:** 2026-08-25
-**Estado global:** `FASE 3 — API Y PRODUCTO` · **H1 y H2 completados** · siguiente frente: H3/H4
+**Estado global:** `FASE 3 — API Y PRODUCTO` · **H1 y H2 completados · motor de sobres funcionando** · siguiente frente: H3 (API HTTP)
 **Repositorio:** `C:\ProyectoTCG` — Git inicializado en `main`, commit inicial `bc7eb7c` (2026-08-25)
 
 ## Estado por área
