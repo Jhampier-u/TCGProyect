@@ -1,0 +1,22 @@
+# Normalizacion de finales de linea.
+#
+# El repositorio guarda SIEMPRE LF. Sin esto, en Windows git convierte a CRLF al
+# hacer checkout y cualquier reescritura de fichero genera diffs fantasma de
+# "todas las lineas cambiadas", que hacen ilegible una revision de codigo.
+* text=auto eol=lf
+
+# Binarios: nunca tocar.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.svg text eol=lf
+*.ico binary
+*.woff binary
+*.woff2 binary
+
+# El lockfile es generado: colapsarlo en las revisiones.
+package-lock.json linguist-generated=true diff=none
+
+# Las migraciones SQL son historicas: nunca se editan una vez aplicadas.
+db/migrations/*.sql text eol=lf

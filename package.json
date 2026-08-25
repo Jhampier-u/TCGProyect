@@ -1,0 +1,27 @@
+{
+  "name": "proyecto-tcg",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Simulador de apertura de sobres y constructor de mazos para MTG, Yu-Gi-Oh! y Pokemon TCG",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "typecheck": "tsc --build",
+    "build": "tsc --build",
+    "clean": "tsc --build --clean",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "dev:web": "npm run dev --workspace @tcg/web"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "typescript": "^5.7.2",
+    "vitest": "^4.1.11"
+  }
+}

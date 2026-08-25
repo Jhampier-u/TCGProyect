@@ -1,0 +1,18 @@
+# dependencias
+node_modules/
+
+# artefactos de compilacion
+dist/
+dist-types/
+*.tsbuildinfo
+
+# entorno
+.env
+.env.local
+
+# imagenes re-hospedadas (P-001). Son ~6-7 GB, jamas van a git.
+storage/
+
+# sistema
+.DS_Store
+Thumbs.db
