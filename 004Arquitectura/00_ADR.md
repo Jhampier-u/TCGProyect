@@ -164,3 +164,37 @@ open(templateId, seed) -> slots.map(slot => pickRarity(rng) -> pickPrintOfRarity
 
 **Validado con 3.000 sobres reales:** super 74,87 % / ultra 16,77 % / secret 8,37 %, frente a los
 75 / 16,67 / 8,33 publicados por Konami.
+
+---
+
+## ADR-007 — Framework HTTP de la API
+**Estado:** ✅ **ACEPTADA — Fastify**
+**Fecha:** 2026-08-25 (S013)
+
+**Contexto.** H3 expone el catálogo por HTTP. Hasta ahora el backend no tenía puerta de entrada.
+
+| Opción | Encaje |
+|---|---|
+| **Fastify 5** | Validación y **serialización por esquema** integradas, tipado bueno, rápido, ecosistema maduro |
+| Express 5 | Omnipresente y conocido, pero sin validación integrada y con ergonomía de la era callback |
+| Hono | Muy ligero y basado en estándares web; pensado para *edge*, ecosistema menor sobre Node puro |
+
+**DECISIÓN: Fastify.** Y el motivo decisivo no es el rendimiento, sino la **serialización por esquema**.
+
+Fastify no sólo valida la entrada: al serializar la respuesta **elimina todo campo que no esté en el
+esquema declarado**. Aplicado a este proyecto, eso convierte el invariante más caro que tenemos en
+una garantía estructural:
+
+> **`card_prints.image_source_url` no puede filtrarse al frontend.**
+
+Ese campo apunta a `images.ygoprodeck.com`, y servirlo al navegador es exactamente el hotlinking que
+castiga con lista negra de IP permanente (P-001). Con Express, evitarlo depende de que nadie escriba
+nunca un `res.json(row)` de más. Con Fastify, un campo que no esté en el esquema **no sale**, aunque
+la consulta lo traiga.
+
+Los beneficios secundarios también cuentan: la API de catálogo tiene muchos parámetros de consulta
+(juego, set, rareza, rangos numéricos) y validarlos en la frontera con JSON Schema evita repartir
+comprobaciones por todo el código.
+
+**Consecuencia:** el servidor vive en `apps/api/src/api/`, separado de `apps/api/src/http/`, que es
+el cliente **saliente** hacia las tres APIs externas. Dos cosas distintas que conviene no confundir.

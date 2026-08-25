@@ -65,11 +65,13 @@ Deck ──► DeckValidator (factory por game_id)
 
 | Método | Ruta | Descripción |
 |---|---|---|
-| GET | `/api/games` | Los 3 juegos |
-| GET | `/api/sets?game=MTG` | Sets por juego |
-| GET | `/api/cards?game=&set=&q=&rarity=&page=` | Búsqueda unificada, paginación keyset |
-| GET | `/api/cards/:id` | Detalle con `game_data` |
-| POST | `/api/packs/open` | Abre sobre(s) — autenticado |
+| GET | `/api/health` | ✅ Sonda de vida |
+| GET | `/api/games` | ✅ Los 3 juegos |
+| GET | `/api/games/:game/sets` | ✅ Sets del juego, con `poolSize` (impresiones abribles) |
+| GET | `/api/games/:game/rarities` | ✅ Rarezas, para poblar el filtro del frontend |
+| GET | `/api/cards?game=&set=&rarity=&q=&cursor=&limit=` | ✅ Búsqueda unificada, **keyset** (no `page`) |
+| GET | `/api/cards/:printId` | ✅ Detalle con `game_data` |
+| POST | `/api/packs/open` | ⏳ **Espera a H6.** El motor existe desde S012, pero abrir un sobre muta la colección de un usuario: sin auth habría que fiarse del `user_id` del cliente |
 | GET | `/api/packs/openings/:id` | Reproduce una apertura por seed (RN-01) |
 | GET | `/api/collection` | Colección del usuario, con filtros |
 | GET/POST/PUT/DELETE | `/api/decks[/:id]` | CRUD de mazos |

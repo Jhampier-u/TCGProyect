@@ -1,6 +1,6 @@
 # Registro de Problemas
 
-**Última actualización:** 2026-08-25 (S012) · **Abiertos:** 5 · **Cerrados:** 13
+**Última actualización:** 2026-08-25 (S013) · **Abiertos:** 5 · **Cerrados:** 14
 
 Severidad: 🔴 crítica · 🟠 alta · 🟡 media · ⚪ baja
 
@@ -531,3 +531,38 @@ recurre al respaldo. Es que la plantilla por defecto no describe este set.
 **Solución: un `INSERT`, no un despliegue.** Es justo el caso de uso para el que ADR-005 hizo esto
 configurable por datos. Hace falta una plantilla con `set_id` propio para los sets de la era Quarter
 Century. Registrado como **T-024**.
+
+---
+
+## P-020 ✅ CERRADO · La paginación keyset perdía filas del catálogo
+**Estado:** CERRADO el 2026-08-25 (S013)
+**Origen:** primer recorrido completo de la API sobre datos reales.
+
+**Detalle.** El cursor de paginación usaba `(cards.name, cards.id)`. Pero cada fila del resultado es
+una **impresión**, no una carta, y varias impresiones comparten la misma carta conceptual — en
+Yu-Gi-Oh! la misma carta sale en dos rarezas dentro del mismo set (P-013).
+
+Con `cards.id` como desempate, el cursor no identifica una fila sino un **grupo**. Al pedir "lo que
+va después de este cursor", la condición `c.id > ?` descartaba **todas** las impresiones restantes de
+esa carta.
+
+**Medición sobre 733 impresiones reales:**
+
+| | Antes | Después |
+|---|---|---|
+| Impresiones devueltas | **723** | **733** |
+| Duplicados | 0 | 0 |
+| Cobertura completa | ❌ | ✅ |
+
+**Diez filas desaparecidas del catálogo, en silencio.** Un usuario navegando nunca las habría visto,
+y nada en la respuesta indicaba que faltasen.
+
+**Solución:** el desempate pasa a `card_prints.id`, que sí es único por fila, y el `ORDER BY` a
+`(c.name, p.id)`.
+
+**Por qué no lo vieron los tests unitarios:** el catálogo falso devolvía una página fija sin paginar
+de verdad. Sólo recorrer el catálogo entero contra la base de datos lo destapa. Es el mismo patrón
+que P-017: **el bug que sólo aparece a escala**.
+
+**Comprobación añadida:** el recorrido completo verifica `impresiones vistas == COUNT(*)` y ausencia
+de duplicados. Cualquier regresión futura de la paginación falla ahí.

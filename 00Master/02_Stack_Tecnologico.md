@@ -12,6 +12,7 @@
 | Base de datos | MySQL 8.0.17+ (InnoDB, `utf8mb4_0900_ai_ci`) | ✅ CONFIRMADO |
 | Driver / acceso a datos | `mysql2` + SQL plano, sin ORM (ADR-006) | ✅ IMPLEMENTADO (T-020) |
 | Migraciones | Migrador propio, ~100 líneas (ADR-006) | ✅ IMPLEMENTADO (T-020) |
+| Framework HTTP | **Fastify 5** (ADR-007) | ✅ IMPLEMENTADO (T-029) |
 | Caché / colas | Redis 7 | PROPUESTO |
 | Cliente HTTP externo | `fetch` de Node + cola con límite de tasa propia | ✅ IMPLEMENTADO (T-009) |
 | Proceso de imágenes | `sharp` (libvips 8.18.3) → WebP | ✅ IMPLEMENTADO (T-014) |

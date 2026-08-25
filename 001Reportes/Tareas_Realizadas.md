@@ -1,6 +1,6 @@
 # Tareas Realizadas
 
-**Última actualización:** 2026-08-25 (S012)
+**Última actualización:** 2026-08-25 (S013)
 
 | ID | Tarea | Agente | Fecha | Sesión | Evidencia |
 |---|---|---|---|---|---|
@@ -39,3 +39,7 @@
 | T-025 | **`PackService`**: motor de sobres determinista con xoshiro128**, respaldo de pool y RN-01/RN-02 | Backend | 2026-08-25 | S012 | `apps/api/src/packs/` |
 | T-026 | `PackRepositoryMysql`: pool precargado, persistencia transaccional, reproducción desde lo guardado | Base de Datos | 2026-08-25 | S012 | `apps/api/src/db/pack-repository.ts` |
 | T-025v | Verificación: 22 tests + 3.000 sobres reales contra MySQL con las distribuciones contrastadas | QA | 2026-08-25 | S012 | Ver S012 en `005Registro` |
+| T-027 | **ADR-007 resuelta**: Fastify, por su serialización por esquema (garantía estructural de P-001) | Arquitectura | 2026-08-25 | S013 | `004Arquitectura/00_ADR.md` |
+| T-028 | `CatalogQueryRepository`: búsqueda FULLTEXT, filtros y paginación keyset | Base de Datos | 2026-08-25 | S013 | `apps/api/src/db/catalog-query-repository.ts` |
+| T-029 | **API HTTP del catálogo** (H3): 6 endpoints con esquemas de entrada y salida | Backend | 2026-08-25 | S013 | `apps/api/src/api/` |
+| T-029v | Verificación: 18 tests + recorrido completo del catálogo real (733/733, sin duplicados) | QA / Seguridad | 2026-08-25 | S013 | Ver S013 en `005Registro` |
