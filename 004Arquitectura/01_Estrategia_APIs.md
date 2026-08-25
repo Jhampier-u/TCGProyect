@@ -12,16 +12,35 @@
 | Límite de tasa | **~10 req/s** — la doc exige 50–100 ms de espera entre peticiones | **20 req/s**; excederlo = **bloqueo de 1 hora** | Cuota **diaria** (sin key ~1.000/día; con key ~20.000/día) |
 | Castigo por exceso | 429 + baneo temporal | Bloqueo de IP 1 h | 429 / agotamiento de cuota |
 | Cabeceras exigidas | `User-Agent` **propio y descriptivo** + `Accept: application/json` | — | `X-Api-Key` |
-| Descarga masiva | ✅ **`GET /bulk-data`** — volcados JSON diarios completos | ⚠️ Un único `cardinfo.php` sin filtros ≈ todo el catálogo | ❌ Sólo paginación (`page`, `pageSize` máx. 250) |
+| Descarga masiva | ✅ **`GET /bulk-data`** — volcados **JSONL comprimidos en gzip**, diarios | ⚠️ Un único `cardinfo.php` sin filtros ≈ todo el catálogo | ❌ Sólo paginación (`page`, `pageSize` máx. 250) |
 | Imágenes | Permite uso, pide no abusar → cacheamos | 🚨 **Hotlinking prohibido, blacklist de IP.** Descargar **una sola vez** y re-hospedar | URLs en `images.small/large` |
 | Paginación | `has_more` + `next_page` (175/pág) | `num`/`offset` | `page` / `pageSize` / `totalCount` |
 
 ## Consecuencia arquitectónica por API
 
 ### MTG → **no paginar, usar bulk**
-Descargar `default_cards` de `/bulk-data` (un fichero JSON de varios cientos de MB), procesarlo
-en **streaming** (`stream-json` / parser incremental), nunca `JSON.parse` completo en memoria.
-Esto reduce la ingesta de MTG de ~600 peticiones paginadas a **2 peticiones**.
+
+> **CORRECCIÓN DE S001 (verificada en T-011, S007).** El endpoint ha cambiado respecto a lo que se
+> documentó aquí inicialmente. Ya **no** expone `download_uri` ni `size`, sino **`jsonl_download_uri`**
+> y **`compressed_size`**, y el fichero es **JSONL comprimido en gzip**, no un array JSON.
+> Cualquier código que buscase `download_uri` fallaría.
+
+Descargar `default_cards` de `/bulk-data` (74 MB comprimidos, ~116.750 impresiones) desde
+**`data.scryfall.io`** — host distinto de `api.scryfall.com`, con su propia cola. Se procesa en
+streaming: gunzip + partición por líneas. Reduce la ingesta de MTG de ~600 peticiones paginadas a
+**2 peticiones**.
+
+Que el formato sea JSONL y no un array elimina la necesidad de un analizador de JSON incremental:
+basta partir por saltos de línea. **Medido: 116.752 impresiones en 12,5 s con pico de 210 MB de RSS.**
+
+| Particularidad del origen | Consecuencia de diseño |
+|---|---|
+| En cartas de doble cara, `mana_cost`, `colors`, `oracle_text` e `image_uris` viven en `card_faces[0]` | El adaptador consulta arriba y cae a la primera cara |
+| El layout `reversible_card` **no trae `oracle_id`** de nivel superior | `oracleKey` cae al `oracle_id` de la cara |
+| `colors` llega como `[]` en cartas incoloras | Se omite: una carta incolora no debe entrar en el índice multivaluado |
+| `set` (código) es único: 0 duplicados en 1048 | Sirve como clave natural, al revés que en YGO (P-013) |
+| `id` de impresión es un UUID global | No hace falta componer la clave con la rareza |
+| **`booster: false` en el 54,7 % de las impresiones** | **Sin persistir → el pool de sobres es infiel (P-014)** |
 
 ### YGO → particularidades del origen (verificadas en T-012, S006)
 

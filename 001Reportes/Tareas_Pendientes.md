@@ -1,6 +1,6 @@
 # Tareas Pendientes
 
-**Última actualización:** 2026-08-25 (S006) · **Total abiertas:** 8
+**Última actualización:** 2026-08-25 (S007) · **Total abiertas:** 8
 
 Leyenda de prioridad: 🔴 crítica · 🟠 alta · 🟡 media · ⚪ baja
 
@@ -20,7 +20,6 @@ Sin tareas abiertas. T-006, T-007 y T-008 cerradas y verificadas en MySQL 8.0.42
 
 | ID | Tarea | Agente | Prio | Depende de |
 |---|---|---|---|---|
-| T-011 | `ScryfallAdapter` con lectura en streaming de `/bulk-data` | Backend | 🔴 | ✅ desbloqueada |
 | T-013 | `PokemonTcgAdapter` (paginación 250 + control de cuota diaria) | Backend | 🔴 | ✅ desbloqueada |
 | T-014 | Job `image-harvest`: descarga, WebP, almacenamiento local | Backend | 🔴 | T-011..T-013 |
 
@@ -30,6 +29,7 @@ Sin tareas abiertas. T-006, T-007 y T-008 cerradas y verificadas en MySQL 8.0.42
 |---|---|---|---|
 | T-016 | Test que detecte *drift* entre `GAME_IDS` de `@tcg/shared` y el seed SQL de `games`. Hoy la correspondencia 1=MTG/2=YGO/3=PTCG vive en dos sitios sin nada que la verifique | QA | 🟡 |
 | T-017 | `QuotaStore` sobre Redis con TTL a medianoche UTC. **Obligatorio antes de la ingesta real de Pokémon** (ver P-012) | Backend | 🟠 |
+| T-018 | **`card_prints.in_boosters`** + `DomainPrint.inBoosters`. Sin esto el pool de sobres entrega cartas que nunca salen en sobre — el 54,7 % del catálogo de MTG (ver **P-014**) | Base de Datos / Backend | 🔴 |
 
 ## Contratos que la ingesta debe cumplir (derivados de T-006 y T-007)
 

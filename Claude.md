@@ -2,7 +2,7 @@
 
 > **Rol:** Arquitecto Principal y Orquestador de Proyectos de Software.
 > **Producto:** Simulador de Apertura de Sobres + Constructor de Mazos unificado para MTG, Yu-Gi-Oh! y Pokémon TCG.
-> **Estado del Vault:** ACTIVO — última sesión S006 (2026-08-25)
+> **Estado del Vault:** ACTIVO — última sesión S007 (2026-08-25)
 
 ---
 
@@ -52,7 +52,8 @@ C:\ProyectoTCG\
 │   ├── 2026-08-25_S003_Seeds.md
 │   ├── 2026-08-25_S004_Monorepo_GameAdapter.md
 │   ├── 2026-08-25_S005_Git_RateLimitedClient.md
-│   └── 2026-08-25_S006_YgoprodeckAdapter.md
+│   ├── 2026-08-25_S006_YgoprodeckAdapter.md
+│   └── 2026-08-25_S007_ScryfallAdapter.md
 │
 ├── db\                          <- esquema (fuera del Vault documental)
 │   ├── README.md
@@ -76,7 +77,8 @@ C:\ProyectoTCG\
 │       ├── http\               RateLimitedClient: unica salida a las 3 APIs
 │       │                       types · policies · errors · quota · client
 │       └── adapters\
-│           └── ygoprodeck\     YgoprodeckAdapter (T-012)
+│           ├── ygoprodeck\     YgoprodeckAdapter (T-012)
+│           └── scryfall\       ScryfallAdapter + lector JSONL gz (T-011)
 ├── apps\web\                    <- @tcg/web (Vite + React)
 └── package.json                 <- npm workspaces
 ```

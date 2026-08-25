@@ -37,6 +37,12 @@ export const DEFAULT_HOST_POLICIES: Readonly<Record<string, Partial<HostPolicy>>
   // los ~20.000/dia con API key para no agotarla con reintentos.
   'api.pokemontcg.io': { minIntervalMs: 250, concurrency: 2, dailyQuota: 18_000 },
 
+  // Host de los volcados masivos de Scryfall. Es un HOST DISTINTO de
+  // api.scryfall.com (CDN estatico tras Cloudflare) y por tanto tiene su propia
+  // cola: descargar el volcado no debe consumir el presupuesto de la API.
+  // Concurrencia 1: son ficheros de decenas de MB, no tiene sentido paralelizar.
+  'data.scryfall.io': { minIntervalMs: 1_000, concurrency: 1 },
+
   // Hosts de imagenes: siempre mas lentos. Descargar imagenes es lo que dispara
   // las listas negras, no consultar datos.
   'images.ygoprodeck.com': { minIntervalMs: 300, concurrency: 1 },

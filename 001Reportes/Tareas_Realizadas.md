@@ -1,6 +1,6 @@
 # Tareas Realizadas
 
-**Última actualización:** 2026-08-25 (S006)
+**Última actualización:** 2026-08-25 (S007)
 
 | ID | Tarea | Agente | Fecha | Sesión | Evidencia |
 |---|---|---|---|---|---|
@@ -22,3 +22,6 @@
 | T-009v | Verificación: 38/38 tests con reloj virtual + prueba de humo contra Scryfall y YGOPRODeck reales | QA | 2026-08-25 | S005 | Ver S005 en `005Registro` |
 | T-012 | `YgoprodeckAdapter`: sets, impresiones, banlist, normalización de rarezas y acabados | Backend | 2026-08-25 | S006 | `apps/api/src/adapters/ygoprodeck/` |
 | T-012v | Verificación: 18 tests + ingesta real de *Supreme Darkness* insertada en MySQL 8.0.42 | QA | 2026-08-25 | S006 | Ver S006 en `005Registro` |
+| T-011 | `ScryfallAdapter`: volcado JSONL en streaming + camino incremental paginado | Backend | 2026-08-25 | S007 | `apps/api/src/adapters/scryfall/` |
+| T-011a | `RateLimitedClient.stream()`: cuerpo como flujo de bytes, para descargas grandes | Backend | 2026-08-25 | S007 | `apps/api/src/http/` |
+| T-011v | Verificación: 24 tests + volcado real de 116.752 impresiones (210 MB de pico) + ingesta en MySQL | QA | 2026-08-25 | S007 | Ver S007 en `005Registro` |

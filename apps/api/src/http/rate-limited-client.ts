@@ -148,6 +148,26 @@ export class RateLimitedClient {
     return (await response.json()) as T;
   }
 
+  /**
+   * Cuerpo de la respuesta como flujo de bytes, sin cargarlo en memoria.
+   *
+   * Para descargas grandes: el volcado `default_cards` de Scryfall son 74 MB
+   * comprimidos que descomprimen a varios cientos. Con `json()` o `text()` el
+   * worker muere por falta de memoria (P-004).
+   *
+   * CONTRATO DE REINTENTOS: los reintentos cubren el establecimiento de la
+   * peticion (estado no-2xx o error de red), no el consumo posterior. Una vez
+   * devuelto el flujo, si se corta a mitad, reintentarlo es responsabilidad del
+   * llamante: este cliente ya no puede rebobinarlo.
+   */
+  async stream(url: string, init: HttpRequestInit = {}): Promise<AsyncIterable<Uint8Array>> {
+    const response = await this.request(url, init);
+    if (!response.body) {
+      throw new Error(`La respuesta de ${url} no expone cuerpo como flujo`);
+    }
+    return response.body;
+  }
+
   /** Consumo de cuota del host. Para observabilidad. */
   async quotaUsed(host: string): Promise<number> {
     return this.#quota.used(host);
@@ -274,5 +294,25 @@ async function safeText(response: HttpResponse): Promise<string | undefined> {
   }
 }
 
-const defaultFetch: FetchLike = (url, init) =>
-  (globalThis as { fetch: (u: string, i?: unknown) => Promise<HttpResponse> }).fetch(url, init);
+/**
+ * Envoltorio sobre el `fetch` global de Node.
+ *
+ * Reexpone `body` porque la Response nativa lo trae como ReadableStream web,
+ * que en Node es async-iterable. Es lo que hace posible `stream()`.
+ */
+const defaultFetch: FetchLike = async (url, init) => {
+  const native = await (
+    globalThis as unknown as {
+      fetch: (u: string, i?: unknown) => Promise<HttpResponse & { body?: unknown }>;
+    }
+  ).fetch(url, init);
+
+  return {
+    status: native.status,
+    ok: native.ok,
+    headers: native.headers,
+    text: () => native.text(),
+    json: () => native.json(),
+    body: (native.body ?? null) as AsyncIterable<Uint8Array> | null,
+  };
+};

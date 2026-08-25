@@ -1,6 +1,6 @@
 # Registro de Problemas
 
-**Última actualización:** 2026-08-25 (S006) · **Abiertos:** 5 · **Cerrados:** 7
+**Última actualización:** 2026-08-25 (S007) · **Abiertos:** 5 · **Cerrados:** 8
 
 Severidad: 🔴 crítica · 🟠 alta · 🟡 media · ⚪ baja
 
@@ -50,13 +50,30 @@ Monte Carlo con 200.000 sobres por juego contra las tasas publicadas:
 
 ---
 
-## P-004 🟡 · Volumen del volcado de Scryfall vs memoria
-**Estado:** ABIERTO
+## P-004 ✅ CERRADO · Volumen del volcado de Scryfall vs memoria
+**Estado:** CERRADO el 2026-08-25 (S007)
 **Detalle:** el bulk `default_cards` de Scryfall son cientos de MB. Un `JSON.parse` completo
 revienta la memoria del proceso.
 **Impacto:** el worker de ingesta muere por OOM.
 **Mitigación:** parseo **en streaming** obligatorio en `ScryfallAdapter` (T-011); criterio de
 aceptación de la tarea: la ingesta de MTG completa no debe superar 512 MB de RSS.
+
+**RESUELTO en S007.** Y resultó más fácil de lo previsto: **Scryfall ya no sirve un array JSON
+gigante, sino JSONL comprimido en gzip** (un objeto por línea). Eso convirtió el problema de
+"escribir un analizador de JSON incremental" en "partir por saltos de línea", que es trivial y
+robusto.
+
+**Medición real** con el volcado `default_cards` completo (74 MB comprimidos):
+
+| Métrica | Valor | Criterio |
+|---|---|---|
+| Impresiones procesadas | **116.752** | — |
+| Tiempo | **12,5 s** | — |
+| **Pico de RSS** | **210 MB** | < 512 MB ✅ |
+
+El RSS se mantuvo plano (104 → 138 → 144 → 206 MB conforme avanzaba), sin crecer de forma
+proporcional al fichero. Hay además un test que comprueba la propiedad de forma aislada con
+40 MB sintéticos.
 
 ---
 
@@ -241,3 +258,36 @@ consulta `cardinfo.php?cardset=`.
 **Lección:** es el tercer caso de la misma familia (P-010 con Nidoran ♂/♀, y ahora estos dos). El
 patrón se repite: una clave natural que *parece* única, un `ON DUPLICATE KEY UPDATE`, y datos que
 desaparecen sin un solo error en los logs. **Antes de elegir una clave natural, contarla.**
+
+---
+
+## P-014 🔴 · El pool de sobres incluye cartas que NUNCA salen en un sobre
+**Estado:** ABIERTO — requiere decisión del usuario (migración de esquema)
+**Origen:** análisis del volcado real de Scryfall al implementar T-011 (S007).
+
+**Detalle.** Scryfall marca cada impresión con un booleano `booster`: vale `false` en las cartas
+que no se obtienen abriendo sobres — promos, buy-a-box, Secret Lair, art series, cartas de mazos
+precondstruidos, The List…
+
+En la muestra analizada del volcado, **el 54,7 % de las impresiones tiene `booster: false`**.
+Hay sets enteros al 100 % (`prm`, `sld`, `who`).
+
+**Nuestro esquema no guarda ese campo.** El motor de sobres elige del pool
+`(set_id, rarity_id)` de `card_prints`, así que un sobre simulado de un set con promos podría
+entregar cartas que físicamente no pueden salir de un sobre.
+
+**Impacto.** Golpea el núcleo del producto. P-003 se cerró midiendo que las *distribuciones de
+rareza* son fieles; de nada sirve acertar que el hueco de rara sale 1 de cada 7 veces si la carta
+que entrega es una promo de Secret Lair que jamás estuvo en un sobre. El simulador dejaría de ser
+creíble, que es exactamente el riesgo R-03.
+
+**Corrección propuesta (T-018), de una sola migración:**
+1. `ALTER TABLE card_prints ADD COLUMN in_boosters TINYINT(1) NOT NULL DEFAULT 1;`
+2. Rehacer `idx_prints_pool` como `(set_id, rarity_id, in_boosters, id)` para que siga siendo
+   covering al filtrar.
+3. Añadir `inBoosters: boolean` a `DomainPrint` en `@tcg/shared`.
+4. Mapearlo en los adaptadores: `raw.booster ?? true` (MTG). YGO y PTCG no exponen el campo, así
+   que por defecto `true` — es correcto, ambos catálogos son casi enteramente de sobre.
+
+**Por qué no se ha hecho ya:** cambia el esquema y el contrato de dominio compartido, que va más
+allá de lo que pedía T-011. Se documenta con la medición para que la decisión sea informada.

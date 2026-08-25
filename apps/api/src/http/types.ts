@@ -16,6 +16,14 @@ export interface HttpResponse {
   readonly headers: { get(name: string): string | null };
   text(): Promise<string>;
   json(): Promise<unknown>;
+  /**
+   * Cuerpo sin consumir, como flujo de bytes.
+   *
+   * Existe por el volcado de Scryfall: son 74 MB comprimidos que descomprimen a
+   * varios cientos. Llamar a `text()` sobre eso mata el worker por falta de
+   * memoria (P-004). El unico consumo viable es en streaming.
+   */
+  readonly body?: AsyncIterable<Uint8Array> | null;
 }
 
 export interface HttpRequestInit {
