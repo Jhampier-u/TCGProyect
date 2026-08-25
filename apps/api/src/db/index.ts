@@ -6,3 +6,5 @@ export type { PendingSet } from './catalog-repository.js';
 export { PackRepositoryMysql } from './pack-repository.js';
 export { CatalogQueryRepository, toBooleanQuery, encodeCursor, decodeCursor, MIN_FULLTEXT_LENGTH, MAX_PAGE_SIZE, DEFAULT_PAGE_SIZE } from './catalog-query-repository.js';
 export type { CardSummary, CardDetail, CardQuery, CardPage, SetSummary } from './catalog-query-repository.js';
+export { CollectionRepository, encodeCollectionCursor, decodeCollectionCursor } from './collection-repository.js';
+export type { CollectionEntry, CollectionPage, SetCompletion } from './collection-repository.js';

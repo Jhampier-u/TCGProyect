@@ -71,8 +71,13 @@ Deck ──► DeckValidator (factory por game_id)
 | GET | `/api/games/:game/rarities` | ✅ Rarezas, para poblar el filtro del frontend |
 | GET | `/api/cards?game=&set=&rarity=&q=&cursor=&limit=` | ✅ Búsqueda unificada, **keyset** (no `page`) |
 | GET | `/api/cards/:printId` | ✅ Detalle con `game_data` |
-| POST | `/api/packs/open` | ⏳ **Espera a H6.** El motor existe desde S012, pero abrir un sobre muta la colección de un usuario: sin auth habría que fiarse del `user_id` del cliente |
-| GET | `/api/packs/openings/:id` | Reproduce una apertura por seed (RN-01) |
-| GET | `/api/collection` | Colección del usuario, con filtros |
+| POST | `/api/auth/register` | ✅ Alta de cuenta. Devuelve token |
+| POST | `/api/auth/login` | ✅ Máx. 10 intentos / 5 min. Sin enumeración de usuarios |
+| GET | `/api/auth/me` | ✅ Usuario del token |
+| POST | `/api/packs/open` | ✅ **Autenticado.** El `user_id` sale del token, nunca del cuerpo |
+| GET | `/api/packs/openings/:id` | ✅ Reproduce desde lo persistido (RN-01). Ajena → 404, no 403 |
+| GET | `/api/collection` | ✅ Colección paginada por keyset `(printId, finish)` |
+| GET | `/api/collection/completion/:game` | ✅ Completitud por set. Denominador: `in_boosters = 1` |
+| GET | `/api/collection/summary` | ✅ Entradas, copias y aperturas |
 | GET/POST/PUT/DELETE | `/api/decks[/:id]` | CRUD de mazos |
 | POST | `/api/decks/:id/validate` | Devuelve `ValidationResult` |

@@ -2,7 +2,7 @@
 
 > **Rol:** Arquitecto Principal y Orquestador de Proyectos de Software.
 > **Producto:** Simulador de Apertura de Sobres + Constructor de Mazos unificado para MTG, Yu-Gi-Oh! y Pokémon TCG.
-> **Estado del Vault:** ACTIVO — última sesión S013 (2026-08-25)
+> **Estado del Vault:** ACTIVO — última sesión S014 (2026-08-25)
 
 ---
 
@@ -59,7 +59,8 @@ C:\ProyectoTCG\
 │   ├── 2026-08-25_S010_ImageHarvest.md
 │   ├── 2026-08-25_S011_ADR006_Orquestador.md
 │   ├── 2026-08-25_S012_MotorDeSobres.md
-│   └── 2026-08-25_S013_ApiCatalogo.md
+│   ├── 2026-08-25_S013_ApiCatalogo.md
+│   └── 2026-08-25_S014_CuentasYColeccion.md
 │
 ├── db\                          <- esquema (fuera del Vault documental)
 │   ├── README.md
@@ -84,12 +85,16 @@ C:\ProyectoTCG\
 │   └── src\
 │       ├── api\                API HTTP de ENTRADA: Fastify (ADR-007, H3)
 │       │                       server · schemas (hacen cumplir P-001)
+│       │                       auth-routes · auth-schemas (H6)
+│       ├── auth\               Argon2id + hash señuelo (ADR-008, H6)
+│       │                       password · user-repository
 │       ├── http\               cliente SALIENTE hacia las 3 APIs externas
 │       │                       types · policies · errors · client
 │       │                       quota (memoria) · redis-quota (T-017)
 │       ├── db\                 mysql2 + SQL plano (ADR-006, T-020)
 │       │                       connection · migrator · catalog-repository
 │       │                       catalog-query-repository (H3) · pack-repository (H4)
+│       │                       collection-repository (H6)
 │       ├── ingest\             IngestService: el orquestador (T-021)
 │       ├── images\             image-harvest: descarga unica + WebP (T-014)
 │       │                       harvester · sharp-encoder · file-store

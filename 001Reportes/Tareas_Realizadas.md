@@ -1,6 +1,6 @@
 # Tareas Realizadas
 
-**Última actualización:** 2026-08-25 (S013)
+**Última actualización:** 2026-08-25 (S014)
 
 | ID | Tarea | Agente | Fecha | Sesión | Evidencia |
 |---|---|---|---|---|---|
@@ -43,3 +43,8 @@
 | T-028 | `CatalogQueryRepository`: búsqueda FULLTEXT, filtros y paginación keyset | Base de Datos | 2026-08-25 | S013 | `apps/api/src/db/catalog-query-repository.ts` |
 | T-029 | **API HTTP del catálogo** (H3): 6 endpoints con esquemas de entrada y salida | Backend | 2026-08-25 | S013 | `apps/api/src/api/` |
 | T-029v | Verificación: 18 tests + recorrido completo del catálogo real (733/733, sin duplicados) | QA / Seguridad | 2026-08-25 | S013 | Ver S013 en `005Registro` |
+| T-030 | **ADR-008 resuelta**: Argon2id + JWT de vida corta, con las defensas contra enumeración y fuerza bruta | Arquitectura / Seguridad | 2026-08-25 | S014 | `004Arquitectura/00_ADR.md` |
+| T-031 | Cuentas: `hashPassword`/`verifyPassword` con hash señuelo, `UserRepository` | Seguridad / Backend | 2026-08-25 | S014 | `apps/api/src/auth/` |
+| T-032 | `CollectionRepository`: colección paginada, completitud por set y resumen | Base de Datos | 2026-08-25 | S014 | `apps/api/src/db/collection-repository.ts` |
+| T-033 | **Rutas autenticadas** (H6): registro, login, sobres y colección. 9 endpoints nuevos | Backend | 2026-08-25 | S014 | `apps/api/src/api/auth-routes.ts` |
+| T-033v | Verificación: 22 tests de seguridad + ciclo completo real (registro → 103 sobres → colección) | QA / Seguridad | 2026-08-25 | S014 | Ver S014 en `005Registro` |

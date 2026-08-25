@@ -198,3 +198,49 @@ comprobaciones por todo el código.
 
 **Consecuencia:** el servidor vive en `apps/api/src/api/`, separado de `apps/api/src/http/`, que es
 el cliente **saliente** hacia las tres APIs externas. Dos cosas distintas que conviene no confundir.
+
+---
+
+## ADR-008 — Estrategia de autenticación
+**Estado:** ✅ **ACEPTADA — Argon2id + JWT de vida corta**
+**Fecha:** 2026-08-25 (S014)
+
+**Contexto.** H6 introduce cuentas. Todo lo que el usuario posee —colección, mazos, historial de
+aperturas— cuelga de su identidad, así que equivocarse aquí compromete el producto entero.
+
+### Hash de contraseñas: Argon2id
+
+Ya estaba fijado en `02_Stack_Tecnologico.md` y se confirma. Se usa **`@node-rs/argon2`** y no el
+paquete `argon2`: el primero trae binarios precompilados y no exige herramientas de compilación en la
+máquina de desarrollo, que en Windows es una fuente clásica de fricción.
+
+Parámetros: los recomendados por OWASP (19 MiB de memoria, 2 iteraciones, paralelismo 1). Son el
+punto en que un ataque por fuerza bruta resulta caro sin que el login se vuelva lento.
+
+### Sesión: JWT y no cookie de sesión en servidor
+
+| | JWT | Sesión en servidor |
+|---|---|---|
+| Estado | Ninguno; escala sin almacén compartido | Requiere Redis o tabla de sesiones |
+| Revocación | **No se puede revocar antes de que expire** | Inmediata |
+| Encaje | El frontend es una SPA que ya habla con una API | Igual de válido |
+
+Se elige **JWT** por coherencia con `.env.example`, que ya preveía `JWT_SECRET`, y porque el
+proyecto ya tiene Redis reservado para otra cosa (cuotas) y no conviene acoplarlo a la sesión.
+
+**El coste asumido es real y conviene decirlo:** un token robado sigue siendo válido hasta que
+caduca. Se mitiga con **caducidad corta (1 hora)**. Si más adelante hace falta revocación inmediata
+—expulsar una cuenta comprometida— habrá que añadir una lista de revocación en Redis. No se hace
+ahora porque sería infraestructura sin caso de uso.
+
+### Decisiones defensivas que NO son opcionales
+
+1. **El secreto JWT no tiene valor por defecto.** El servidor **se niega a arrancar** si falta o si
+   es demasiado corto. Un secreto por defecto en producción es una cuenta de administrador regalada.
+2. **Login sin enumeración de usuarios.** Mismo mensaje y mismo coste temporal tanto si el correo no
+   existe como si la contraseña es incorrecta: si no existe, igualmente se verifica contra un hash
+   señuelo. Sin eso, el tiempo de respuesta delata qué correos están registrados.
+3. **Límite de intentos en el login.** Sin él, Argon2id sólo encarece cada intento; no impide
+   probar millones.
+4. **El hash nunca sale en una respuesta.** Lo garantiza el mismo mecanismo que P-001: los esquemas
+   de respuesta de Fastify eliminan lo no declarado (ADR-007).

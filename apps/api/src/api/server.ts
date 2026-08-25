@@ -1,6 +1,12 @@
 import Fastify, { type FastifyInstance } from 'fastify';
+import fastifyJwt from '@fastify/jwt';
+import fastifyRateLimit from '@fastify/rate-limit';
 import type { GameCode } from '@tcg/shared';
 import type { CatalogQueryRepository } from '../db/catalog-query-repository.js';
+import type { CollectionRepository } from '../db/collection-repository.js';
+import type { UserRepository } from '../auth/user-repository.js';
+import type { PackService } from '../packs/index.js';
+import { registerAuthRoutes } from './auth-routes.js';
 import {
   GET_CARD,
   LIST_GAMES,
@@ -12,7 +18,34 @@ import {
 export interface ApiOptions {
   catalog: CatalogQueryRepository;
   logger?: boolean;
+  /** Presentes activan cuentas, sobres y coleccion (H6). Sin ellos, solo catalogo. */
+  auth?: {
+    users: UserRepository;
+    collection: CollectionRepository;
+    packs: PackService;
+    jwtSecret: string;
+    /** Caducidad del token. Corta a proposito: un JWT no se puede revocar (ADR-008). */
+    tokenTtl?: string;
+  };
 }
+
+/**
+ * Longitud minima del secreto JWT.
+ *
+ * 32 caracteres no es una cifra ritual: por debajo, un secreto es adivinable por
+ * fuerza bruta, y quien lo adivine puede firmar un token para CUALQUIER usuario.
+ */
+export const MIN_JWT_SECRET_LENGTH = 32;
+
+export class WeakJwtSecretError extends Error {
+  constructor(motivo: string) {
+    super(`Secreto JWT invalido: ${motivo}`);
+    this.name = 'WeakJwtSecretError';
+  }
+}
+
+/** Valores que alguien podria dejar puestos sin darse cuenta. */
+const SECRETOS_PROHIBIDOS = new Set(['cambiame', 'changeme', 'secret', 'jwt_secret', 'development']);
 
 /**
  * API HTTP del catalogo (H3, ADR-007).
@@ -80,15 +113,11 @@ export function buildServer(options: ApiOptions): FastifyInstance {
   );
 
   /**
-   * NO HAY ENDPOINT DE APERTURA DE SOBRES, y es deliberado.
+   * Las rutas de cuenta, sobres y coleccion NO se registran aqui.
    *
-   * El motor (`PackService`) esta construido y probado desde S012, pero abrir un
-   * sobre MUTA la coleccion de un usuario concreto. Exponerlo antes de tener
-   * autenticacion (H6) significaria aceptar el `user_id` del cliente, que es una
-   * vulnerabilidad de referencia directa a objetos de manual: cualquiera podria
-   * llenar la coleccion de otro.
-   *
-   * Se prefiere no tener el endpoint a tenerlo inseguro. Llega en H6.
+   * Viven en `buildFullServer`, que exige un secreto JWT valido. Asi es
+   * imposible levantar por descuido un servidor con el endpoint de sobres
+   * abierto y sin autenticacion: el `user_id` sale siempre del token.
    */
 
   app.setNotFoundHandler(async (request, reply) =>
@@ -96,4 +125,60 @@ export function buildServer(options: ApiOptions): FastifyInstance {
   );
 
   return app;
+}
+
+/**
+ * Servidor completo: catalogo + cuentas + sobres + coleccion (H6).
+ *
+ * Es `async` porque registrar plugins de Fastify lo es. `buildServer` se
+ * mantiene sincrono y sin auth para que los tests del catalogo sigan siendo
+ * triviales de montar.
+ */
+export async function buildFullServer(options: ApiOptions & { auth: NonNullable<ApiOptions['auth']> }): Promise<FastifyInstance> {
+  assertStrongSecret(options.auth.jwtSecret);
+
+  const app = buildServer(options);
+
+  await app.register(fastifyRateLimit, {
+    // Tope global generoso; el login lleva el suyo, mucho mas estricto.
+    max: 300,
+    timeWindow: '1 minute',
+  });
+
+  await app.register(fastifyJwt, {
+    secret: options.auth.jwtSecret,
+    sign: { expiresIn: options.auth.tokenTtl ?? '1h' },
+  });
+
+  await registerAuthRoutes(app, {
+    users: options.auth.users,
+    collection: options.auth.collection,
+    catalog: options.catalog,
+    packs: options.auth.packs,
+  });
+
+  return app;
+}
+
+/**
+ * El servidor se NIEGA A ARRANCAR con un secreto debil.
+ *
+ * Un valor por defecto en produccion es una cuenta de administrador regalada:
+ * quien conozca el secreto puede firmar un token para cualquier usuario. Fallar
+ * al arrancar es ruidoso; un secreto por defecto es silencioso hasta que alguien
+ * lo aprovecha.
+ */
+export function assertStrongSecret(secret: string | undefined): void {
+  if (!secret || secret.trim() === '') {
+    throw new WeakJwtSecretError('esta vacio o no esta definido');
+  }
+  const limpio = secret.trim();
+  if (limpio.length < MIN_JWT_SECRET_LENGTH) {
+    throw new WeakJwtSecretError(
+      `tiene ${limpio.length} caracteres y se exigen al menos ${MIN_JWT_SECRET_LENGTH}`,
+    );
+  }
+  if (SECRETOS_PROHIBIDOS.has(limpio.toLowerCase())) {
+    throw new WeakJwtSecretError('es un valor de ejemplo que alguien olvido cambiar');
+  }
 }

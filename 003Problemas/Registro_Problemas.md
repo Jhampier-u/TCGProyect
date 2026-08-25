@@ -1,6 +1,6 @@
 # Registro de Problemas
 
-**Última actualización:** 2026-08-25 (S013) · **Abiertos:** 5 · **Cerrados:** 14
+**Última actualización:** 2026-08-25 (S014) · **Abiertos:** 5 · **Cerrados:** 14
 
 Severidad: 🔴 crítica · 🟠 alta · 🟡 media · ⚪ baja
 
@@ -503,8 +503,8 @@ con un pool sin `rare`.
 
 ---
 
-## P-019 🟡 · La plantilla por defecto de Yu-Gi-Oh! no encaja con los sets modernos
-**Estado:** ABIERTO — es la limitación 3 de P-008 materializada
+## P-019 🟠 · La plantilla por defecto de Yu-Gi-Oh! no encaja con los sets modernos
+**Estado:** ABIERTO — **severidad elevada en S014**: rompe la promesa al coleccionista
 **Origen:** tanda de sobres contra *Supreme Darkness* (S012).
 
 **Detalle.** La plantilla sembrada en T-008 (7 comunes + 1 `rare` + 1 *hit*) describe el Core Booster
@@ -531,6 +531,27 @@ recurre al respaldo. Es que la plantilla por defecto no describe este set.
 **Solución: un `INSERT`, no un despliegue.** Es justo el caso de uso para el que ADR-005 hizo esto
 configurable por datos. Hace falta una plantilla con `set_id` propio para los sets de la era Quarter
 Century. Registrado como **T-024**.
+
+### Medición en S014 que eleva la severidad
+
+Con la colección ya funcionando, se abrieron **103 sobres reales** de *Supreme Darkness* y se midió
+la completitud por rareza:
+
+| Rareza | En el pool | Poseídas tras 103 sobres |
+|---|---|---|
+| `common` | 50 | **50** |
+| `super_rare` | 26 | 25 |
+| **`quarter_century_secret_rare`** | **25** | **0** |
+| `ultra_rare` | 14 | 10 |
+| `secret_rare` | 10 | 6 |
+
+**Cero de 25, y no por mala suerte: la plantilla nunca las pide.** Eso pone un **techo del 80 %** a
+la completitud del set.
+
+`01_Producto.md` define al **coleccionista** como uno de los tres usuarios objetivo: *"quiere ver su
+colección virtual crecer y medir su completitud por set"*. Con esta plantilla, ese usuario **no puede
+completar ningún set moderno de Yu-Gi-Oh!, jamás**, y la interfaz se lo mostraría atascado en el 80 %
+sin explicación. Deja de ser una imprecisión de fidelidad para ser una promesa incumplida.
 
 ---
 

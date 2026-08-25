@@ -13,6 +13,9 @@
 | Driver / acceso a datos | `mysql2` + SQL plano, sin ORM (ADR-006) | ✅ IMPLEMENTADO (T-020) |
 | Migraciones | Migrador propio, ~100 líneas (ADR-006) | ✅ IMPLEMENTADO (T-020) |
 | Framework HTTP | **Fastify 5** (ADR-007) | ✅ IMPLEMENTADO (T-029) |
+| Hash de contraseñas | `@node-rs/argon2` — Argon2id, parámetros OWASP (ADR-008) | ✅ IMPLEMENTADO (T-031) |
+| Sesión | `@fastify/jwt`, token de 1 h (ADR-008) | ✅ IMPLEMENTADO (T-033) |
+| Límite de peticiones | `@fastify/rate-limit` — 10 intentos / 5 min en el login | ✅ IMPLEMENTADO (T-033) |
 | Caché / colas | Redis 7 | PROPUESTO |
 | Cliente HTTP externo | `fetch` de Node + cola con límite de tasa propia | ✅ IMPLEMENTADO (T-009) |
 | Proceso de imágenes | `sharp` (libvips 8.18.3) → WebP | ✅ IMPLEMENTADO (T-014) |
