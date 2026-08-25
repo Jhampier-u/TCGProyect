@@ -1,6 +1,6 @@
 # Tareas Realizadas
 
-**Última actualización:** 2026-08-25 (S004)
+**Última actualización:** 2026-08-25 (S005)
 
 | ID | Tarea | Agente | Fecha | Sesión | Evidencia |
 |---|---|---|---|---|---|
@@ -17,3 +17,6 @@
 | T-003 | Monorepo npm workspaces: `apps/web`, `apps/api`, `packages/shared` + project references | Arquitectura | 2026-08-25 | S004 | `package.json`, `tsconfig.base.json` |
 | T-010 | Interfaz `GameAdapter` + tipos de dominio + utilidades de normalización | Backend / Arquitectura | 2026-08-25 | S004 | `packages/shared/src/` |
 | T-010v | Verificación: `tsc --build` limpio, 17/17 tests, build de web OK, 0 vulnerabilidades | QA / Seguridad | 2026-08-25 | S004 | Ver S004 en `005Registro` |
+| T-001 | `git init` + `.gitattributes` + commit inicial (`bc7eb7c`, 49 ficheros) | Arquitectura | 2026-08-25 | S005 | `git log` |
+| T-009 | `RateLimitedClient`: cola por host, backoff con jitter, `Retry-After`, cortocircuito, cuota diaria | Backend | 2026-08-25 | S005 | `apps/api/src/http/` |
+| T-009v | Verificación: 38/38 tests con reloj virtual + prueba de humo contra Scryfall y YGOPRODeck reales | QA | 2026-08-25 | S005 | Ver S005 en `005Registro` |

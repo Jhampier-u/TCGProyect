@@ -1,6 +1,6 @@
 # Registro de Problemas
 
-**Última actualización:** 2026-08-25 (S004) · **Abiertos:** 6 · **Cerrados:** 4
+**Última actualización:** 2026-08-25 (S005) · **Abiertos:** 6 · **Cerrados:** 5
 
 Severidad: 🔴 crítica · 🟠 alta · 🟡 media · ⚪ baja
 
@@ -19,14 +19,17 @@ URL externa" (`004Arquitectura/01_Estrategia_APIs.md`).
 
 ---
 
-## P-002 🟠 · Rate limits heterogéneos entre las 3 APIs
-**Estado:** ABIERTO — mitigación diseñada, sin implementar
+## P-002 ✅ CERRADO · Rate limits heterogéneos entre las 3 APIs
+**Estado:** CERRADO el 2026-08-25 (S005)
 **Detalle:** Scryfall ~10 req/s con castigo por ráfagas; YGOPRODeck 20 req/s con **bloqueo de 1 hora**
 al excederse; Pokémon TCG usa **cuota diaria**, no por segundo. Un único limitador global es
 incorrecto para los tres a la vez.
 **Impacto:** ingestas fallidas a medias, datos inconsistentes, bloqueos temporales.
 **Mitigación:** `RateLimitedClient` con política **por host** (T-009), márgenes conservadores,
-respeto de `Retry-After`, circuit breaker y contador de cuota diaria en Redis.
+respeto de `Retry-After`, circuit breaker y contador de cuota diaria.
+**RESUELTO en S005 (T-009).** Implementado y verificado: 38 tests con reloj virtual + prueba de
+humo contra Scryfall y YGOPRODeck reales (huecos medidos de 136 y 137 ms frente al mínimo de 120).
+**Residual:** el contador de cuota es en memoria y se pierde al reiniciar el worker → **P-012**.
 
 ---
 
@@ -179,3 +182,23 @@ desarrollo de este proyecto: no eran teóricas.
 el salto de versión mayor.
 **Rutina propuesta:** `npm audit` forma parte del criterio de aceptación de cualquier tarea que
 toque dependencias, no de una revisión final de seguridad.
+
+---
+
+## P-012 🟠 · El contador de cuota en memoria se pierde al reiniciar el worker
+**Estado:** ABIERTO — bloquea la ingesta real de Pokémon (T-017)
+**Origen:** decisión consciente al implementar T-009.
+**Detalle:** `InMemoryQuotaStore` cuenta las peticiones diarias a `api.pokemontcg.io` en un `Map`
+del proceso. Si el worker se reinicia a mitad de una ingesta, **el contador vuelve a cero** mientras
+que la cuota real en el servidor de Pokémon sigue consumida.
+
+Con una ingesta inicial que puede tardar horas y un worker que puede reiniciarse (despliegue,
+OOM, circuit breaker), el escenario no es hipotético: dos o tres reinicios bastarían para agotar
+la cuota diaria real creyendo que quedan miles de peticiones. El síntoma sería una avalancha de
+429 y, con ella, el cortocircuito abierto durante 15 minutos en bucle.
+**Impacto:** un día entero de ingesta de Pokémon perdido, sin causa evidente en los logs.
+**Mitigación prevista (T-017):** `QuotaStore` sobre Redis con clave por día y TTL a medianoche UTC.
+La interfaz `QuotaStore` ya está definida precisamente para poder sustituir la implementación sin
+tocar el cliente.
+**Mientras tanto:** es seguro para desarrollo y tests. **No arrancar la ingesta completa de Pokémon
+en producción hasta cerrar T-017.**

@@ -3,7 +3,7 @@
 **Proyecto:** ProyectoTCG (nombre en clave: *TriplePack*)
 **Fecha de inicio:** 2026-08-25
 **Estado global:** `FASE 2 — INGESTA` · **H1 completado** · siguiente frente: H2
-**Repositorio:** `C:\ProyectoTCG` — **sin control de versiones aún** (ver T-001)
+**Repositorio:** `C:\ProyectoTCG` — Git inicializado en `main`, commit inicial `bc7eb7c` (2026-08-25)
 
 ## Estado por área
 
@@ -11,7 +11,7 @@
 |---|---|---|
 | Arquitectura | Definida a nivel macro (ADR-002..005) | Agente Arquitectura |
 | Base de datos | **H1 cerrado**: DDL + seeds verificados en MySQL 8.0.42 (T-006/007/008) | Agente Base de Datos |
-| Backend | Monorepo en pie · contrato `GameAdapter` definido y tipado | Agente Backend |
+| Backend | `GameAdapter` + `RateLimitedClient` listos. Faltan los 3 adaptadores | Agente Backend |
 | Frontend | Esqueleto Vite+React compilando y consumiendo `@tcg/shared` | Agente Frontend |
 | Ingesta de APIs | Estrategia definida, implementación pendiente | Agente Backend |
 | QA | Sin iniciar | Agente QA |
@@ -31,8 +31,10 @@ ningún ORM de Node modela hoy columnas generadas ni índices multivaluados, que
 1. **R-01 — Volumen de datos.** El catálogo unificado ronda las ~110.000 impresiones de carta
    (MTG ~100k prints, YGO ~13k cartas, PTCG ~20k). La ingesta ingenua tarda horas y puede
    provocar baneo de IP. Mitigado por la estrategia de ingesta por lotes (ADR-004).
-2. **R-02 — Hotlinking de imágenes.** YGOPRODeck **blacklistea la IP** si se enlazan sus imágenes
-   en caliente. Obliga a una capa de almacenamiento propio de imágenes desde el día 1.
+2. **R-02 — Hotlinking y ritmo de peticiones.** YGOPRODeck **blacklistea la IP** por hotlinking de
+   imágenes y por exceso de peticiones. **Mitigado a medias en S005**: `RateLimitedClient` (T-009)
+   controla ya el ritmo con márgenes conservadores y cortocircuito. La mitad de las imágenes sigue
+   abierta hasta T-014.
 3. **R-03 — Fidelidad de los sobres.** ~~Riesgo abierto~~ → **MITIGADO en S003**. Las
    distribuciones se sembraron como datos (T-008) con nivel de confianza declarado por número
    y se validaron por Monte Carlo contra las tasas publicadas. Quedan 3 limitaciones acotadas

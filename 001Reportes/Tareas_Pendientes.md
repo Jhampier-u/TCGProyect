@@ -1,6 +1,6 @@
 # Tareas Pendientes
 
-**Última actualización:** 2026-08-25 (S004) · **Total abiertas:** 10
+**Última actualización:** 2026-08-25 (S005) · **Total abiertas:** 9
 
 Leyenda de prioridad: 🔴 crítica · 🟠 alta · 🟡 media · ⚪ baja
 
@@ -8,7 +8,6 @@ Leyenda de prioridad: 🔴 crítica · 🟠 alta · 🟡 media · ⚪ baja
 
 | ID | Tarea | Agente | Prio | Depende de |
 |---|---|---|---|---|
-| T-001 | `git init` + primer commit. **`.gitignore` ya escrito en S004**, falta el repo | Arquitectura | 🟠 | — |
 | T-004 | `docker-compose.yml` con mysql, redis, api, web | Arquitectura | 🟠 | ✅ T-003 hecha |
 | T-005 | Obtener API key de Pokémon TCG en dev.pokemontcg.io | Usuario | 🟠 | — |
 | T-015 | Resolver **ADR-006** (ORM y migrador). Recomendado: SQL plano + migrador ligero | Usuario | 🟡 | — |
@@ -21,10 +20,9 @@ Sin tareas abiertas. T-006, T-007 y T-008 cerradas y verificadas en MySQL 8.0.42
 
 | ID | Tarea | Agente | Prio | Depende de |
 |---|---|---|---|---|
-| T-009 | `RateLimitedClient` con cola por host, backoff y circuit breaker | Backend | 🔴 | ✅ desbloqueada |
-| T-011 | `ScryfallAdapter` con lectura en streaming de `/bulk-data` | Backend | 🟠 | T-009 (T-010 ✅) |
-| T-012 | `YgoprodeckAdapter` (`cardinfo.php` + mapeo de banlist) | Backend | 🟠 | T-009 (T-010 ✅) |
-| T-013 | `PokemonTcgAdapter` (paginación 250 + control de cuota diaria) | Backend | 🟠 | T-009 (T-010 ✅) |
+| T-011 | `ScryfallAdapter` con lectura en streaming de `/bulk-data` | Backend | 🔴 | ✅ desbloqueada |
+| T-012 | `YgoprodeckAdapter` (`cardinfo.php` + mapeo de banlist + normalización P-007) | Backend | 🔴 | ✅ desbloqueada |
+| T-013 | `PokemonTcgAdapter` (paginación 250 + control de cuota diaria) | Backend | 🔴 | ✅ desbloqueada |
 | T-014 | Job `image-harvest`: descarga, WebP, almacenamiento local | Backend | 🔴 | T-011..T-013 |
 
 ## Deuda técnica detectada en S004
@@ -32,6 +30,7 @@ Sin tareas abiertas. T-006, T-007 y T-008 cerradas y verificadas en MySQL 8.0.42
 | ID | Tarea | Agente | Prio |
 |---|---|---|---|
 | T-016 | Test que detecte *drift* entre `GAME_IDS` de `@tcg/shared` y el seed SQL de `games`. Hoy la correspondencia 1=MTG/2=YGO/3=PTCG vive en dos sitios sin nada que la verifique | QA | 🟡 |
+| T-017 | `QuotaStore` sobre Redis con TTL a medianoche UTC. **Obligatorio antes de la ingesta real de Pokémon** (ver P-012) | Backend | 🟠 |
 
 ## Contratos que la ingesta debe cumplir (derivados de T-006 y T-007)
 
