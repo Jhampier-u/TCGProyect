@@ -1,6 +1,6 @@
 # Registro de Problemas
 
-**Última actualización:** 2026-08-25 (S010) · **Abiertos:** 4 · **Cerrados:** 11
+**Última actualización:** 2026-08-25 (S011) · **Abiertos:** 4 · **Cerrados:** 12
 
 Severidad: 🔴 crítica · 🟠 alta · 🟡 media · ⚪ baja
 
@@ -428,3 +428,44 @@ El reintento posterior fue a la primera. Consecuencias operativas:
 - **El cortocircuito NO llegó a abrirse** en ninguna prueba, porque los éxitos intercalados
   reinician el contador de fallos consecutivos. Es el comportamiento correcto: el origen no está
   caído, está degradado.
+
+---
+
+## P-017 ✅ CERRADO · `sets.external_id` VARCHAR(64) tumbaba la ingesta entera de Yu-Gi-Oh!
+**Estado:** CERRADO el 2026-08-25 (S011) — migración 0005
+**Origen:** **la primera ejecución del orquestador real.**
+
+**Detalle.** Para Yu-Gi-Oh! la clave natural de un set es su **nombre** (decisión de T-012:
+`set_code` se repite en 142 casos, ver P-013). Y hay nombres que superan de largo los 64 caracteres:
+
+```
+"Trials of the Pharaoh - Match of the Millennium & Twisted Nightmares promotional card"
+-> 85 caracteres
+```
+
+**16 de los 1032 sets** desbordan la columna. Longitudes máximas medidas:
+
+| Juego | `external_id` máx. | Sets afectados |
+|---|---|---|
+| MTG | 6 | 0 |
+| **YGO** | **85** | **16** |
+| PTCG | 11 | 0 |
+
+**Impacto: no se perdían 16 sets — no entraba ninguno.** El upsert por lotes es una sola sentencia,
+así que el error 1406 abortaba el `INSERT` completo y con él la ingesta de todo el juego.
+
+**Por qué no se detectó antes.** Las verificaciones de S006 a S010 insertaban **un set cada vez**,
+elegido a mano. Ninguna ejercitó el upsert del catálogo completo. La primera ejecución del
+orquestador lo destapó en el primer intento.
+
+**Solución:** `VARCHAR(255)`. El máximo real es 85; la clave `UNIQUE (game_id, external_id)` ocupa
+1 + 255×4 = 1021 bytes, muy por debajo del límite de 3072 de InnoDB con `ROW_FORMAT=DYNAMIC`.
+`sets.name` se deja en 160: su máximo también es 85 y ahí el margen ya bastaba. **Se amplía sólo lo
+que realmente rompió.**
+
+**El rollback falla a propósito** si ya hay sets de YGO ingestados: MySQL rechaza el `MODIFY` en vez
+de truncar en silencio. Perder la clave natural de 16 sets sería peor que no poder deshacer.
+
+**Lección:** es el quinto problema de longitud/unicidad de clave (P-009, P-010, P-013, P-015 y éste).
+Y el primero que sólo aparece **a escala**: probar con una muestra elegida a mano no ejercita el
+mismo camino que procesar el catálogo entero.

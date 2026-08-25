@@ -2,7 +2,7 @@
 
 > **Rol:** Arquitecto Principal y Orquestador de Proyectos de Software.
 > **Producto:** Simulador de Apertura de Sobres + Constructor de Mazos unificado para MTG, Yu-Gi-Oh! y Pokémon TCG.
-> **Estado del Vault:** ACTIVO — última sesión S010 (2026-08-25)
+> **Estado del Vault:** ACTIVO — última sesión S011 (2026-08-25)
 
 ---
 
@@ -56,7 +56,8 @@ C:\ProyectoTCG\
 │   ├── 2026-08-25_S007_ScryfallAdapter.md
 │   ├── 2026-08-25_S008_InBoosters.md
 │   ├── 2026-08-25_S009_PokemonAdapter_RedisQuota.md
-│   └── 2026-08-25_S010_ImageHarvest.md
+│   ├── 2026-08-25_S010_ImageHarvest.md
+│   └── 2026-08-25_S011_ADR006_Orquestador.md
 │
 ├── db\                          <- esquema (fuera del Vault documental)
 │   ├── README.md
@@ -64,7 +65,8 @@ C:\ProyectoTCG\
 │       ├── 0001_initial_schema.up.sql / .down.sql
 │       ├── 0002_seed_games_rarities.sql
 │       ├── 0003_seed_pack_templates.sql
-│       └── 0004_add_in_boosters.{up,down}.sql
+│       ├── 0004_add_in_boosters.{up,down}.sql
+│       └── 0005_widen_set_external_id.{up,down}.sql
 │
 ├── packages\shared\             <- @tcg/shared: contrato de dominio
 │   └── src\

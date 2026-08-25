@@ -1,6 +1,6 @@
 # Tareas Realizadas
 
-**Última actualización:** 2026-08-25 (S010)
+**Última actualización:** 2026-08-25 (S011)
 
 | ID | Tarea | Agente | Fecha | Sesión | Evidencia |
 |---|---|---|---|---|---|
@@ -32,3 +32,7 @@
 | T-013v | Verificación: 27 tests + ingesta real de `sv1` + **los 3 juegos en un solo esquema MySQL** | QA | 2026-08-25 | S009 | Ver S009 en `005Registro` |
 | T-014 | Job `image-harvest`: descarga única, conversión a WebP, almacenamiento local con 3 salvaguardas | Backend | 2026-08-25 | S010 | `apps/api/src/images/` |
 | T-014v | Verificación: 13 tests + cosecha real de los 3 orígenes (94,8 % de reducción, 0 redescargas) | QA / Seguridad | 2026-08-25 | S010 | Ver S010 en `005Registro` |
+| T-015 | **ADR-006 resuelta**: `mysql2` + SQL plano + migrador propio, sin ORM ni query builder | Usuario / Arquitectura | 2026-08-25 | S011 | `004Arquitectura/00_ADR.md` |
+| T-020 | Capa de datos: `Database`, `Migrator` propio, `CatalogRepository` con upserts por lotes | Base de Datos / Backend | 2026-08-25 | S011 | `apps/api/src/db/` |
+| T-021 | **`IngestService`**: orquestador con camino masivo/incremental, checkpoint y aislamiento de fallos | Backend | 2026-08-25 | S011 | `apps/api/src/ingest/` |
+| T-021v | Verificación extremo a extremo: migrador + 3 adaptadores + cosecha de imágenes contra MySQL real | QA | 2026-08-25 | S011 | Ver S011 en `005Registro` |

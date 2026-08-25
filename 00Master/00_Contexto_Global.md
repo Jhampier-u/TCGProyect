@@ -13,7 +13,7 @@
 | Base de datos | **H1 cerrado**: DDL + seeds verificados en MySQL 8.0.42 (T-006/007/008) | Agente Base de Datos |
 | Backend | Ingesta completa: 3 adaptadores + cliente + job de imágenes | Agente Backend |
 | Frontend | Esqueleto Vite+React compilando y consumiendo `@tcg/shared` | Agente Frontend |
-| Ingesta de APIs | **H2 cerrado.** Falta el orquestador que una las piezas (bloqueado por ADR-006) | Agente Backend |
+| Ingesta de APIs | **Completa y verificada extremo a extremo**: migrador → orquestador → catálogo → imágenes | Agente Backend |
 | QA | Sin iniciar | Agente QA |
 | Seguridad | Auditoría de dependencias: 0 vulnerabilidades (S004) | Agente Seguridad |
 
@@ -21,10 +21,13 @@
 
 **ADR-001 — RESUELTA (2026-08-25).** Backend en **Node.js + TypeScript**. Desbloquea H1 y H2.
 
-## Decisión abierta (no bloqueante)
+**ADR-006 — RESUELTA (2026-08-25, S011).** `mysql2` + SQL plano + **migrador propio**. Sin ORM y sin
+*query builder*: ninguno modela columnas generadas ni índices multivaluados, y las consultas del
+proyecto son pocas y dependen de que el plan de ejecución use un índice concreto.
 
-**ADR-006 — ORM y migrador.** Recomendación: SQL plano versionado + migrador ligero, porque
-ningún ORM de Node modela hoy columnas generadas ni índices multivaluados, que el esquema usa.
+## Sin decisiones abiertas
+
+Los seis ADR están cerrados. Ver `004Arquitectura/00_ADR.md`.
 
 ## Riesgos vivos (top 3)
 

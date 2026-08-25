@@ -36,8 +36,8 @@ distintos) entre back y front elimina toda una clase de bugs de contrato.
 ---
 
 ## ADR-006 — ORM y sistema de migraciones (Node.js)
-**Estado:** 🟡 ABIERTA — no bloqueante
-**Fecha:** 2026-08-25
+**Estado:** ✅ **ACEPTADA — `mysql2` + SQL plano + migrador propio**
+**Fecha propuesta:** 2026-08-25 · **Fecha decidida:** 2026-08-25 (S011)
 
 **Contexto.** Elegido Node.js, falta decidir cómo se accede a MySQL y cómo se versionan las migraciones.
 
@@ -52,11 +52,34 @@ tratar el DDL como SQL plano.
 | Drizzle | Buen soporte de SQL crudo, tipado excelente; las generadas hay que declararlas a mano. |
 | Prisma | DX superior, pero su `schema.prisma` no expresa MVI ni generadas: obligaría a `migrate diff` + parches manuales, con riesgo de *drift*. |
 
-**Recomendación:** **SQL plano versionado + un migrador ligero**, y un cliente tipado por encima
-(Drizzle o `mysql2` + Kysely) sólo para las consultas. Mantiene el esquema como fuente de verdad
-y evita que el ORM pelee con las features de MySQL 8 que el proyecto necesita.
+**DECISIÓN: `mysql2` + SQL plano + migrador propio.** Sin ORM y sin *query builder*.
 
-**→ Pendiente de confirmación. No bloquea: T-007 y T-008 son SQL plano.**
+**Justificación, con lo aprendido entre S002 y S010:**
+
+1. **Ningún ORM modela este esquema.** Columnas generadas (`STORED` y `VIRTUAL`), índice
+   multivaluado sobre JSON, `FULLTEXT`, `CHECK`. Cualquier opción acabaría tratando el DDL como SQL
+   plano igualmente, así que el ORM sólo aportaría una capa que hay que puentear.
+
+2. **Las consultas son pocas y muy específicas.** `INSERT ... ON DUPLICATE KEY UPDATE` por lotes
+   sobre claves naturales, precarga del pool `(set_id, rarity_id, in_boosters)`, paginación keyset.
+   Un *query builder* no las hace más claras; las hace más indirectas. Y varias dependen de que el
+   plan de ejecución use un índice concreto — algo que se verifica leyendo el `EXPLAIN` del SQL que
+   uno escribe, no del que genera una librería.
+
+3. **Descartado también Kysely/Drizzle** (que sí se barajaron). Añadirían dependencia y superficie
+   de auditoría para envolver una decena de consultas que ya sabemos escribir. El tipado se consigue
+   igual con repositorios tipados a mano sobre `mysql2`.
+
+**Migrador propio en vez de `umzug`/`dbmate`:** son ~100 líneas (tabla `schema_migrations`, leer
+`db/migrations/*.up.sql` en orden, ejecutar las pendientes en transacción cuando el motor lo
+permita). Menos que integrar y configurar una librería, sin dependencia nueva, y con la ventaja de
+entenderlo por completo cuando falle a las 3 de la mañana.
+
+**Reversible:** si en el futuro las consultas se multiplican, se puede introducir un *query builder*
+sobre el mismo driver sin tocar ni el esquema ni las migraciones.
+
+**Consecuencia:** el acceso a datos vive en `apps/api/src/db/`, tras interfaces de repositorio. El
+orquestador de ingesta y el job de imágenes dependen de las interfaces, no de `mysql2`.
 
 ---
 

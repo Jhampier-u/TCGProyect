@@ -51,6 +51,16 @@ mysql -u root -p < db/migrations/0001_initial_schema.down.sql
 | `0002_seed_games_rarities.sql` | 3 juegos, 66 rarezas | ✅ verificada, idempotente |
 | `0003_seed_pack_templates.sql` | 3 plantillas, 33 slots | ✅ verificada, idempotente |
 | `0004_add_in_boosters.{up,down}.sql` | `in_boosters` + índice del pool rehecho | ✅ verificada (ciclo up/down/up) |
+| `0005_widen_set_external_id.{up,down}.sql` | `sets.external_id` → VARCHAR(255) (P-017) | ✅ verificada |
+
+## Cómo se aplican (desde S011)
+
+Existe un migrador propio en `apps/api/src/db/migrator.ts` (ADR-006). Lleva el registro en la tabla
+`schema_migrations`, aplica en orden alfabético y **nunca reaplica** lo ya hecho. Los `.down.sql`
+son manuales a propósito: deshacer en producción debe ser una decisión consciente.
+
+**Requisito previo:** la base de datos debe existir antes de migrar (la `0001` la crea, pero el
+driver necesita conectarse a algo). Hoy ese paso es manual → **T-022**.
 
 > **Las migraciones publicadas son inmutables.** Todo cambio de esquema es una migración nueva.
 > El rollback de la 0004 **pierde el valor de `in_boosters`**: tras deshacerla y rehacerla hay que

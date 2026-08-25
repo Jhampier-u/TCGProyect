@@ -1,6 +1,6 @@
 # Tareas Pendientes
 
-**Última actualización:** 2026-08-25 (S010) · **Total abiertas:** 5
+**Última actualización:** 2026-08-25 (S011) · **Total abiertas:** 5
 
 Leyenda de prioridad: 🔴 crítica · 🟠 alta · 🟡 media · ⚪ baja
 
@@ -10,7 +10,6 @@ Leyenda de prioridad: 🔴 crítica · 🟠 alta · 🟡 media · ⚪ baja
 |---|---|---|---|---|
 | T-004 | `docker-compose.yml` con mysql, redis, api, web | Arquitectura | 🟠 | ✅ T-003 hecha |
 | T-005 | Obtener API key de Pokémon TCG en dev.pokemontcg.io | Usuario | 🟠 | — |
-| T-015 | Resolver **ADR-006** (ORM y migrador). Recomendado: SQL plano + migrador ligero | Usuario | 🟡 | — |
 
 ## Hito H1 — Esquema de datos ✅ COMPLETADO
 
@@ -21,14 +20,14 @@ Sin tareas abiertas. T-006, T-007 y T-008 cerradas y verificadas en MySQL 8.0.42
 Sin tareas abiertas. Los 3 adaptadores, el cliente con límite de tasa y el job de imágenes están
 hechos y verificados contra los orígenes reales.
 
-**Queda por construir el orquestador de ingesta** que una las piezas (leer sets → upsert →
-`sets.ingested_at` → encolar imágenes). No se ha creado tarea porque depende de **ADR-006**: sin
-decidir ORM/migrador no hay capa de persistencia que escribir.
+**El orquestador (`IngestService`) está construido y verificado** contra MySQL real (T-021, S011).
 
 ## Deuda técnica detectada en S004
 
 | ID | Tarea | Agente | Prio |
 |---|---|---|---|
+| T-022 | Guion `db:migrate` que cree la base de datos si falta y ejecute el migrador. Hoy ese paso previo es manual (ver S011) | Backend | 🟡 |
+| T-023 | Revisar el orden de `findPendingSets`: `released_at DESC` hace que una ejecución acotada procese primero sets **futuros** y promocionales en vez de los jugables (ver S011) | Backend | ⚪ |
 | T-019 | `card_prints.image_failed_at` o similar. Hoy una URL de imagen permanentemente rota se reintenta en cada ejecución del job, para siempre (ver S010) | Base de Datos | 🟡 |
 | T-016 | Test que detecte *drift* entre `GAME_IDS` de `@tcg/shared` y el seed SQL de `games`. Hoy la correspondencia 1=MTG/2=YGO/3=PTCG vive en dos sitios sin nada que la verifique | QA | 🟡 |
 

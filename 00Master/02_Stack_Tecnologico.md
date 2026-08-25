@@ -10,6 +10,8 @@
 | Routing | React Router v6 | PROPUESTO |
 | Backend | **Node.js + TypeScript** | ✅ CONFIRMADO (ADR-001, S002) |
 | Base de datos | MySQL 8.0.17+ (InnoDB, `utf8mb4_0900_ai_ci`) | ✅ CONFIRMADO |
+| Driver / acceso a datos | `mysql2` + SQL plano, sin ORM (ADR-006) | ✅ IMPLEMENTADO (T-020) |
+| Migraciones | Migrador propio, ~100 líneas (ADR-006) | ✅ IMPLEMENTADO (T-020) |
 | Caché / colas | Redis 7 | PROPUESTO |
 | Cliente HTTP externo | `fetch` de Node + cola con límite de tasa propia | ✅ IMPLEMENTADO (T-009) |
 | Proceso de imágenes | `sharp` (libvips 8.18.3) → WebP | ✅ IMPLEMENTADO (T-014) |
