@@ -58,6 +58,18 @@ basta partir por saltos de línea. **Medido: 116.752 impresiones en 12,5 s con p
 carga inicial y después se refresca por `?misc=yes&startdate=` o simplemente semanalmente.
 El coste está en las **imágenes**, no en los datos.
 
+### PTCG → particularidades del origen (verificadas en T-013, S009)
+
+| Hecho del origen | Consecuencia de diseño |
+|---|---|
+| **El nombre NO identifica una carta**: 258 cartas y 175 nombres en `sv1` | `oracle_key` = `id` de la API, no el nombre (P-015) |
+| `hp` llega como cadena (`"30"`) | `toJsonNumber` |
+| 49 de 258 cartas sin `hp`/`types`/`attacks` | Entrenadores y energías; claves omitidas |
+| `retreatCost`, `convertedEnergyCost` en camelCase | Se mapean a snake_case por contrato con el DDL |
+| `releaseDate` con barras (`1999/01/09`) | Se convierte a `DATE` de MySQL |
+| Algunas promos sin `rarity` | Caen a `common` con aviso; nunca se descarta la carta |
+| **~30 % de éxito en las peticiones** (500/502 de Cloudflare) | `maxRetries: 8` para ese host; la ingesta debe ser reanudable (P-016) |
+
 ### PTCG → **paginación agresiva con key**
 `pageSize=250` sobre `/cards` ⇒ ~80–100 peticiones para todo el catálogo. Con cuota diaria, la
 ingesta inicial debe repartirse o ejecutarse una sola vez y cachear el resultado en disco.

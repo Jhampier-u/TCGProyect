@@ -1,6 +1,6 @@
 # Tareas Realizadas
 
-**Última actualización:** 2026-08-25 (S008)
+**Última actualización:** 2026-08-25 (S009)
 
 | ID | Tarea | Agente | Fecha | Sesión | Evidencia |
 |---|---|---|---|---|---|
@@ -27,3 +27,6 @@
 | T-011v | Verificación: 24 tests + volcado real de 116.752 impresiones (210 MB de pico) + ingesta en MySQL | QA | 2026-08-25 | S007 | Ver S007 en `005Registro` |
 | T-018 | `card_prints.in_boosters` (migración 0004) + `DomainPrint.inBoosters` + mapeo en ambos adaptadores | Base de Datos / Backend | 2026-08-25 | S008 | `db/migrations/0004_*`, `packages/shared` |
 | T-018v | Verificación: 4 tests nuevos + ingesta de 8221 impresiones + ciclo up/down/up del índice | QA | 2026-08-25 | S008 | Ver S008 en `005Registro` |
+| T-013 | `PokemonTcgAdapter`: paginación, clave de API, normalización de `hp` y ataques | Backend | 2026-08-25 | S009 | `apps/api/src/adapters/pokemontcg/` |
+| T-017 | `RedisQuotaStore`: cuota diaria persistida, con la fecha en la clave y TTL a medianoche UTC | Backend | 2026-08-25 | S009 | `apps/api/src/http/redis-quota.ts` |
+| T-013v | Verificación: 27 tests + ingesta real de `sv1` + **los 3 juegos en un solo esquema MySQL** | QA | 2026-08-25 | S009 | Ver S009 en `005Registro` |

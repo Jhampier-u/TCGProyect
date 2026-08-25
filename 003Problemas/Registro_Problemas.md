@@ -1,6 +1,6 @@
 # Registro de Problemas
 
-**Última actualización:** 2026-08-25 (S008) · **Abiertos:** 4 · **Cerrados:** 9
+**Última actualización:** 2026-08-25 (S009) · **Abiertos:** 5 · **Cerrados:** 10
 
 Severidad: 🔴 crítica · 🟠 alta · 🟡 media · ⚪ baja
 
@@ -215,8 +215,8 @@ toque dependencias, no de una revisión final de seguridad.
 
 ---
 
-## P-012 🟠 · El contador de cuota en memoria se pierde al reiniciar el worker
-**Estado:** ABIERTO — bloquea la ingesta real de Pokémon (T-017)
+## P-012 ✅ CERRADO · El contador de cuota en memoria se pierde al reiniciar el worker
+**Estado:** CERRADO el 2026-08-25 (S009) — resuelto en T-017
 **Origen:** decisión consciente al implementar T-009.
 **Detalle:** `InMemoryQuotaStore` cuenta las peticiones diarias a `api.pokemontcg.io` en un `Map`
 del proceso. Si el worker se reinicia a mitad de una ingesta, **el contador vuelve a cero** mientras
@@ -230,8 +230,21 @@ la cuota diaria real creyendo que quedan miles de peticiones. El síntoma sería
 **Mitigación prevista (T-017):** `QuotaStore` sobre Redis con clave por día y TTL a medianoche UTC.
 La interfaz `QuotaStore` ya está definida precisamente para poder sustituir la implementación sin
 tocar el cliente.
-**Mientras tanto:** es seguro para desarrollo y tests. **No arrancar la ingesta completa de Pokémon
-en producción hasta cerrar T-017.**
+**RESUELTO en S009 (T-017).** `RedisQuotaStore` sobre una interfaz `RedisLike` mínima (`incr`,
+`decr`, `expire`, `get`), que satisfacen tal cual tanto `ioredis` como `node-redis` sin añadir
+dependencia al proyecto.
+
+**Dos defensas independientes contra el vuelco de día:**
+1. La fecha UTC forma parte de la **clave** (`tcg:quota:api.pokemontcg.io:2026-08-25`). Al cambiar
+   el día se cuenta en una clave nueva aunque el TTL fallara. Ésta es la que garantiza la corrección.
+2. TTL hasta la medianoche UTC, sólo para que las claves viejas no se acumulen.
+
+`INCR` es atómico, así que dos workers concurrentes no pueden colarse por encima del límite — que es
+justo el motivo de contar en Redis y no en cada proceso. Cuando la cuota está agotada se compensa
+con `DECR` para que `used()` no se infle en los paneles.
+
+**Verificado:** 10 tests, incluido el que reproduce el escenario original — un store nuevo (worker
+reiniciado) sobre el mismo Redis lee 5 de 10 consumidas y sólo permite 5 más.
 
 ---
 
@@ -325,3 +338,70 @@ normal del set, todos ellos "Special Guests" que sólo aparecen en otros product
 El rollback de la 0004 **pierde el dato**: al eliminar la columna y volver a crearla, todo queda a
 `DEFAULT 1`. Verificado (8221 de 8221 volvieron a 1). Queda avisado en el propio fichero `.down.sql`:
 tras un ciclo de rollback hay que **re-ingestar MTG**.
+
+---
+
+## P-015 ✅ CERRADO · El nombre NO identifica una carta en Pokémon TCG
+**Estado:** CERRADO el 2026-08-25 (S009) — resuelto en el diseño de T-013
+**Origen:** análisis de la API real antes de escribir el adaptador.
+
+**Detalle.** El diccionario de datos planteaba `oracle_key = nombre normalizado` para PTCG, porque
+la API no expone un identificador conceptual. **Los datos reales lo desmienten.**
+
+En el set `sv1` hay **258 cartas y sólo 175 nombres distintos**. Y las homónimas no son
+reimpresiones: son cartas **realmente distintas**.
+
+| id | nombre | PS | ataque | rareza |
+|---|---|---|---|---|
+| `sv1-16` | Tarountula | 40 | String Haul | common |
+| `sv1-17` | Tarountula | 40 | String Shot | common |
+| `sv1-18` | Tarountula | **60** | **Surprise Attack** | common |
+| `sv1-199` | Tarountula | 40 | String Shot | illustration_rare |
+
+Con clave por nombre, las cuatro habrían colapsado en una sola fila de `cards` y el
+`ON DUPLICATE KEY UPDATE` habría dejado el `game_data` de la última ingerida. **En un solo set se
+habrían perdido 83 cartas.**
+
+**Solución:** `oracleKey = id` de la API (`sv1-16`). Para PTCG, `cards` y `card_prints` quedan 1:1,
+lo cual refleja honestamente lo que el origen ofrece.
+
+**Lo que NO se rompe:** la regla de mazo "máximo 4 copias por nombre" (RN-04) sigue funcionando,
+porque el validador agrupa por `cards.name`, que sigue ahí.
+
+**Coste aceptado:** `sv1-17` y `sv1-199` **sí** son la misma carta (mismos PS, mismo ataque, distinta
+ilustración) y quedan como dos filas conceptuales. Es una sobre-división inocua: dos filas con datos
+idénticos. La alternativa —un hash de contenido— sería más exacta pero frágil ante cualquier cambio
+de campos en el origen.
+
+**Cuarto caso de la misma familia** (P-010 Nidoran, P-013 los dos `set_code`, y éste): una clave
+natural que *parece* única, un `ON DUPLICATE KEY UPDATE`, y datos que desaparecen sin un error.
+
+---
+
+## P-016 🟠 · La API de Pokémon TCG es intermitentemente inestable
+**Estado:** ABIERTO — mitigado, pero es un riesgo operativo permanente
+**Origen:** medido el 2026-08-25 durante T-013.
+
+**Detalle.** Sondeo de 8 peticiones idénticas repetidas:
+
+| Petición | 200 | Errores |
+|---|---|---|
+| `/v2/sets?pageSize=250` | 3 | 5 (500, 502) |
+| `/v2/sets?pageSize=1` | 2 | 6 (500, 502) |
+
+**No es un límite de paginación** — el primer sondeo lo sugería, pero repetir la misma petición
+demostró que los fallos son independientes del tamaño de página. Los 502 vienen de Cloudflare con
+`error_name: origin_bad_gateway`: el origen está sobrecargado.
+
+**Mitigación aplicada:** `maxRetries: 8` para `api.pokemontcg.io` (en vez de 5). Con 9 intentos y
+~30 % de éxito, la probabilidad de perder una página baja del 12 % al ~4 %.
+
+**Pero no basta.** Durante la verificación de S009 una ingesta **agotó los 9 intentos y falló**.
+El reintento posterior fue a la primera. Consecuencias operativas:
+- La ingesta de PTCG **debe** poder reanudarse. Ya está previsto: `sets.ingested_at` es el
+  checkpoint de ADR-004.
+- Los reintentos consumen cuota diaria. Con la API a este ritmo, una ingesta completa puede gastar
+  el triple de peticiones de lo previsto. El contador de T-017 lo hace visible.
+- **El cortocircuito NO llegó a abrirse** en ninguna prueba, porque los éxitos intercalados
+  reinician el contador de fallos consecutivos. Es el comportamiento correcto: el origen no está
+  caído, está degradado.

@@ -2,6 +2,8 @@ export { RateLimitedClient, parseRetryAfter } from './rate-limited-client.js';
 export type { RateLimitedClientOptions, ClientEvent } from './rate-limited-client.js';
 export { HttpError, CircuitOpenError, QuotaExhaustedError } from './errors.js';
 export { InMemoryQuotaStore } from './quota.js';
+export { RedisQuotaStore } from './redis-quota.js';
+export type { RedisLike } from './redis-quota.js';
 export type { QuotaStore } from './quota.js';
 export { BASE_POLICY, DEFAULT_HOST_POLICIES, RETRYABLE_STATUSES, resolvePolicy } from './policies.js';
 export { systemClock } from './types.js';

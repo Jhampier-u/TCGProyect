@@ -11,9 +11,9 @@
 |---|---|---|
 | Arquitectura | Definida a nivel macro (ADR-002..005) | Agente Arquitectura |
 | Base de datos | **H1 cerrado**: DDL + seeds verificados en MySQL 8.0.42 (T-006/007/008) | Agente Base de Datos |
-| Backend | `GameAdapter` + `RateLimitedClient` + adaptadores **MTG y YGO**. Falta PTCG | Agente Backend |
+| Backend | `GameAdapter` + `RateLimitedClient` + **los 3 adaptadores**. Falta el job de imágenes | Agente Backend |
 | Frontend | Esqueleto Vite+React compilando y consumiendo `@tcg/shared` | Agente Frontend |
-| Ingesta de APIs | **2 de 3 conectores en pie**, ambos probados extremo a extremo contra MySQL | Agente Backend |
+| Ingesta de APIs | **3 de 3 conectores**, los tres verificados juntos en un mismo esquema MySQL | Agente Backend |
 | QA | Sin iniciar | Agente QA |
 | Seguridad | Auditoría de dependencias: 0 vulnerabilidades (S004) | Agente Seguridad |
 

@@ -1,6 +1,6 @@
 # Tareas Pendientes
 
-**Última actualización:** 2026-08-25 (S008) · **Total abiertas:** 7
+**Última actualización:** 2026-08-25 (S009) · **Total abiertas:** 5
 
 Leyenda de prioridad: 🔴 crítica · 🟠 alta · 🟡 media · ⚪ baja
 
@@ -20,15 +20,13 @@ Sin tareas abiertas. T-006, T-007 y T-008 cerradas y verificadas en MySQL 8.0.42
 
 | ID | Tarea | Agente | Prio | Depende de |
 |---|---|---|---|---|
-| T-013 | `PokemonTcgAdapter` (paginación 250 + control de cuota diaria) | Backend | 🔴 | ✅ desbloqueada |
-| T-014 | Job `image-harvest`: descarga, WebP, almacenamiento local | Backend | 🔴 | T-011..T-013 |
+| T-014 | Job `image-harvest`: descarga, WebP, almacenamiento local | Backend | 🔴 | ✅ desbloqueada — **última de H2** |
 
 ## Deuda técnica detectada en S004
 
 | ID | Tarea | Agente | Prio |
 |---|---|---|---|
 | T-016 | Test que detecte *drift* entre `GAME_IDS` de `@tcg/shared` y el seed SQL de `games`. Hoy la correspondencia 1=MTG/2=YGO/3=PTCG vive en dos sitios sin nada que la verifique | QA | 🟡 |
-| T-017 | `QuotaStore` sobre Redis con TTL a medianoche UTC. **Obligatorio antes de la ingesta real de Pokémon** (ver P-012) | Backend | 🟠 |
 
 ## Contrato adicional derivado de T-018
 

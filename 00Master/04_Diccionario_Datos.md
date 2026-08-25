@@ -49,7 +49,7 @@ Necesaria porque las reglas de mazo (máx. 4 copias) se aplican **por nombre**, 
 |---|---|---|
 | `id` | BIGINT UNSIGNED PK | |
 | `game_id` | TINYINT UNSIGNED FK | |
-| `oracle_key` | VARCHAR(64) | `oracle_id` (MTG), `id` (YGO), `name` normalizado (PTCG) |
+| `oracle_key` | VARCHAR(64) | `oracle_id` (MTG), `id` numérico (YGO), **`id` de impresión (PTCG)** — ver la corrección abajo |
 | `name` | VARCHAR(255) | |
 | `type_line` | VARCHAR(255) NULL | Texto de tipo crudo del juego |
 | `text` | TEXT NULL | Texto de reglas |
@@ -104,6 +104,17 @@ probabilidad sobre rarezas.
 - `user_collection`: `(user_id, card_print_id, finish)` UNIQUE + `quantity`. Nunca borra filas, ajusta cantidad.
 - `pack_openings`: `id`, `user_id`, `pack_template_id`, `seed CHAR(32)`, `opened_at`. Cumple **RN-01**.
 - `deck_cards`: `deck_id`, `card_print_id`, `quantity`, `zone` ENUM(`main`,`extra`,`side`,`commander`).
+
+## Corrección de la clave conceptual de Pokémon (P-015, S009)
+
+Este documento decía originalmente que para PTCG `oracle_key` sería el **nombre normalizado**.
+**Es incorrecto y se descartó al implementar T-013.** En el set `sv1` hay 258 cartas y sólo 175
+nombres: `Tarountula` sv1-16 (40 PS, "String Haul") y sv1-18 (60 PS, "Surprise Attack") son cartas
+distintas homónimas. Con clave por nombre se habrían perdido 83 cartas en un solo set.
+
+Se usa el **`id` de la API** (`sv1-16`). Para PTCG, `cards` y `card_prints` quedan 1:1, que es lo que
+el origen realmente soporta. La regla de mazo "máximo 4 por nombre" (RN-04) no se ve afectada: el
+validador agrupa por `cards.name`.
 
 ## Perfiles JSON de `cards.game_data`
 

@@ -35,7 +35,10 @@ export const DEFAULT_HOST_POLICIES: Readonly<Record<string, Partial<HostPolicy>>
 
   // Pokemon. No limita por segundo sino por CUOTA DIARIA. Se deja margen bajo
   // los ~20.000/dia con API key para no agotarla con reintentos.
-  'api.pokemontcg.io': { minIntervalMs: 250, concurrency: 2, dailyQuota: 18_000 },
+  // maxRetries 8 y no 5: en el muestreo del 2026-08-25 solo ~30% de las
+  // peticiones respondieron 200, con 500 y 502 intercalados sin patron (P-016).
+  // Con 9 intentos la probabilidad de perder una pagina baja del 12% al 4%.
+  'api.pokemontcg.io': { minIntervalMs: 250, concurrency: 2, dailyQuota: 18_000, maxRetries: 8 },
 
   // Host de los volcados masivos de Scryfall. Es un HOST DISTINTO de
   // api.scryfall.com (CDN estatico tras Cloudflare) y por tanto tiene su propia
