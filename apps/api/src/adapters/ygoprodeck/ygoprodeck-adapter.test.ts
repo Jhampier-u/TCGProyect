@@ -281,10 +281,21 @@ describe('contrato del dominio', () => {
       'externalId',
       'finishes',
       'imageSourceUrl',
+      'inBoosters',
       'rarityCode',
       'rarityLabel',
       'setExternalId',
     ]);
     expect(print.card.game).toBe('YGO');
+  });
+});
+
+describe('inBoosters (P-014)', () => {
+  it('marca todas las impresiones de YGO como de sobre', async () => {
+    // Es una suposicion a nivel de set, no un dato del origen: YGOPRODeck no lo
+    // expone por carta. Correcta porque en Yu-Gi-Oh! los Structure Deck y los
+    // tins son sets aparte, no cartas marcadas dentro de un set de sobres.
+    const prints = await collect(makeAdapter([CARTA_DOBLE_RAREZA, SLIFER]).fetchPrints(SET));
+    expect(prints.every((p) => p.inBoosters)).toBe(true);
   });
 });

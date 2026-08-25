@@ -174,6 +174,11 @@ export class ScryfallAdapter implements GameAdapter<'MTG'> {
       rarityLabel: raw.rarity,
       imageSourceUrl,
       finishes: raw.finishes && raw.finishes.length > 0 ? raw.finishes : ['nonfoil'],
+      // Dato REAL del origen (P-014). El 54,7% de las impresiones del volcado
+      // tienen booster:false: promos, buy-a-box, Secret Lair, art series.
+      // El respaldo a `true` solo actua si el campo falta, que en el volcado no
+      // ocurre; se mantiene por prudencia ante cambios del origen.
+      inBoosters: raw.booster ?? true,
     };
   }
 

@@ -1,6 +1,6 @@
 # Tareas Realizadas
 
-**Última actualización:** 2026-08-25 (S007)
+**Última actualización:** 2026-08-25 (S008)
 
 | ID | Tarea | Agente | Fecha | Sesión | Evidencia |
 |---|---|---|---|---|---|
@@ -25,3 +25,5 @@
 | T-011 | `ScryfallAdapter`: volcado JSONL en streaming + camino incremental paginado | Backend | 2026-08-25 | S007 | `apps/api/src/adapters/scryfall/` |
 | T-011a | `RateLimitedClient.stream()`: cuerpo como flujo de bytes, para descargas grandes | Backend | 2026-08-25 | S007 | `apps/api/src/http/` |
 | T-011v | Verificación: 24 tests + volcado real de 116.752 impresiones (210 MB de pico) + ingesta en MySQL | QA | 2026-08-25 | S007 | Ver S007 en `005Registro` |
+| T-018 | `card_prints.in_boosters` (migración 0004) + `DomainPrint.inBoosters` + mapeo en ambos adaptadores | Base de Datos / Backend | 2026-08-25 | S008 | `db/migrations/0004_*`, `packages/shared` |
+| T-018v | Verificación: 4 tests nuevos + ingesta de 8221 impresiones + ciclo up/down/up del índice | QA | 2026-08-25 | S008 | Ver S008 en `005Registro` |

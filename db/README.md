@@ -11,7 +11,7 @@ Verificado contra **MySQL 8.0.42** el 2026-08-25.
 Ejecutar **en orden**:
 
 ```bash
-mysql -u root -p < db/migrations/0001_initial_schema.up.sql && mysql -u root -p < db/migrations/0002_seed_games_rarities.sql && mysql -u root -p < db/migrations/0003_seed_pack_templates.sql
+mysql -u root -p < db/migrations/0001_initial_schema.up.sql && mysql -u root -p < db/migrations/0002_seed_games_rarities.sql && mysql -u root -p < db/migrations/0003_seed_pack_templates.sql && mysql -u root -p < db/migrations/0004_add_in_boosters.up.sql
 ```
 
 Los seeds (0002 y 0003) son **idempotentes**: re-ejecutarlos no duplica nada.
@@ -50,6 +50,11 @@ mysql -u root -p < db/migrations/0001_initial_schema.down.sql
 | `0001_initial_schema.down.sql` | rollback | ✅ verificada |
 | `0002_seed_games_rarities.sql` | 3 juegos, 66 rarezas | ✅ verificada, idempotente |
 | `0003_seed_pack_templates.sql` | 3 plantillas, 33 slots | ✅ verificada, idempotente |
+| `0004_add_in_boosters.{up,down}.sql` | `in_boosters` + índice del pool rehecho | ✅ verificada (ciclo up/down/up) |
+
+> **Las migraciones publicadas son inmutables.** Todo cambio de esquema es una migración nueva.
+> El rollback de la 0004 **pierde el valor de `in_boosters`**: tras deshacerla y rehacerla hay que
+> re-ingestar MTG. Está avisado en su `.down.sql`.
 
 ## Tercera trampa: longitud de `rarities.code`
 

@@ -36,9 +36,11 @@ ningún ORM de Node modela hoy columnas generadas ni índices multivaluados, que
    imágenes y por exceso de peticiones. **Mitigado a medias en S005**: `RateLimitedClient` (T-009)
    controla ya el ritmo con márgenes conservadores y cortocircuito. La mitad de las imágenes sigue
    abierta hasta T-014.
-3. **R-03 — Fidelidad de los sobres.** Parcialmente mitigado en S003 — pero **reabierto en S007
-   por P-014**: las distribuciones de rareza son fieles, pero el pool del que se eligen las cartas
-   incluye impresiones que nunca salen en sobre (el 54,7 % del catálogo de MTG). Ver P-014 y T-018.
+3. **R-03 — Fidelidad de los sobres.** **MITIGADO por completo en S008.** Tiene dos mitades y
+   ambas están cerradas:
+   - *Qué rarezas salen* → P-003, cerrado en S003 y validado por Monte Carlo.
+   - *Qué cartas pueden salir* → P-014, cerrado en S008 con `in_boosters`. Sin él, más de la mitad
+     del pool de raras de un set era inalcanzable en un sobre real.
    Detalle de la mitigación original de S003: Las
    distribuciones se sembraron como datos (T-008) con nivel de confianza declarado por número
    y se validaron por Monte Carlo contra las tasas publicadas. Quedan 3 limitaciones acotadas

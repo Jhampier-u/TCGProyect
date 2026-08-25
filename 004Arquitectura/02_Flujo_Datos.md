@@ -30,7 +30,8 @@ PackService
    ├─ 2. carga pack_template + pack_slots del set (o el default del juego)
    ├─ 3. rng = mulberry32(seed)
    ├─ 4. por cada slot: resuelve rareza por pesos ──► elige print aleatorio
-   │       de esa (set_id, rarity_id)  [pool precargado en Redis por set]
+   │       de esa (set_id, rarity_id) CON in_boosters = 1
+   │       [pool precargado en Redis por set]  <- el filtro es obligatorio (P-014)
    ├─ 5. persiste pack_openings + pack_opening_cards
    └─ 6. UPSERT user_collection (quantity = quantity + 1)   [RN-02]
    │
@@ -39,7 +40,13 @@ Respuesta: { openingId, seed, cards[] }  ── el front anima el reveal
 ```
 
 **Nota de rendimiento:** el paso 4 no hace `ORDER BY RAND()` (escaneo completo). Se precarga en
-Redis un array de `card_print_id` por `(set_id, rarity_id)` y se indexa con el RNG. O(1).
+Redis un array de `card_print_id` por `(set_id, rarity_id)` **filtrando `in_boosters = 1`** y se
+indexa con el RNG. O(1).
+
+**El filtro `in_boosters` no es opcional.** Sin él, en Bloomburrow el pool de raras pasa de 60
+impresiones reales a 129, y más de la mitad de las raras entregadas serían cartas que nunca
+estuvieron en un sobre (P-014). El índice `idx_prints_pool` incluye la columna para que la consulta
+siga siendo *covering*.
 
 ## Flujo C — Validación de mazo
 

@@ -68,6 +68,21 @@ export interface DomainPrint<G extends GameCode = GameCode> {
   imageSourceUrl: string | null;
   /** p.ej. ["nonfoil","foil"], ["normal","reverse"], ["holo"]. */
   finishes: string[];
+  /**
+   * Si esta impresion puede salir de un sobre.
+   *
+   * `false` en promos, buy-a-box, Secret Lair, art series y cartas de mazos
+   * preconstruidos. Sin este dato el simulador entrega cartas que jamas
+   * estuvieron en un sobre: es el 54,7% de las impresiones de Magic (P-014).
+   *
+   * Fiabilidad por juego:
+   *  - MTG : dato REAL, Scryfall lo expone por impresion (`booster`).
+   *  - YGO : SUPOSICION a nivel de set. YGOPRODeck no lo expone por carta, pero
+   *          en Yu-Gi-Oh! los Structure Deck y los tins son sets aparte, asi que
+   *          dentro de un set de sobres todas las cartas salen de sobre.
+   *  - PTCG: mismo caso que YGO.
+   */
+  inBoosters: boolean;
 }
 
 /** Un peso de rareza dentro de un slot. Espejo de `pack_slots.distribution`. */

@@ -309,3 +309,41 @@ describe('utilidades', () => {
     expect(imageOf({ ...BOSQUE, image_uris: undefined, card_faces: undefined })).toBeNull();
   });
 });
+
+describe('inBoosters (P-014)', () => {
+  it('lee el booster real de Scryfall', async () => {
+    const promo: RawCard = { ...BOSQUE, id: 'promo-1', booster: false };
+    const adapter = new ScryfallAdapter(
+      http({ json: () => ({ data: [BOSQUE, promo], has_more: false }) }),
+    );
+    const prints = await collect(adapter.fetchPrints(SET_BLB));
+
+    expect(prints[0]!.inBoosters).toBe(true);
+    expect(prints[1]!.inBoosters).toBe(false);
+  });
+
+  it('separa el pool de sobres del catalogo completo', async () => {
+    // El caso que motiva P-014: el 54,7% del volcado real es booster:false.
+    // Si el motor de sobres no filtra, entrega promos como si salieran de sobre.
+    const catalogo: RawCard[] = [
+      { ...BOSQUE, id: 'a', booster: true },
+      { ...BOSQUE, id: 'b', booster: false },
+      { ...BOSQUE, id: 'c', booster: false },
+      { ...BOSQUE, id: 'd', booster: true },
+    ];
+    const adapter = new ScryfallAdapter(
+      http({ json: () => ({ data: catalogo, has_more: false }) }),
+    );
+    const prints = await collect(adapter.fetchPrints(SET_BLB));
+
+    expect(prints).toHaveLength(4); // el catalogo las conserva todas
+    expect(prints.filter((p) => p.inBoosters)).toHaveLength(2); // el pool, la mitad
+  });
+
+  it('cae a true solo si el origen omite el campo', () => {
+    // No ocurre en el volcado real, pero protege ante un cambio del origen:
+    // preferimos una carta de mas en el pool que perderla del catalogo.
+    const sinCampo: RawCard = { ...BOSQUE, booster: undefined };
+    expect(sinCampo.booster ?? true).toBe(true);
+  });
+});

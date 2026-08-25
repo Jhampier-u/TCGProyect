@@ -2,7 +2,7 @@
 
 > **Rol:** Arquitecto Principal y Orquestador de Proyectos de Software.
 > **Producto:** Simulador de Apertura de Sobres + Constructor de Mazos unificado para MTG, Yu-Gi-Oh! y Pokémon TCG.
-> **Estado del Vault:** ACTIVO — última sesión S007 (2026-08-25)
+> **Estado del Vault:** ACTIVO — última sesión S008 (2026-08-25)
 
 ---
 
@@ -53,14 +53,16 @@ C:\ProyectoTCG\
 │   ├── 2026-08-25_S004_Monorepo_GameAdapter.md
 │   ├── 2026-08-25_S005_Git_RateLimitedClient.md
 │   ├── 2026-08-25_S006_YgoprodeckAdapter.md
-│   └── 2026-08-25_S007_ScryfallAdapter.md
+│   ├── 2026-08-25_S007_ScryfallAdapter.md
+│   └── 2026-08-25_S008_InBoosters.md
 │
 ├── db\                          <- esquema (fuera del Vault documental)
 │   ├── README.md
 │   └── migrations\
 │       ├── 0001_initial_schema.up.sql / .down.sql
 │       ├── 0002_seed_games_rarities.sql
-│       └── 0003_seed_pack_templates.sql
+│       ├── 0003_seed_pack_templates.sql
+│       └── 0004_add_in_boosters.{up,down}.sql
 │
 ├── packages\shared\             <- @tcg/shared: contrato de dominio
 │   └── src\
@@ -96,3 +98,6 @@ C:\ProyectoTCG\
   que reescriba el fichero puede destruirlo sin que se note. Los comentarios en español sí llevan
   acentos con normalidad.
 - **`npm audit` limpio** es criterio de aceptación de toda tarea que toque dependencias (P-011).
+- **Las migraciones publicadas son inmutables** (desde S008). Un cambio de esquema es siempre una
+  migración nueva, nunca una edición de una anterior. En S003 sí se editó la `0001`, cuando el
+  proyecto aún no tenía repositorio; ese ya no es el caso.

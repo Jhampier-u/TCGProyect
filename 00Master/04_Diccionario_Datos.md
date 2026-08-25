@@ -70,7 +70,9 @@ La **impresión física** en un set concreto. Es lo que un sobre entrega.
 | `image_local_path` | VARCHAR(512) NULL | **Ruta propia**, no URL externa (ver P-001) |
 | `image_source_url` | VARCHAR(512) NULL | Sólo para la descarga inicial |
 | `finishes` | JSON | `["nonfoil","foil"]`, `["normal","reverse"]`, etc. |
+| `in_boosters` | TINYINT(1) DEFAULT 1 | Si la impresión puede salir de un sobre. **El motor de sobres filtra por aquí** (P-014, migración 0004) |
 | **UNIQUE** | `(set_id, external_id)` | |
+| **ÍNDICE** | `idx_prints_pool (set_id, rarity_id, in_boosters, id)` | Covering para la precarga del pool |
 
 ### `rarities`
 Rareza **por juego** — no son intercambiables entre juegos.

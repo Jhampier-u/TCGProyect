@@ -1,6 +1,6 @@
 # Registro de Problemas
 
-**Última actualización:** 2026-08-25 (S007) · **Abiertos:** 5 · **Cerrados:** 8
+**Última actualización:** 2026-08-25 (S008) · **Abiertos:** 4 · **Cerrados:** 9
 
 Severidad: 🔴 crítica · 🟠 alta · 🟡 media · ⚪ baja
 
@@ -261,8 +261,8 @@ desaparecen sin un solo error en los logs. **Antes de elegir una clave natural, 
 
 ---
 
-## P-014 🔴 · El pool de sobres incluye cartas que NUNCA salen en un sobre
-**Estado:** ABIERTO — requiere decisión del usuario (migración de esquema)
+## P-014 ✅ CERRADO · El pool de sobres incluía cartas que NUNCA salen en un sobre
+**Estado:** CERRADO el 2026-08-25 (S008) — corregido en T-018
 **Origen:** análisis del volcado real de Scryfall al implementar T-011 (S007).
 
 **Detalle.** Scryfall marca cada impresión con un booleano `booster`: vale `false` en las cartas
@@ -289,5 +289,39 @@ creíble, que es exactamente el riesgo R-03.
 4. Mapearlo en los adaptadores: `raw.booster ?? true` (MTG). YGO y PTCG no exponen el campo, así
    que por defecto `true` — es correcto, ambos catálogos son casi enteramente de sobre.
 
-**Por qué no se ha hecho ya:** cambia el esquema y el contrato de dominio compartido, que va más
-allá de lo que pedía T-011. Se documenta con la medición para que la decisión sea informada.
+**APLICADO en S008 (T-018).** Migración `0004_add_in_boosters` + `DomainPrint.inBoosters` +
+mapeo en los dos adaptadores.
+
+### Lo que estábamos entregando mal, medido
+
+Ingesta real de tres sets con perfiles distintos:
+
+| Set | Catálogo | Pool de sobres | Descartado |
+|---|---|---|---|
+| Secret Lair Drop (`sld`) | 2706 | **0** | **100 %** |
+| Bloomburrow (`blb`) | 398 | 281 | 29,4 % |
+| The List (`plst`) | 5117 | 4321 | 15,6 % |
+
+Y el desglose de Bloomburrow por rareza es lo verdaderamente revelador:
+
+| Rareza | Pool antiguo | Pool correcto | Cartas imposibles |
+|---|---|---|---|
+| **rare** | 129 | **60** | **69** |
+| **mythic** | 45 | **20** | **25** |
+| common | 118 | 101 | 17 |
+| uncommon | 106 | 100 | 6 |
+
+**Más de la mitad del pool de raras era inalcanzable en un sobre real.** Ejemplos concretos que el
+simulador antiguo podía entregar como rara de Bloomburrow: *Sword of Vengeance* (#395),
+*Colossification* (#392), *Mind Spring* (#389) — números de coleccionista por encima del rango
+normal del set, todos ellos "Special Guests" que sólo aparecen en otros productos.
+
+### El índice sigue sirviendo a los dos casos
+- Con filtro: `Covering index lookup (set_id=1, rarity_id=3, in_boosters=1)`
+- Sin filtro (catálogo): `Covering index lookup (set_id=1, rarity_id=3)` — el prefijo de 2 columnas
+  sigue valiendo.
+
+### Riesgo residual documentado
+El rollback de la 0004 **pierde el dato**: al eliminar la columna y volver a crearla, todo queda a
+`DEFAULT 1`. Verificado (8221 de 8221 volvieron a 1). Queda avisado en el propio fichero `.down.sql`:
+tras un ciclo de rollback hay que **re-ingestar MTG**.

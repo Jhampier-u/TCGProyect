@@ -153,6 +153,11 @@ export class YgoprodeckAdapter implements GameAdapter<'YGO'> {
           rarityLabel: printing.set_rarity,
           imageSourceUrl: imageUrl,
           finishes: NON_FOIL_RARITIES.has(rarityCode) ? ['nonfoil'] : ['foil'],
+          // SUPOSICION, no dato: YGOPRODeck no marca esto por carta. Es correcta
+          // porque en Yu-Gi-Oh! la distincion es POR SET -- los Structure Deck,
+          // los tins y los promocionales son sets aparte, no cartas marcadas
+          // dentro de un set de sobres. Ver P-014.
+          inBoosters: true,
         };
       }
     }
