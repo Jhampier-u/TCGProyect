@@ -1,6 +1,6 @@
 # Registro de Problemas
 
-**Última actualización:** 2026-08-25 (S005) · **Abiertos:** 6 · **Cerrados:** 5
+**Última actualización:** 2026-08-25 (S006) · **Abiertos:** 5 · **Cerrados:** 7
 
 Severidad: 🔴 crítica · 🟠 alta · 🟡 media · ⚪ baja
 
@@ -94,9 +94,20 @@ set debe borrar sus plantillas) y además se ahorra almacenamiento.
 
 ---
 
-## P-007 🟠 · YGOPRODeck devuelve valores de rareza corruptos
-**Estado:** ABIERTO — contrato definido, pendiente de implementar en T-012
-**Origen:** muestreo real del set *Supreme Darkness* vía `cardinfo.php` el 2026-08-25.
+## P-007 ✅ CERRADO · YGOPRODeck devuelve valores de rareza corruptos
+**Estado:** CERRADO el 2026-08-25 (S006) — implementado y verificado en T-012
+**Origen:** muestreo vía `cardinfo.php` el 2026-08-25.
+
+> **CORRECCIÓN DE S003.** Aquí se escribió que la basura procedía del set *Supreme Darkness*.
+> Es **inexacto**. Al implementar T-012 se descubrió por qué: `card_sets` de una carta lista
+> **todas** sus impresiones en **todos** los sets, así que la respuesta de `?cardset=Supreme
+> Darkness` incluye entradas de otros sets. El muestreo de S003 contó rarezas sin filtrar.
+> Procedencia real de cada valor corrupto:
+> - `"2"` y `"3"` → sets *Legendary Modern Decks 2026* y *Legendary Arc-V Decks*
+> - `"PLatinum Secret Rare"` → set *Rarity Collection 5*
+>
+> Filtrando por `set_name = 'Supreme Darkness'`, ese set está limpio: 5 rarezas, todas válidas.
+> **La basura es real y P-007 sigue siendo válido**; sólo estaba mal atribuida.
 **Detalle:** junto a rarezas válidas, `card_sets[].set_rarity` devolvió basura:
 - `"PLatinum Secret Rare"` — errata de mayúsculas en el origen (L intercalada).
 - `"2"` y `"3"` — números sueltos que no son rarezas en absoluto.
@@ -110,8 +121,10 @@ distribuciones de sobre. Con un mapeo estricto que descarte lo desconocido, se h
 2. Valores numéricos o vacíos → se descartan y se cae a `common`, dejando aviso en el log.
 3. Cualquier otra rareza desconocida → se inserta al vuelo con `tier = 50`. **Nunca se pierde
    una carta por no reconocer su rareza.**
-**Verificación de QA:** ingestar *Supreme Darkness* y comprobar que no aparecen rarezas nuevas
-con `tier = 50` que sean variantes ortográficas de una ya existente.
+**Verificación (S006):** implementado en `YgoprodeckAdapter`. Tests con las cadenas reales:
+`"PLatinum Secret Rare"` → `platinum_secret_rare` (recuperada, sin aviso); `"2"` → `common` con
+aviso `invalid_rarity`, **sin perder la carta**. Ingesta real de *Supreme Darkness*: 125
+impresiones, 5 rarezas, **0 avisos**.
 
 ---
 
@@ -202,3 +215,29 @@ La interfaz `QuotaStore` ya está definida precisamente para poder sustituir la 
 tocar el cliente.
 **Mientras tanto:** es seguro para desarrollo y tests. **No arrancar la ingesta completa de Pokémon
 en producción hasta cerrar T-017.**
+
+---
+
+## P-013 ✅ CERRADO · `set_code` de YGOPRODeck no identifica una impresión
+**Estado:** CERRADO el 2026-08-25 (S006) — resuelto en el diseño de T-012
+**Origen:** inspección de la API real antes de escribir el adaptador.
+
+Dos colisiones distintas, ambas con capacidad de **perder datos en silencio**:
+
+**1. `set_code` se repite DENTRO de un set.** En *Supreme Darkness* hay **24 códigos duplicados**:
+la misma carta, el mismo `SUDA-EN049`, en dos rarezas (*Quarter Century Secret Rare* y *Secret
+Rare*). Son dos productos distintos: un sobre entrega uno u otro y un coleccionista los posee por
+separado. Con `external_id = set_code` y `UNIQUE (set_id, external_id)`, el `ON DUPLICATE KEY
+UPDATE` de la ingesta habría hecho que la segunda **sobrescribiera** a la primera.
+*Solución:* `externalId = "{set_code}::{rarityCode}"`. Verificado: 125 impresiones a partir de 101
+cartas conceptuales, **0 colisiones**.
+
+**2. `set_code` se repite ENTRE sets.** De los 1032 sets del catálogo, sólo 644 códigos son únicos.
+`JUMP` lo comparten **70 sets** distintos; `LART`, 65. Usarlo como `sets.external_id` habría
+colapsado esos 70 en una sola fila.
+*Solución:* `externalId = set_name`, que sí es único en los 1032 y además es la clave por la que se
+consulta `cardinfo.php?cardset=`.
+
+**Lección:** es el tercer caso de la misma familia (P-010 con Nidoran ♂/♀, y ahora estos dos). El
+patrón se repite: una clave natural que *parece* única, un `ON DUPLICATE KEY UPDATE`, y datos que
+desaparecen sin un solo error en los logs. **Antes de elegir una clave natural, contarla.**

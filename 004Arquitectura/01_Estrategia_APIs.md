@@ -23,6 +23,17 @@ Descargar `default_cards` de `/bulk-data` (un fichero JSON de varios cientos de 
 en **streaming** (`stream-json` / parser incremental), nunca `JSON.parse` completo en memoria.
 Esto reduce la ingesta de MTG de ~600 peticiones paginadas a **2 peticiones**.
 
+### YGO → particularidades del origen (verificadas en T-012, S006)
+
+| Hecho del origen | Consecuencia de diseño |
+|---|---|
+| `card_sets` de una carta lista sus impresiones en **todos** los sets | El adaptador **debe** filtrar por `set_name`; si no, la ingesta de un set contamina a los demás |
+| `set_code` se repite **dentro** de un set (24 casos en *Supreme Darkness*) | `card_prints.external_id` = `{set_code}::{rarityCode}` |
+| `set_code` se repite **entre** sets (`JUMP` en 70 sets; 1032 sets, 644 códigos) | `sets.external_id` = `set_name`, único en los 1032 |
+| `def` es `null` en monstruos Link | Tercer caso numérico distinto de `"?"` y de ausente |
+| Sets sin cartas responden **HTTP 400**, no 404 ni 200 vacío | Se trata como aviso, no como avería |
+| La rareza determina el acabado (no hay campo propio) | `finishes` se deriva de la rareza |
+
 ### YGO → **una descarga completa, luego incremental**
 `cardinfo.php` sin parámetros devuelve el catálogo entero de una vez. Se ingesta completo en la
 carga inicial y después se refresca por `?misc=yes&startdate=` o simplemente semanalmente.

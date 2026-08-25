@@ -1,6 +1,6 @@
 # Tareas Pendientes
 
-**Última actualización:** 2026-08-25 (S005) · **Total abiertas:** 9
+**Última actualización:** 2026-08-25 (S006) · **Total abiertas:** 8
 
 Leyenda de prioridad: 🔴 crítica · 🟠 alta · 🟡 media · ⚪ baja
 
@@ -21,7 +21,6 @@ Sin tareas abiertas. T-006, T-007 y T-008 cerradas y verificadas en MySQL 8.0.42
 | ID | Tarea | Agente | Prio | Depende de |
 |---|---|---|---|---|
 | T-011 | `ScryfallAdapter` con lectura en streaming de `/bulk-data` | Backend | 🔴 | ✅ desbloqueada |
-| T-012 | `YgoprodeckAdapter` (`cardinfo.php` + mapeo de banlist + normalización P-007) | Backend | 🔴 | ✅ desbloqueada |
 | T-013 | `PokemonTcgAdapter` (paginación 250 + control de cuota diaria) | Backend | 🔴 | ✅ desbloqueada |
 | T-014 | Job `image-harvest`: descarga, WebP, almacenamiento local | Backend | 🔴 | T-011..T-013 |
 

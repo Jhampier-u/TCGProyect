@@ -125,8 +125,16 @@ export function toStringArray(raw: unknown): string[] | undefined {
  * `JSON.stringify` ya las omite, pero esta funcion permite comparar objetos
  * game_data en los tests y garantiza que no se escriben claves vacias si el
  * driver de MySQL serializa por su cuenta.
+ *
+ * SOBRE LA FIRMA: el parametro es un tipo mapeado homomorfico y no `T` a secas.
+ * Con `exactOptionalPropertyTypes: true`, TypeScript distingue "clave ausente"
+ * de "clave presente con valor undefined", asi que un objeto construido a base
+ * de `toJsonNumber(...)` (que devuelve `number | undefined`) NO es asignable a
+ * un tipo cuyas propiedades opcionales son `number`. El tipo mapeado admite
+ * explicitamente el undefined en la entrada, que es justo lo que esta funcion
+ * se encarga de eliminar.
  */
-export function stripUndefined<T extends Record<string, unknown>>(obj: T): Partial<T> {
+export function stripUndefined<T extends object>(obj: { [K in keyof T]: T[K] | undefined }): Partial<T> {
   const out: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(obj)) {
     if (value !== undefined) out[key] = value;

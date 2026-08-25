@@ -52,14 +52,21 @@ export interface YgoBanlistInfo {
 export interface YgoGameData {
   attribute?: string;
   race?: string;
+  /**
+   * Para monstruos Xyz este campo contiene el RANGO, no el nivel: YGOPRODeck
+   * reutiliza `level` para ambos y no expone `rank` por separado.
+   */
   level?: number;
   rank?: number;
   link_val?: number;
   link_markers?: string[];
   /** Omitido cuando la API devuelve "?" (ATK variable). Ver `toJsonNumber`. */
   atk?: number;
+  /** Omitido en monstruos Link, donde la API devuelve `null`. */
   def?: number;
   scale?: number;
+  /** Arquetipo. Es el filtro mas usado al construir mazos de Yu-Gi-Oh!. */
+  archetype?: string;
   banlist_info?: YgoBanlistInfo;
 }
 

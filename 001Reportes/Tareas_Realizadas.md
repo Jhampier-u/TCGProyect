@@ -1,6 +1,6 @@
 # Tareas Realizadas
 
-**Última actualización:** 2026-08-25 (S005)
+**Última actualización:** 2026-08-25 (S006)
 
 | ID | Tarea | Agente | Fecha | Sesión | Evidencia |
 |---|---|---|---|---|---|
@@ -20,3 +20,5 @@
 | T-001 | `git init` + `.gitattributes` + commit inicial (`bc7eb7c`, 49 ficheros) | Arquitectura | 2026-08-25 | S005 | `git log` |
 | T-009 | `RateLimitedClient`: cola por host, backoff con jitter, `Retry-After`, cortocircuito, cuota diaria | Backend | 2026-08-25 | S005 | `apps/api/src/http/` |
 | T-009v | Verificación: 38/38 tests con reloj virtual + prueba de humo contra Scryfall y YGOPRODeck reales | QA | 2026-08-25 | S005 | Ver S005 en `005Registro` |
+| T-012 | `YgoprodeckAdapter`: sets, impresiones, banlist, normalización de rarezas y acabados | Backend | 2026-08-25 | S006 | `apps/api/src/adapters/ygoprodeck/` |
+| T-012v | Verificación: 18 tests + ingesta real de *Supreme Darkness* insertada en MySQL 8.0.42 | QA | 2026-08-25 | S006 | Ver S006 en `005Registro` |
