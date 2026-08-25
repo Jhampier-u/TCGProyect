@@ -54,6 +54,13 @@ export interface CardPage {
 }
 
 export interface SetSummary {
+  /**
+   * Id numerico. Se expone porque `POST /api/packs/open` lo necesita y es lo
+   * unico que identifica un set de forma global: `externalId` solo es unico
+   * DENTRO de un juego. Sin esto, el frontend no puede enlazar el selector de
+   * set con la apertura de sobres.
+   */
+  id: number;
   externalId: string;
   code: string;
   name: string;
@@ -79,10 +86,10 @@ export class CatalogQueryRepository {
 
   async listSets(game: GameCode): Promise<SetSummary[]> {
     const rows = await this.db.select<{
-      external_id: string; code: string; name: string; released_at: string | null;
+      id: number; external_id: string; code: string; name: string; released_at: string | null;
       card_count: number; icon_url: string | null; pool_size: number;
     }>(
-      `SELECT s.external_id, s.code, s.name, s.released_at, s.card_count, s.icon_url,
+      `SELECT s.id, s.external_id, s.code, s.name, s.released_at, s.card_count, s.icon_url,
               COUNT(p.id) AS pool_size
        FROM sets s
        LEFT JOIN card_prints p ON p.set_id = s.id AND p.in_boosters = 1
@@ -92,6 +99,7 @@ export class CatalogQueryRepository {
       [GAME_IDS[game]],
     );
     return rows.map((r) => ({
+      id: Number(r.id),
       externalId: r.external_id,
       code: r.code,
       name: r.name,

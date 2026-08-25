@@ -71,12 +71,18 @@ export const LIST_SETS = {
           items: {
             type: 'object',
             properties: {
+              id: { type: 'integer' },
               externalId: { type: 'string' },
               code: { type: 'string' },
               name: { type: 'string' },
               releasedAt: { type: ['string', 'null'] },
               cardCount: { type: 'integer' },
-              iconUrl: { type: ['string', 'null'] },
+              // `iconUrl` NO se expone. `sets.icon_url` guarda la URL del
+              // ORIGEN (images.ygoprodeck.com), y servirla al navegador es
+              // exactamente el hotlinking que castiga con lista negra de IP
+              // (P-001). El job image-harvest cubre las cartas pero no los
+              // iconos de set; hasta que lo haga, este campo se queda dentro.
+              // Ver P-022 y T-035.
               poolSize: { type: 'integer' },
             },
           },

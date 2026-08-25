@@ -2,7 +2,7 @@
 
 > **Rol:** Arquitecto Principal y Orquestador de Proyectos de Software.
 > **Producto:** Simulador de Apertura de Sobres + Constructor de Mazos unificado para MTG, Yu-Gi-Oh! y Pokémon TCG.
-> **Estado del Vault:** ACTIVO — última sesión S015 (2026-08-25)
+> **Estado del Vault:** ACTIVO — última sesión S016 (2026-08-25)
 
 ---
 
@@ -61,7 +61,8 @@ C:\ProyectoTCG\
 │   ├── 2026-08-25_S012_MotorDeSobres.md
 │   ├── 2026-08-25_S013_ApiCatalogo.md
 │   ├── 2026-08-25_S014_CuentasYColeccion.md
-│   └── 2026-08-25_S015_PlantillaYgoModerna.md
+│   ├── 2026-08-25_S015_PlantillaYgoModerna.md
+│   └── 2026-08-25_S016_FrontendSobrio.md
 │
 ├── db\                          <- esquema (fuera del Vault documental)
 │   ├── README.md
@@ -107,6 +108,9 @@ C:\ProyectoTCG\
 │           ├── scryfall\       ScryfallAdapter + lector JSONL gz (T-011)
 │           └── pokemontcg\     PokemonTcgAdapter (T-013)
 ├── apps\web\                    <- @tcg/web (Vite + React)
+│   └── src│       ├── lib\   api.ts (cliente) · auth.tsx (sesion)
+│       ├── pages\ Catalogo · Acceso · Sobres · Coleccion
+│       └── components\ CardTile · styles.css
 └── package.json                 <- npm workspaces
 ```
 

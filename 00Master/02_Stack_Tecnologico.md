@@ -3,11 +3,11 @@
 | Capa | Tecnología | Estado |
 |---|---|---|
 | Frontend | React 18 + TypeScript + Vite | CONFIRMADO |
-| Estado servidor | TanStack Query v5 | PROPUESTO |
-| Estado cliente | Zustand | PROPUESTO |
-| Estilos | TailwindCSS + CSS Modules para animaciones | PROPUESTO |
+| Estado servidor | TanStack Query v5 | ✅ IMPLEMENTADO (T-038) |
+| Estado cliente | ~~Zustand~~ → contexto de React | ✅ Basta para un token; se revisará si el estado crece |
+| Estilos | ~~TailwindCSS~~ → CSS plano con variables | ✅ IMPLEMENTADO (T-038). Menos configuración para una interfaz sobria; Tailwind sigue siendo opción si crece |
 | Animación de sobres | Framer Motion | PROPUESTO |
-| Routing | React Router v6 | PROPUESTO |
+| Routing | React Router v7 | ✅ IMPLEMENTADO (T-038) |
 | Backend | **Node.js + TypeScript** | ✅ CONFIRMADO (ADR-001, S002) |
 | Base de datos | MySQL 8.0.17+ (InnoDB, `utf8mb4_0900_ai_ci`) | ✅ CONFIRMADO |
 | Driver / acceso a datos | `mysql2` + SQL plano, sin ORM (ADR-006) | ✅ IMPLEMENTADO (T-020) |

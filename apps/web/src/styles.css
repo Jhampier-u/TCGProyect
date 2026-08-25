@@ -1,0 +1,220 @@
+/*
+ * Estilos de ProyectoTCG.
+ *
+ * CSS plano y no TailwindCSS. `02_Stack_Tecnologico.md` proponia Tailwind, pero
+ * estaba marcado como PROPUESTO y no CONFIRMADO, asi que no se contradice
+ * ninguna decision. El motivo: para esta primera pasada sobria, un fichero
+ * organizado con variables produce menos configuracion, menos dependencias y un
+ * diff mas legible que montar Tailwind. Si la interfaz crece, Tailwind se puede
+ * introducir despues sin tirar nada.
+ */
+
+:root {
+  --fondo: #0f1115;
+  --fondo-alt: #171a21;
+  --superficie: #1e222b;
+  --borde: #2b303b;
+  --texto: #e6e8ec;
+  --texto-tenue: #9aa1ae;
+  --acento: #e0b450;
+  --acento-tenue: #7a6229;
+  --peligro: #d9534f;
+  --exito: #4f9d69;
+
+  --radio: 8px;
+  --fuente: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--fondo);
+  color: var(--texto);
+  font-family: var(--fuente);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+a { color: var(--acento); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* ------------------------------------------------------------------ layout */
+
+.cabecera {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 12px 24px;
+  background: var(--fondo-alt);
+  border-bottom: 1px solid var(--borde);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.marca { font-weight: 700; font-size: 17px; color: var(--acento); }
+.nav { display: flex; gap: 18px; }
+.nav a { color: var(--texto-tenue); font-size: 14px; }
+.nav a.activo { color: var(--texto); border-bottom: 2px solid var(--acento); padding-bottom: 2px; }
+.cabecera-derecha { margin-left: auto; display: flex; align-items: center; gap: 12px; font-size: 14px; }
+
+main { max-width: 1180px; margin: 0 auto; padding: 24px; }
+h1 { font-size: 22px; margin: 0 0 4px; }
+h2 { font-size: 17px; margin: 24px 0 10px; }
+.subtitulo { color: var(--texto-tenue); font-size: 14px; margin: 0 0 20px; }
+
+/* ----------------------------------------------------------------- filtros */
+
+.filtros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+  padding: 14px;
+  background: var(--fondo-alt);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+}
+
+input, select, button {
+  font: inherit;
+  color: var(--texto);
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  padding: 8px 10px;
+}
+input:focus, select:focus { outline: 2px solid var(--acento-tenue); outline-offset: 1px; }
+input { min-width: 200px; }
+
+button {
+  cursor: pointer;
+  background: var(--superficie);
+  transition: background 120ms, border-color 120ms;
+}
+button:hover:not(:disabled) { border-color: var(--acento-tenue); }
+button:disabled { opacity: 0.45; cursor: not-allowed; }
+button.primario { background: var(--acento); color: #1a1508; border-color: var(--acento); font-weight: 600; }
+button.primario:hover:not(:disabled) { filter: brightness(1.08); }
+
+/* ------------------------------------------------------------------ cartas */
+
+.rejilla {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 14px;
+}
+
+.carta {
+  background: var(--fondo-alt);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.carta-imagen {
+  aspect-ratio: 245 / 350;
+  background: var(--superficie);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.carta-imagen img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.carta-imagen .sin-imagen {
+  color: var(--texto-tenue);
+  font-size: 11px;
+  text-align: center;
+  padding: 8px;
+}
+
+.carta-pie { padding: 8px 9px; }
+.carta-nombre {
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.3;
+  margin-bottom: 4px;
+  /* Los nombres de carta son largos y de longitud muy variable: sin esto la
+     rejilla se descuadra al primer "A Bao A Qu, the Lightless Shadow". */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 32px;
+}
+.carta-meta { font-size: 11px; color: var(--texto-tenue); display: flex; justify-content: space-between; gap: 6px; }
+
+.etiqueta {
+  display: inline-block;
+  font-size: 10.5px;
+  padding: 1px 6px;
+  border-radius: 20px;
+  border: 1px solid var(--borde);
+  background: var(--superficie);
+  white-space: nowrap;
+}
+.etiqueta.nueva { border-color: var(--exito); color: var(--exito); }
+.etiqueta.foil { border-color: var(--acento); color: var(--acento); }
+.etiqueta.cantidad { border-color: var(--acento-tenue); }
+
+/* ------------------------------------------------------------ formulario */
+
+.tarjeta {
+  background: var(--fondo-alt);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  padding: 22px;
+}
+.formulario { max-width: 380px; margin: 40px auto; }
+.campo { display: flex; flex-direction: column; gap: 5px; margin-bottom: 14px; }
+.campo label { font-size: 13px; color: var(--texto-tenue); }
+.campo input { min-width: 0; width: 100%; }
+
+.aviso {
+  padding: 9px 12px;
+  border-radius: var(--radio);
+  font-size: 13.5px;
+  margin-bottom: 14px;
+  border: 1px solid;
+}
+.aviso.error { border-color: var(--peligro); color: #ffb3b1; background: #2a1414; }
+.aviso.info { border-color: var(--borde); color: var(--texto-tenue); background: var(--superficie); }
+
+/* -------------------------------------------------------------- completitud */
+
+.completitud { display: flex; flex-direction: column; gap: 8px; }
+.fila-set {
+  display: grid;
+  grid-template-columns: 70px 1fr 110px;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 12px;
+  background: var(--fondo-alt);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  font-size: 13px;
+}
+.barra { height: 8px; background: var(--superficie); border-radius: 4px; overflow: hidden; }
+.barra > div { height: 100%; background: var(--acento); transition: width 300ms; }
+.fila-set .cifras { text-align: right; color: var(--texto-tenue); font-variant-numeric: tabular-nums; }
+
+/* ------------------------------------------------------------------- varios */
+
+.resumen { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 20px; }
+.dato {
+  background: var(--fondo-alt);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  padding: 12px 18px;
+  min-width: 120px;
+}
+.dato .valor { font-size: 22px; font-weight: 700; color: var(--acento); font-variant-numeric: tabular-nums; }
+.dato .etiqueta-dato { font-size: 12px; color: var(--texto-tenue); }
+
+.vacio { color: var(--texto-tenue); padding: 36px; text-align: center; }
+.centrado { display: flex; justify-content: center; margin: 22px 0; }
+.sobre-cabecera { display: flex; align-items: baseline; gap: 12px; margin: 18px 0 10px; }
+.sobre-cabecera .semilla { font-family: ui-monospace, monospace; font-size: 11px; color: var(--texto-tenue); }

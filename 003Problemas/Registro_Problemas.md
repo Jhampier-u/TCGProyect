@@ -1,6 +1,6 @@
 # Registro de Problemas
 
-**Última actualización:** 2026-08-25 (S015) · **Abiertos:** 5 · **Cerrados:** 15
+**Última actualización:** 2026-08-25 (S016) · **Abiertos:** 5 · **Cerrados:** 16
 
 Severidad: 🔴 crítica · 🟠 alta · 🟡 media · ⚪ baja
 
@@ -587,3 +587,38 @@ que P-017: **el bug que sólo aparece a escala**.
 
 **Comprobación añadida:** el recorrido completo verifica `impresiones vistas == COUNT(*)` y ausencia
 de duplicados. Cualquier regresión futura de la paginación falla ahí.
+
+---
+
+## P-022 ✅ CERRADO · La API filtraba 1032 URLs externas en `iconUrl`
+**Estado:** CERRADO el 2026-08-25 (S016)
+**Origen:** **arrancar el servidor de verdad y mirar la respuesta.**
+
+**Detalle.** `GET /api/games/:game/sets` devolvía `iconUrl` con el valor de `sets.icon_url`, que es la
+URL del **origen**:
+
+```
+"iconUrl": "https://images.ygoprodeck.com/images/sets/SUDA.jpg"
+```
+
+Con 1032 sets de Yu-Gi-Oh!, un frontend que pintara iconos de set haría **1032 peticiones de imagen
+a YGOPRODeck por cada usuario que abriera el selector**. Es exactamente el hotlinking que castiga con
+lista negra de IP permanente — el riesgo que P-001 llevaba quince sesiones conteniendo.
+
+**Por qué ADR-007 no lo impidió.** La serialización por esquema sólo elimina lo **no declarado**, y
+`iconUrl` **sí estaba declarado**. La garantía estructural protege de los descuidos, no de haber
+declarado el campo equivocado a propósito.
+
+**Por qué el test de S013 no lo detectó.** El test *"ninguna respuesta contiene http"* recorría
+`/api/games/MTG/sets`… pero el catálogo falso devolvía `iconUrl: null`. **El test pasaba sin
+comprobar nada.** Un test verde que no ejercita el caso es peor que no tenerlo: da confianza falsa.
+
+**Solución:** `iconUrl` deja de exponerse. El job `image-harvest` cubre las cartas pero no los iconos
+de set; hasta que lo haga, el campo se queda dentro de la API. Registrado como **T-035**.
+
+**Y el test ya no puede pasar de forma vacua:** la fixture devuelve ahora una `iconUrl` real de
+`images.ygoprodeck.com`, así que si alguien vuelve a exponerla, el test falla.
+
+**Lección:** es la tercera vez que un problema sólo aparece al ejecutar de verdad (P-017 a escala,
+P-020 recorriendo el catálogo entero, y éste al arrancar el servidor). Los dobles de prueba son útiles
+para la lógica, pero **la fidelidad de sus datos determina lo que el test puede detectar**.

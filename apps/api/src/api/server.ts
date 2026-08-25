@@ -1,6 +1,7 @@
 import Fastify, { type FastifyInstance } from 'fastify';
 import fastifyJwt from '@fastify/jwt';
 import fastifyRateLimit from '@fastify/rate-limit';
+import fastifyStatic from '@fastify/static';
 import type { GameCode } from '@tcg/shared';
 import type { CatalogQueryRepository } from '../db/catalog-query-repository.js';
 import type { CollectionRepository } from '../db/collection-repository.js';
@@ -18,6 +19,12 @@ import {
 export interface ApiOptions {
   catalog: CatalogQueryRepository;
   logger?: boolean;
+  /**
+   * Raiz del almacen de imagenes re-hospedadas. Si se indica, se sirven en
+   * `/images/...` — que es la UNICA via por la que el navegador debe ver una
+   * carta. Nunca se le da la URL del origen (P-001).
+   */
+  storagePath?: string;
   /** Presentes activan cuentas, sobres y coleccion (H6). Sin ellos, solo catalogo. */
   auth?: {
     users: UserRepository;
@@ -144,6 +151,20 @@ export async function buildFullServer(options: ApiOptions & { auth: NonNullable<
     max: 300,
     timeWindow: '1 minute',
   });
+
+  if (options.storagePath) {
+    // Las imagenes las servimos NOSOTROS desde disco. Es la contrapartida del
+    // job image-harvest: se descargan una vez y se re-hospedan, y el navegador
+    // nunca toca images.ygoprodeck.com (P-001).
+    await app.register(fastifyStatic, {
+      root: options.storagePath,
+      prefix: '/images/',
+      // Las imagenes de carta no cambian nunca: una vez cosechadas son
+      // inmutables. Un ano de cache evita miles de peticiones condicionales.
+      maxAge: '365d',
+      immutable: true,
+    });
+  }
 
   await app.register(fastifyJwt, {
     secret: options.auth.jwtSecret,

@@ -20,8 +20,13 @@ function fakeCatalog(over: Partial<CatalogQueryRepository> = {}): {
     listGames: async () => [{ code: 'MTG', name: 'Magic: The Gathering' }],
     listSets: async () => [
       {
-        externalId: 'blb', code: 'BLB', name: 'Bloomburrow',
-        releasedAt: '2024-08-02', cardCount: 398, iconUrl: null, poolSize: 281,
+        id: 1, externalId: 'blb', code: 'BLB', name: 'Bloomburrow',
+        releasedAt: '2024-08-02', cardCount: 398,
+        // NO nulo a proposito: con `iconUrl: null` el test de "ninguna URL
+        // externa" pasaba sin comprobar nada, y por eso no detecto la fuga
+        // real de P-022. La fixture ahora reproduce lo que la base devuelve.
+        iconUrl: 'https://images.ygoprodeck.com/images/sets/BLB.jpg',
+        poolSize: 281,
       },
     ],
     listRarities: async () => [{ code: 'common', label: 'common', tier: 1 }],

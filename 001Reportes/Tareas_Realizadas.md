@@ -1,6 +1,6 @@
 # Tareas Realizadas
 
-**Última actualización:** 2026-08-25 (S015)
+**Última actualización:** 2026-08-25 (S016)
 
 | ID | Tarea | Agente | Fecha | Sesión | Evidencia |
 |---|---|---|---|---|---|
@@ -50,3 +50,7 @@
 | T-033v | Verificación: 22 tests de seguridad + ciclo completo real (registro → 103 sobres → colección) | QA / Seguridad | 2026-08-25 | S014 | Ver S014 en `005Registro` |
 | T-024 | Migración 0006: plantilla de sobre moderna de Yu-Gi-Oh! (8 comunes + hit con QCSR) | Base de Datos | 2026-08-25 | S015 | `db/migrations/0006_*` |
 | T-024v | Verificación: 2.000 sobres reales · completitud 80 % → **100 %** · QCSR 0/25 → **25/25** | QA | 2026-08-25 | S015 | Ver S015 en `005Registro` |
+| T-036 | Arranque real del servidor: `config.ts` con validación estricta + `index.ts` que migra y escucha | Backend | 2026-08-25 | S016 | `apps/api/src/index.ts` |
+| T-037 | Servido de imágenes propias en `/images/` con caché inmutable de 1 año | Backend | 2026-08-25 | S016 | `apps/api/src/api/server.ts` |
+| T-038 | **Frontend sobrio** (H5): catálogo, acceso, apertura de sobres y colección | Frontend | 2026-08-25 | S016 | `apps/web/src/` |
+| T-038v | Verificación en navegador real: ciclo completo y 0 URLs externas en el HTML renderizado | QA / Seguridad | 2026-08-25 | S016 | Ver S016 en `005Registro` |

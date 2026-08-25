@@ -16,3 +16,6 @@ storage/
 # sistema
 .DS_Store
 Thumbs.db
+
+# Configuracion local del entorno de desarrollo de Claude Code
+.claude/launch.json

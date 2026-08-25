@@ -2,7 +2,7 @@
 
 **Proyecto:** ProyectoTCG (nombre en clave: *TriplePack*)
 **Fecha de inicio:** 2026-08-25
-**Estado global:** `FASE 4 — INTERFAZ` · **H1, H2, H3, H4 y H6 completados** · el backend está funcionalmente completo · siguiente frente: **H5 (frontend)**
+**Estado global:** `FASE 4 — INTERFAZ` · **el producto funciona de punta a punta en el navegador** · siguiente frente: la animación de apertura (T-039)
 **Repositorio:** `C:\ProyectoTCG` — Git inicializado en `main`, commit inicial `bc7eb7c` (2026-08-25)
 
 ## Estado por área
@@ -12,7 +12,7 @@
 | Arquitectura | Definida a nivel macro (ADR-002..005) | Agente Arquitectura |
 | Base de datos | **H1 cerrado**: DDL + seeds verificados en MySQL 8.0.42 (T-006/007/008) | Agente Base de Datos |
 | Backend | Ingesta completa: 3 adaptadores + cliente + job de imágenes | Agente Backend |
-| Frontend | Esqueleto compilando. **Es lo único que falta**: la API ya sirve el producto entero | Agente Frontend |
+| Frontend | **Interfaz sobria funcionando**: catálogo, acceso, sobres y colección. Falta la animación | Agente Frontend |
 | Ingesta de APIs | **Completa y verificada extremo a extremo**: migrador → orquestador → catálogo → imágenes | Agente Backend |
 | QA | Sin iniciar | Agente QA |
 | Seguridad | 0 vulnerabilidades · Argon2id + JWT (ADR-008) · sin enumeración de usuarios · límite de intentos | Agente Seguridad |
