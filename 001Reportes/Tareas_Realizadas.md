@@ -1,6 +1,6 @@
 # Tareas Realizadas
 
-**Última actualización:** 2026-08-25 (S016)
+**Última actualización:** 2026-08-25 (S017)
 
 | ID | Tarea | Agente | Fecha | Sesión | Evidencia |
 |---|---|---|---|---|---|
@@ -54,3 +54,5 @@
 | T-037 | Servido de imágenes propias en `/images/` con caché inmutable de 1 año | Backend | 2026-08-25 | S016 | `apps/api/src/api/server.ts` |
 | T-038 | **Frontend sobrio** (H5): catálogo, acceso, apertura de sobres y colección | Frontend | 2026-08-25 | S016 | `apps/web/src/` |
 | T-038v | Verificación en navegador real: ciclo completo y 0 URLs externas en el HTML renderizado | QA / Seguridad | 2026-08-25 | S016 | Ver S016 en `005Registro` |
+| T-039 | **Animación de apertura**: revelado carta a carta, orden por escasez, foil y reversos en CSS | Frontend | 2026-08-25 | S017 | `apps/web/src/components/PackReveal.tsx` |
+| T-039v | Verificación: 6 tests del orden de revelado + comprobación en navegador de estado, orden y foil | QA | 2026-08-25 | S017 | Ver S017 en `005Registro` |

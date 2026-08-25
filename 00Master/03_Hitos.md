@@ -7,7 +7,7 @@
 | **H2** | Ingesta | Los 3 conectores pueblan `sets`/`cards`/`card_prints`; catálogo consultable | ✅ **COMPLETADO** (3 adaptadores + cliente + job de imágenes, todos verificados contra los orígenes reales) |
 | **H3** | API de catálogo | `GET /api/cards` con búsqueda, filtros y paginación keyset | ✅ **COMPLETADO** (6 endpoints, Fastify, verificados sobre el catálogo real) |
 | **H4** | Motor de sobres | `POST /api/packs/open` determinista por seed + plantillas por set | ✅ **COMPLETADO** — el endpoint quedó expuesto y protegido en H6 |
-| **H5** | Frontend sobres | Animación de apertura + reveal + push a colección | 🟡 **INTERFAZ SOBRIA ✅** verificada en navegador · falta la animación (T-039) |
+| **H5** | Frontend sobres | Animación de apertura + reveal + push a colección | ✅ **COMPLETADO** (revelado carta a carta, orden por escasez, foil, movimiento reducido) |
 | **H6** | Cuentas y colección | Auth, colección persistente, completitud por set | ✅ **COMPLETADO** (Argon2id + JWT, 9 endpoints, verificado con 103 sobres reales) |
 | **H7** | Deckbuilder | CRUD de mazos + validadores por juego + import/export | ⚪ PENDIENTE |
 | **H8** | Endurecimiento | Suite Cypress verde, auditoría de seguridad, rate limiting propio | ⚪ PENDIENTE |

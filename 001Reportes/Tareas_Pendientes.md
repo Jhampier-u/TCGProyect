@@ -26,8 +26,8 @@ hechos y verificados contra los orígenes reales.
 
 | ID | Tarea | Agente | Prio |
 |---|---|---|---|
+| T-040 | Verificar el **volteo** de las cartas con el panel del navegador visible o en Cypress (H8). En S017 no se pudo: `requestAnimationFrame` estaba parado (0 fotogramas en 500 ms), así que ninguna animación podía avanzar. La lógica sí quedó verificada | QA | 🟡 |
 | T-035 | Cosechar también los **iconos de set**. Hoy `sets.icon_url` apunta al origen y por eso la API no lo expone (ver **P-022**); sin iconos propios, el selector de sets no puede mostrarlos | Backend | 🟡 |
-| T-039 | **Animación de apertura** con Framer Motion: revelado carta a carta. La pasada sobria de S016 dejó el circuito verificado; falta la experiencia que `01_Producto.md` describe como núcleo | Frontend | 🟠 |
 | T-034 | Plantillas por época para los sets de Yu-Gi-Oh! **anteriores a 2020**. Hoy topan la completitud en ~70,7 % (ver **P-021**). La tabla histórica de Yugipedia ya está capturada en P-019; el blóqueo real es que hace falta un paso de asignación de plantilla posterior a la ingesta | Base de Datos / Backend | ⚪ |
 | T-022 | Guion `db:migrate` que cree la base de datos si falta y ejecute el migrador. Hoy ese paso previo es manual (ver S011) | Backend | 🟡 |
 | T-023 | Revisar el orden de `findPendingSets`: `released_at DESC` hace que una ejecución acotada procese primero sets **futuros** y promocionales en vez de los jugables (ver S011) | Backend | ⚪ |

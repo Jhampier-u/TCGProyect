@@ -3,14 +3,13 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { GameCode } from '@tcg/shared';
 import { api, ApiError, type PackOpening } from '../lib/api.js';
 import { useAuth } from '../lib/auth.js';
-import { CardTile } from '../components/CardTile.js';
+import { PackReveal } from '../components/PackReveal.js';
 
 /**
  * Apertura de sobres.
  *
- * Esta pantalla es, deliberadamente, sobria: muestra las cartas de golpe. La
- * animacion de revelado carta a carta llega en una pasada posterior, sobre un
- * circuito que ya sabemos que funciona.
+ * Las cartas llegan boca abajo y se revelan una a una, ordenadas de menos a mas
+ * escasa: la gracia de abrir un sobre real esta en dejar la buena para el final.
  */
 export function Sobres() {
   const { token } = useAuth();
@@ -25,6 +24,15 @@ export function Sobres() {
     queryKey: ['sets', game],
     queryFn: () => api.sets(game).then((r) => r.data),
   });
+
+  // Los `tier` de rareza deciden el orden de revelado. Se reutiliza el endpoint
+  // que ya existe en vez de anadir el tier a la respuesta de apertura: el dato
+  // es del catalogo, no de la apertura.
+  const rarezas = useQuery({
+    queryKey: ['rarezas', game],
+    queryFn: () => api.rarities(game).then((r) => r.data),
+  });
+  const tiers = new Map((rarezas.data ?? []).map((r) => [r.code, r.tier]));
 
   // Solo se ofrecen sets ABRIBLES. `poolSize` cuenta las impresiones con
   // `in_boosters = 1`: un set 100% promocional tiene 0 y abrirlo devolveria un
@@ -106,31 +114,21 @@ export function Sobres() {
       {error && <div className="aviso error">{error}</div>}
 
       {aperturas.length === 0 && !abrir.isPending && (
-        <div className="vacio">Elige un set y pulsa Abrir.</div>
+        <div className="vacio">
+          Elige un set y pulsa Abrir. Las cartas llegan boca abajo: pulsa cada una
+          para darle la vuelta.
+        </div>
       )}
 
       {aperturas.map((a) => (
-        <section key={a.openingId}>
-          <div className="sobre-cabecera">
-            <h2 style={{ margin: 0 }}>Sobre #{a.openingId}</h2>
-            <span className="semilla">semilla {a.seed}</span>
-            <span className="etiqueta nueva">
-              {a.cards.filter((c) => c.isNew).length} nuevas
-            </span>
-          </div>
-          <div className="rejilla">
-            {a.cards.map((c) => (
-              <CardTile
-                key={`${a.openingId}-${c.slotIndex}`}
-                name={c.name}
-                rarity={c.rarity}
-                imagePath={c.imagePath}
-                isNew={c.isNew}
-                finish={c.finish}
-              />
-            ))}
-          </div>
-        </section>
+        <PackReveal
+          key={a.openingId}
+          game={game}
+          cards={a.cards}
+          tiers={tiers}
+          openingId={a.openingId}
+          seed={a.seed}
+        />
       ))}
     </>
   );

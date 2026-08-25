@@ -218,3 +218,110 @@ button.primario:hover:not(:disabled) { filter: brightness(1.08); }
 .centrado { display: flex; justify-content: center; margin: 22px 0; }
 .sobre-cabecera { display: flex; align-items: baseline; gap: 12px; margin: 18px 0 10px; }
 .sobre-cabecera .semilla { font-family: ui-monospace, monospace; font-size: 11px; color: var(--texto-tenue); }
+
+/* ============================================================ revelado (T-039)
+ *
+ * El volteo es 3D real (rotateY sobre un contenedor con perspectiva), no un
+ * cruce de opacidades: la diferencia se nota, y es lo que hace que parezca una
+ * carta y no dos imagenes intercambiandose.
+ */
+
+.revelable {
+  background: var(--fondo-alt);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.volteador {
+  all: unset;
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 245 / 350;
+  cursor: pointer;
+  transform-style: preserve-3d;
+  /* Sin perspectiva el rotateY se ve como un aplastamiento horizontal. */
+  perspective: 900px;
+}
+.volteador:focus-visible { outline: 2px solid var(--acento); outline-offset: 2px; }
+.volteador[aria-pressed='true'] { cursor: default; }
+
+.cara {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radio);
+  overflow: hidden;
+  /* Sin esto se ve la cara trasera espejada a traves de la delantera. */
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cara.frente { background: var(--superficie); }
+.cara.frente img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.cara.frente .sin-imagen {
+  color: var(--texto-tenue); font-size: 11px; text-align: center; padding: 10px;
+}
+
+/* La cara trasera va pre-rotada: al girar el contenedor 180 grados queda recta. */
+.cara.reverso { transform: rotateY(180deg); }
+
+/* ---------------------------------------------------------- reversos
+ *
+ * Formas genericas dibujadas en CSS. NO son reproducciones de los reversos
+ * reales: son obra protegida, y ademas exigiria descargar y re-hospedar mas
+ * imagenes de terceros (P-001).
+ */
+.reverso-mtg  { background: radial-gradient(circle at 50% 45%, #4a3418 0%, #241a0d 60%, #150f07 100%); }
+.reverso-ygo  { background: radial-gradient(circle at 50% 45%, #7a4a1c 0%, #3d250f 60%, #201305 100%); }
+.reverso-ptcg { background: radial-gradient(circle at 50% 45%, #1d4f8a 0%, #12304f 60%, #0a1c2e 100%); }
+
+.reverso-marca {
+  width: 46%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.16);
+  box-shadow: inset 0 0 0 8px rgba(0, 0, 0, 0.22), 0 0 22px rgba(0, 0, 0, 0.45);
+  background: linear-gradient(140deg, rgba(255, 255, 255, 0.11), transparent 55%);
+}
+
+/* ------------------------------------------------------------------- foil */
+
+.cara.frente.foil { box-shadow: inset 0 0 0 2px var(--acento); }
+
+.brillo {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    115deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.42) 45%,
+    rgba(180, 220, 255, 0.30) 52%,
+    transparent 68%
+  );
+  background-size: 260% 100%;
+  animation: barrido 3.4s ease-in-out infinite;
+  mix-blend-mode: screen;
+}
+
+@keyframes barrido {
+  0%, 62% { background-position: 190% 0; }
+  100%    { background-position: -60% 0; }
+}
+
+.carta-nombre.oculto { color: var(--texto-tenue); font-style: italic; }
+
+/* Quien pide menos movimiento no deberia sufrir un brillo latiendo en bucle
+   ni un volteo de medio segundo. La animacion es adorno: el contenido no puede
+   depender de ella. */
+@media (prefers-reduced-motion: reduce) {
+  .brillo { animation: none; opacity: 0.28; background-position: 60% 0; }
+  .barra > div { transition: none; }
+  .cara { transition: none; }
+}
