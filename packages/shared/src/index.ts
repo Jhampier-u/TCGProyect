@@ -93,3 +93,19 @@ export type {
   CardTally,
   DeckAggregate,
 } from './deck-rules/index.js';
+
+export {
+  parseDeck,
+  serializeDeck,
+  DECK_CODECS,
+  mtgCodec,
+  ygoCodec,
+  ptcgCodec,
+} from './deck-formats/index.js';
+export type {
+  DeckLine,
+  FormatWarning,
+  ParsedDeck,
+  DeckExportEntry,
+  DeckCodec,
+} from './deck-formats/index.js';
