@@ -150,7 +150,17 @@ export async function buildFullServer(options: ApiOptions & { auth: NonNullable<
   const app = buildServer(options);
 
   await app.register(fastifyRateLimit, {
-    // Tope global generoso; el login lleva el suyo, mucho mas estricto.
+    // Tope global generoso y ultima linea: las rutas caras llevan el suyo,
+    // mucho mas estricto (T-062).
+    //
+    // POR IP, NO POR USUARIO, y no es un descuido: el limitador corre en
+    // `onRequest`, antes de que el token se verifique, asi que no puede saber
+    // quien pide. Moverlo despues obligaria a analizar el cuerpo antes de
+    // rechazar, que es justo lo que un limite de tasa debe evitar.
+    //
+    // EN MEMORIA, no en Redis: el API corre en un solo contenedor. Con N
+    // replicas cada una contaria por su cuenta y el limite efectivo seria N
+    // veces el configurado; ese dia hay que conectarlo a un almacen compartido.
     max: 300,
     timeWindow: '1 minute',
   });

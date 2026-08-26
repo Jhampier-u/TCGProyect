@@ -435,6 +435,23 @@ describe('rutas de mazos', () => {
     expect(res.statusCode).toBe(401);
   });
 
+  it('T-062: resolve tiene su propio limite de tasa', async () => {
+    // Hasta 400 lineas resueltas contra el catalogo por peticion.
+    const pedir = () =>
+      app.inject({
+        method: 'POST',
+        url: '/api/decks/resolve',
+        headers: auth(tokenA),
+        payload: { game: 'YGO', lines: [] },
+      });
+
+    let ultimo = 200;
+    for (let i = 0; i < 31 && ultimo === 200; i++) {
+      ultimo = (await pedir()).statusCode;
+    }
+    expect(ultimo).toBe(429);
+  });
+
   it('borra el mazo', async () => {
     const id = await crear(tokenA, 'Efimero');
     const borrado = await app.inject({

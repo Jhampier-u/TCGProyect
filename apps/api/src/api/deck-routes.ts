@@ -92,7 +92,11 @@ export async function registerDeckRoutes(
   // "resolve" como un id de mazo.
     scope.post<{ Body: { game: GameCode; lines: DeckLineInput[] } }>(
     '/api/decks/resolve',
-    { schema: RESOLVE_DECK },
+    {
+      schema: RESOLVE_DECK,
+      // Hasta 400 lineas resueltas contra el catalogo por peticion (T-062).
+      config: { rateLimit: { max: 30, timeWindow: '1 minute' } },
+    },
     async (request, reply) => {
       const user = usuarioDe(request);
       // No muta nada: resolver es una consulta. El cliente decide que hace con
@@ -131,7 +135,12 @@ export async function registerDeckRoutes(
 
     scope.put<{ Params: { id: number }; Body: { cards: DeckCardInput[] } }>(
     '/api/decks/:id/cards',
-    { schema: PUT_DECK_CARDS },
+    {
+      schema: PUT_DECK_CARDS,
+      // Hasta 400 filas por peticion, borradas e insertadas en transaccion
+      // (T-062).
+      config: { rateLimit: { max: 60, timeWindow: '1 minute' } },
+    },
     async (request, reply) => {
       const user = usuarioDe(request);
 

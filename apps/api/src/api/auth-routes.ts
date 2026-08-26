@@ -48,7 +48,18 @@ export async function registerAuthRoutes(
 
   app.post<{ Body: { email: string; displayName: string; password: string } }>(
     '/api/auth/register',
-    { schema: REGISTER },
+    {
+      schema: REGISTER,
+      // T-062. Cada registro paga un Argon2id con los parametros de OWASP: 19
+      // MiB de memoria y 2 iteraciones. Sin limite propio, el tope global de
+      // 300/min permite 18.000 hashes de 19 MiB por hora, que es una
+      // denegacion de servicio barata contra el recurso mas caro del servidor.
+      //
+      // Son 20 y no menos porque hay IPs compartidas de sobra -- un aula, una
+      // oficina, una red movil con NAT -- y cinco cuentas por hora dejaria
+      // fuera a gente legitima.
+      config: { rateLimit: { max: 20, timeWindow: '1 hour' } },
+    },
     async (request, reply) => {
       const email = normalizeEmail(request.body.email);
       const problema = validatePassword(request.body.password);
@@ -119,7 +130,13 @@ export async function registerAuthRoutes(
 
   app.post<{ Body: { setId: number; count?: number } }>(
     '/api/packs/open',
-    { schema: OPEN_PACK, preValidation: exigirUsuario },
+    {
+      schema: OPEN_PACK,
+      preValidation: exigirUsuario,
+      // Abre hasta 24 sobres por peticion, y cada uno escribe en
+      // pack_openings, pack_opening_cards y user_collection (T-062).
+      config: { rateLimit: { max: 30, timeWindow: '1 minute' } },
+    },
     async (request, reply) => {
       const auth = usuarioDe(request);
 

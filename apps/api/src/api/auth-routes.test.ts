@@ -182,6 +182,33 @@ describe('registro', () => {
     await app.close();
   }, 30_000);
 
+  it('T-062: el registro tiene su propio limite y corta antes del Argon2id', async () => {
+    // Cada registro paga un hash de 19 MiB. Con solo el tope global de 300/min
+    // se podian pedir 18.000 por hora: denegacion de servicio barata contra el
+    // recurso mas caro del servidor.
+    const { app } = await montar();
+    const registrar = (n: number) =>
+      app.inject({
+        method: 'POST',
+        url: '/api/auth/register',
+        payload: {
+          email: `limite${n}@example.com`,
+          displayName: 'Limite',
+          password: 'contrasena-larga-1',
+        },
+      });
+
+    for (let i = 0; i < 20; i++) {
+      expect((await registrar(i)).statusCode).toBe(201);
+    }
+
+    const cortado = await registrar(20);
+    expect(cortado.statusCode).toBe(429);
+    // `retry-after` informado: un cliente honesto necesita saber cuanto esperar.
+    expect(cortado.headers['retry-after']).toBeDefined();
+    await app.close();
+  });
+
   it('devuelve 409 si el correo ya existe', async () => {
     const { app } = await montar();
     await crearCuenta(app);
