@@ -2,7 +2,7 @@
 
 > **Rol:** Arquitecto Principal y Orquestador de Proyectos de Software.
 > **Producto:** Simulador de Apertura de Sobres + Constructor de Mazos unificado para MTG, Yu-Gi-Oh! y Pokémon TCG.
-> **Estado del Vault:** ACTIVO — última sesión S026 (2026-08-26)
+> **Estado del Vault:** ACTIVO — última sesión S027 (2026-08-26)
 
 ---
 
@@ -88,7 +88,8 @@ C:\ProyectoTCG\
 │   ├── 2026-08-26_S023_SuiteE2E.md
 │   ├── 2026-08-26_S024_Seguridad.md
 │   ├── 2026-08-26_S025_DeudaTecnica.md
-│   └── 2026-08-26_S026_ImagenesFallidas.md
+│   ├── 2026-08-26_S026_ImagenesFallidas.md
+│   └── 2026-08-26_S027_IconosDeSet.md
 │
 ├── db\                          <- esquema (fuera del Vault documental)
 │   ├── README.md
@@ -98,7 +99,9 @@ C:\ProyectoTCG\
 │       ├── 0003_seed_pack_templates.sql
 │       ├── 0004_add_in_boosters.{up,down}.sql
 │       ├── 0005_widen_set_external_id.{up,down}.sql
-│       └── 0006_ygo_modern_booster.{up,down}.sql
+│       ├── 0006_ygo_modern_booster.{up,down}.sql
+│       ├── 0007_image_failures.{up,down}.sql
+│       └── 0008_set_icons.{up,down}.sql
 │
 ├── packages\shared\             <- @tcg/shared: contrato de dominio
 │   └── src\
@@ -134,6 +137,7 @@ C:\ProyectoTCG\
 │       ├── cli\                ingest.ts: CLI para poblar el catalogo
 │       ├── ingest\             IngestService: el orquestador (T-021)
 │       ├── images\             image-harvest: descarga unica + WebP (T-014)
+│       │                       cartas y iconos de set, el mismo job (T-035)
 │       │                       harvester · sharp-encoder · file-store
 │       ├── packs\              motor de sobres (H4)
 │       │                       prng (xoshiro128**) · pack-service

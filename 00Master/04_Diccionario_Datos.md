@@ -38,7 +38,10 @@ Una expansión/colección. Existe en los 3 juegos.
 | `name` | VARCHAR(160) | |
 | `released_at` | DATE NULL | |
 | `card_count` | INT UNSIGNED | Declarado por la API |
-| `icon_url` | VARCHAR(512) NULL | |
+| `icon_url` | VARCHAR(512) NULL | URL del **origen**. Sólo para la descarga inicial: no sale de la API (P-022) |
+| `icon_local_path` | VARCHAR(255) NULL | **Ruta propia** del icono cosechado. Es la única que se sirve, como `iconPath` (migración 0008, T-035) |
+| `icon_fail_count` | SMALLINT UNSIGNED DEFAULT 0 | Intentos fallidos. Al agotarlos deja de reintentarse, igual que en `card_prints` (T-019) |
+| `icon_failed_at` | TIMESTAMP NULL | Cuándo falló la última vez |
 | **UNIQUE** | `(game_id, external_id)` | Clave natural de deduplicación |
 
 ### `cards`
@@ -68,6 +71,8 @@ La **impresión física** en un set concreto. Es lo que un sobre entrega.
 | `collector_number` | VARCHAR(16) | |
 | `rarity_id` | SMALLINT UNSIGNED FK | |
 | `image_local_path` | VARCHAR(512) NULL | **Ruta propia**, no URL externa (ver P-001) |
+| `image_fail_count` | SMALLINT UNSIGNED DEFAULT 0 | Intentos fallidos. Una URL rota deja de reintentarse en cada ejecución (migración 0007, T-019) |
+| `image_failed_at` | TIMESTAMP NULL | Cuándo falló la última vez |
 | `image_source_url` | VARCHAR(512) NULL | Sólo para la descarga inicial |
 | `finishes` | JSON | `["nonfoil","foil"]`, `["normal","reverse"]`, etc. |
 | `in_boosters` | TINYINT(1) DEFAULT 1 | Si la impresión puede salir de un sobre. **El motor de sobres filtra por aquí** (P-014, migración 0004) |

@@ -1,6 +1,6 @@
 # Tareas Pendientes
 
-**Última actualización:** 2026-08-26 (S026) · **Total abiertas:** 4 — 3 del proyecto + T-005, que depende de ti
+**Última actualización:** 2026-08-26 (S027) · **Total abiertas:** 4 — 3 del proyecto (T-034, T-065, T-066) + T-005, que depende de ti
 
 Leyenda de prioridad: 🔴 crítica · 🟠 alta · 🟡 media · ⚪ baja
 
@@ -43,29 +43,32 @@ T-051 (401 antes que 400) y T-062 (límites por ruta), verificados. Anotado para
 de una réplica del API: los contadores están **en memoria**, así que el límite efectivo pasaría a ser
 N veces el configurado y habría que conectarlos a un almacén compartido.
 
-### H8c — Deuda técnica 🟡 seis de ocho hechas (S026)
+### H8c — Deuda técnica 🟡 siete de ocho hechas (S027)
 
-Cerradas: T-016, T-019, T-022, T-023, T-050 y T-061. **Quedan dos**:
+Cerradas: T-016, T-019, T-022, T-023, T-035, T-050 y T-061. **Queda una**:
 
 | ID | Tarea | Agente | Prio |
 |---|---|---|---|
-| T-035 | Cosechar los **iconos de set**. Hoy `sets.icon_url` apunta al origen y por eso la API no lo expone (P-022); sin iconos propios el selector no puede mostrarlos | Backend | 🟡 |
 | T-034 | Plantillas por época para los sets de Yu-Gi-Oh! anteriores a 2020. Hoy topan la completitud en ~70,7 % (P-021). La mayor de las ocho | Base de Datos / Backend | ⚪ |
 
-### Además, anotado al probar T-022
+### Además, anotado al hacer T-035 y T-022
 
 | ID | Tarea | Agente | Prio |
 |---|---|---|---|
+| T-066 | **Mostrar los iconos de set en la interfaz.** Ya están cosechados y la API los sirve en `iconPath`, pero el selector es un `<select>` nativo y un `<option>` **no puede** contener una imagen. Enseñarlos exige cambiar el control, que es una decisión de diseño, no un retoque: se deja fuera de T-035 en vez de hacerla a escondidas | Frontend | ⚪ |
 | T-065 | **P-032**: la migración `0001` fija el nombre de la base con un `USE proyecto_tcg`, así que el migrador ignora la conexión. Hoy hay una guarda en `db:migrate` que se niega a arrancar contra otra base; el arreglo de verdad es un juego de migraciones que no fije el nombre | Base de Datos | 🟡 |
 
 ## Deuda técnica detectada en S004
 
+Esta lista se mantenía en paralelo a la de H8c y llevaba dos sesiones repitiendo tareas ya cerradas.
+Se deja sólo lo abierto; lo demás está en `Tareas_Realizadas.md`, que es donde debe estar.
+
 | ID | Tarea | Agente | Prio |
 |---|---|---|---|
-| T-040 | Verificar el **volteo** de las cartas con el panel del navegador visible o en Cypress (H8). En S017 no se pudo: `requestAnimationFrame` estaba parado (0 fotogramas en 500 ms), así que ninguna animación podía avanzar. La lógica sí quedó verificada | QA | 🟡 |
-| T-035 | Cosechar también los **iconos de set**. Hoy `sets.icon_url` apunta al origen y por eso la API no lo expone (ver **P-022**); sin iconos propios, el selector de sets no puede mostrarlos | Backend | 🟡 |
-| T-034 | Plantillas por época para los sets de Yu-Gi-Oh! **anteriores a 2020**. Hoy topan la completitud en ~70,7 % (ver **P-021**). La tabla histórica de Yugipedia ya está capturada en P-019; el blóqueo real es que hace falta un paso de asignación de plantilla posterior a la ingesta | Base de Datos / Backend | ⚪ |
-| T-019 | `card_prints.image_failed_at` o similar. Hoy una URL de imagen permanentemente rota se reintenta en cada ejecución del job, para siempre (ver S010) | Base de Datos | 🟡 |
+| T-034 | Plantillas por época para los sets de Yu-Gi-Oh! **anteriores a 2020**. Hoy topan la completitud en ~70,7 % (ver **P-021**). La tabla histórica de Yugipedia ya está capturada en P-019; el bloqueo real es que hace falta un paso de asignación de plantilla posterior a la ingesta | Base de Datos / Backend | ⚪ |
+
+Cerradas desde entonces: **T-040** (S023, con Playwright en vez de Cypress), **T-019** (S026) y
+**T-035** (S027).
 
 ## Contrato adicional derivado de T-018
 

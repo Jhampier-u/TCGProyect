@@ -80,5 +80,20 @@ JWT_SECRET=***
 
   **Decisión v1 sin cambios:** guardar sólo `small` + generar `large` bajo demanda con caché. Pero
   el almacenamiento deja de ser un riesgo de coste: 1,9 GB cabe en cualquier sitio.
+- **Iconos de set:** MEDIDO en S027 (T-035). Ancho 64 px, no 245: un icono se pinta junto al nombre
+  de un set, no a tamaño de carta.
+
+  | | |
+  |---|---|
+  | Sets con icono en el origen | 2.129 |
+  | **URLs distintas** | **1.101** |
+  | Ficheros en disco | 1.101 |
+  | Peso total | **4,7 MB** (MTG 1,4 · YGO 2,6 · PTCG 0,7) |
+  | Descargados / evitados por deduplicación | 1.096 / 1.027 |
+  | 12,6 MB de origen → | 2,27 MB de WebP (**82 %** menos) |
+
+  Los 1.028 sets que comparten icono con otro **no generaron ni una petición**: el fichero se nombra
+  por la URL, no por el set, así que el segundo lo encuentra ya en disco. Frente a nombrarlo por el
+  set, son ~1.000 peticiones menos contra Scryfall y YGOPRODeck. Ver `iconKeyFromUrl`.
 - **Ingesta inicial completa:** estimada en 6–10 h dominada por la descarga de imágenes,
   no por los datos (los datos: MTG ~5 min con bulk, YGO ~2 min, PTCG ~30 min).

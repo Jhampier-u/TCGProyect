@@ -616,6 +616,13 @@ comprobar nada.** Un test verde que no ejercita el caso es peor que no tenerlo: 
 **Solución:** `iconUrl` deja de exponerse. El job `image-harvest` cubre las cartas pero no los iconos
 de set; hasta que lo haga, el campo se queda dentro de la API. Registrado como **T-035**.
 
+**La otra mitad, cerrada en S027 (T-035).** Que el campo se quedara dentro resolvía la fuga pero
+dejaba el producto sin iconos. Ahora el mismo cosechador trae también los de set y la API expone
+`iconPath`, una ruta **local**. `iconUrl` sigue sin salir, y ahora hay un test que comprueba **las dos
+mitades a la vez**: que la ruta local sale y que la del origen no. Sin él, quitar `iconPath` del
+esquema volvería a dejarlo fuera en silencio — que es exactamente como se perdió `cardId` durante
+tres hitos (P-024).
+
 **Y el test ya no puede pasar de forma vacua:** la fixture devuelve ahora una `iconUrl` real de
 `images.ygoprodeck.com`, así que si alguien vuelve a exponerla, el test falla.
 

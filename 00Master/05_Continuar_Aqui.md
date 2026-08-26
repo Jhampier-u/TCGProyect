@@ -1,7 +1,7 @@
 # 05 — Continuar aquí
 
-**Punto de guardado:** 2026-08-26, tras la sesión **S026**
-**Commit:** rama `main` · 341 tests de Vitest + 6 recorridos E2E en verde · `npm audit` limpio
+**Punto de guardado:** 2026-08-26, tras la sesión **S027**
+**Commit:** rama `main` · 346 tests de Vitest + 6 recorridos E2E en verde · `npm audit` limpio
 
 Este documento existe para retomar el proyecto en otra máquina o en otra sesión sin releer las 26
 bitácoras. Si sólo vas a leer un fichero, que sea éste.
@@ -21,7 +21,7 @@ crecer con completitud por set.
 | H0 Fundamentos | ✅ **cerrado en S019** — Docker Compose (T-004) |
 | H1 Esquema · H2 Ingesta · H3 API · H4 Sobres · H5 Frontend · H6 Cuentas | ✅ |
 | **H7 Constructor de mazos** | ✅ **cerrado en S022** — motor, API, interfaz e import/export |
-| **H8 Endurecimiento** | 🟡 **H8a y H8b hechos** · H8c a seis de ocho |
+| **H8 Endurecimiento** | 🟡 **H8a y H8b hechos** · H8c a **siete de ocho**: sólo queda T-034 |
 
 ---
 
@@ -85,6 +85,10 @@ declarado.
 **Pero ojo:** en S016 se filtraron 1032 URLs por exponer `sets.icon_url`. El esquema sólo protege de
 lo que **no** declaras; si declaras el campo equivocado, sale. Y el test que debía detectarlo pasaba
 en vacío porque la fixture devolvía `null`.
+
+Desde S027 los iconos de set también están re-hospedados y la API expone `iconPath`, una ruta
+**local**. `icon_url` sigue sin salir. Lo mismo que con las cartas: si necesitas enseñar una imagen,
+cosecha primero.
 
 ### 4.2 Las claves naturales que "parecen" únicas
 **Cinco problemas del proyecto** han sido de esta familia (P-009, P-010, P-013, P-015, P-017). El
