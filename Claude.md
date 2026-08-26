@@ -2,7 +2,7 @@
 
 > **Rol:** Arquitecto Principal y Orquestador de Proyectos de Software.
 > **Producto:** Simulador de Apertura de Sobres + Constructor de Mazos unificado para MTG, Yu-Gi-Oh! y Pokémon TCG.
-> **Estado del Vault:** ACTIVO — última sesión S027 (2026-08-26)
+> **Estado del Vault:** ACTIVO — última sesión S028 (2026-08-26)
 
 ---
 
@@ -61,7 +61,9 @@ C:\ProyectoTCG\
 │   ├── 08_Spec_T048_ImportExport.md  <- spec de import/export (H7, 3a pasada)
 │   ├── 09_Plan_T048_ImportExport.md  <- plan de implementacion, 9 tareas
 │   ├── 10_Spec_H8a_SuiteE2E.md      <- spec de la suite E2E (H8a) + ADR-009
-│   └── 11_Plan_H8a_SuiteE2E.md      <- plan de implementacion, 7 tareas
+│   ├── 11_Plan_H8a_SuiteE2E.md      <- plan de implementacion, 7 tareas
+│   ├── 12_Spec_T034_PlantillasPorEpoca.md <- spec de las plantillas por epoca
+│   └── 13_Plan_T034_PlantillasPorEpoca.md <- plan de implementacion, 7 tareas
 ├── 005Registro\
 │   ├── 2026-08-25_S001_Inicializacion.md
 │   ├── 2026-08-25_S002_DDL_MySQL.md
@@ -89,7 +91,8 @@ C:\ProyectoTCG\
 │   ├── 2026-08-26_S024_Seguridad.md
 │   ├── 2026-08-26_S025_DeudaTecnica.md
 │   ├── 2026-08-26_S026_ImagenesFallidas.md
-│   └── 2026-08-26_S027_IconosDeSet.md
+│   ├── 2026-08-26_S027_IconosDeSet.md
+│   └── 2026-08-26_S028_PlantillasPorEpoca.md
 │
 ├── db\                          <- esquema (fuera del Vault documental)
 │   ├── README.md
@@ -101,7 +104,10 @@ C:\ProyectoTCG\
 │       ├── 0005_widen_set_external_id.{up,down}.sql
 │       ├── 0006_ygo_modern_booster.{up,down}.sql
 │       ├── 0007_image_failures.{up,down}.sql
-│       └── 0008_set_icons.{up,down}.sql
+│       ├── 0008_set_icons.{up,down}.sql
+│       ├── 0009_template_eras.{up,down}.sql
+│       ├── 0010_ygo_era_templates.{up,down}.sql
+│       └── 0011_ygo_modern_gaps.{up,down}.sql
 │
 ├── packages\shared\             <- @tcg/shared: contrato de dominio
 │   └── src\
@@ -141,6 +147,7 @@ C:\ProyectoTCG\
 │       │                       harvester · sharp-encoder · file-store
 │       ├── packs\              motor de sobres (H4)
 │       │                       prng (xoshiro128**) · pack-service
+│       │                       coverage: que rarezas no puede entregar (T-034)
 │       └── adapters\
 │           ├── ygoprodeck\     YgoprodeckAdapter (T-012)
 │           ├── scryfall\       ScryfallAdapter + lector JSONL gz (T-011)

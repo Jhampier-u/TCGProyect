@@ -1,6 +1,6 @@
 # Tareas Pendientes
 
-**Última actualización:** 2026-08-26 (S027) · **Total abiertas:** 4 — 3 del proyecto (T-034, T-065, T-066) + T-005, que depende de ti
+**Última actualización:** 2026-08-26 (S028) · **Total abiertas:** 6 — 5 del proyecto (T-065, T-066, T-067, T-068, T-069) + T-005, que depende de ti
 
 Leyenda de prioridad: 🔴 crítica · 🟠 alta · 🟡 media · ⚪ baja
 
@@ -43,13 +43,21 @@ T-051 (401 antes que 400) y T-062 (límites por ruta), verificados. Anotado para
 de una réplica del API: los contadores están **en memoria**, así que el límite efectivo pasaría a ser
 N veces el configurado y habría que conectarlos a un almacén compartido.
 
-### H8c — Deuda técnica 🟡 siete de ocho hechas (S027)
+### H8c — Deuda técnica ✅ COMPLETADO (S028)
 
-Cerradas: T-016, T-019, T-022, T-023, T-035, T-050 y T-061. **Queda una**:
+Las ocho cerradas: T-016, T-019, T-022, T-023, T-034, T-035, T-050 y T-061.
+
+**T-034 resultó ser otra cosa de lo que ponía en la ficha.** Estaba descrita como un problema de los
+sets anteriores a 2020; medido, los modernos estaban peor (MAMS al 36,4 %, por debajo del set de
+2002). Ver **P-021**. De medirlo salieron tres tareas nuevas, abajo.
+
+### Lo que salió de medir el techo de completitud (S028)
 
 | ID | Tarea | Agente | Prio |
 |---|---|---|---|
-| T-034 | Plantillas por época para los sets de Yu-Gi-Oh! anteriores a 2020. Hoy topan la completitud en ~70,7 % (P-021). La mayor de las ocho | Base de Datos / Backend | ⚪ |
+| T-068 | **P-034**: cerrar el techo de Pokémon. Siete de nueve sets tienen una `mega_hyper_rare` o `black_white_rare` que ninguna plantilla pide: una o dos cartas por set, pero son las *chase* | Base de Datos | 🟡 |
+| T-069 | **P-033**: dejar de ofrecer apertura de los sets que no son sobres. LAVD es una caja de Structure Decks y sus 153 impresiones están marcadas `in_boosters = 1`. Es un criterio del adaptador, no una plantilla | Backend | 🟡 |
+| T-067 | Plantilla propia para los sets de composición atípica. MAMO y MAMS **no tienen ni una carta común** y la plantilla pide ocho: sus rarezas ya son alcanzables, pero un sobre suyo no se parece al producto. Es un `INSERT` con `set_id` | Base de Datos | ⚪ |
 
 ### Además, anotado al hacer T-035 y T-022
 
@@ -63,12 +71,8 @@ Cerradas: T-016, T-019, T-022, T-023, T-035, T-050 y T-061. **Queda una**:
 Esta lista se mantenía en paralelo a la de H8c y llevaba dos sesiones repitiendo tareas ya cerradas.
 Se deja sólo lo abierto; lo demás está en `Tareas_Realizadas.md`, que es donde debe estar.
 
-| ID | Tarea | Agente | Prio |
-|---|---|---|---|
-| T-034 | Plantillas por época para los sets de Yu-Gi-Oh! **anteriores a 2020**. Hoy topan la completitud en ~70,7 % (ver **P-021**). La tabla histórica de Yugipedia ya está capturada en P-019; el bloqueo real es que hace falta un paso de asignación de plantilla posterior a la ingesta | Base de Datos / Backend | ⚪ |
-
-Cerradas desde entonces: **T-040** (S023, con Playwright en vez de Cypress), **T-019** (S026) y
-**T-035** (S027).
+**Ninguna abierta.** Cerradas: **T-040** (S023, con Playwright en vez de Cypress), **T-019** (S026),
+**T-035** (S027) y **T-034** (S028).
 
 ## Contrato adicional derivado de T-018
 

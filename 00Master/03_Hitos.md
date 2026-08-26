@@ -10,7 +10,7 @@
 | **H5** | Frontend sobres | Animación de apertura + reveal + push a colección | ✅ **COMPLETADO** (revelado carta a carta, orden por escasez, foil, movimiento reducido) |
 | **H6** | Cuentas y colección | Auth, colección persistente, completitud por set | ✅ **COMPLETADO** (Argon2id + JWT, 9 endpoints, verificado con 103 sobres reales) |
 | **H7** | Deckbuilder | CRUD de mazos + validadores por juego + import/export | ✅ **COMPLETADO** (S022) — motor de reglas, 6 endpoints, interfaz e import/export. **Ultima epica de producto del alcance v1.0** |
-| **H8** | Endurecimiento | Suite E2E verde (**ADR-009**: Playwright, no Cypress), auditoría de seguridad, rate limiting propio | 🟡 EN CURSO — **H8a** (S023) y **H8b** (S024) hechos. **H8c a siete de ocho** (S027): sólo queda T-034 |
+| **H8** | Endurecimiento | Suite E2E verde (**ADR-009**: Playwright, no Cypress), auditoría de seguridad, rate limiting propio | ✅ **COMPLETADO (S028)** — H8a suite E2E, H8b seguridad y H8c las ocho tareas de deuda |
 
 **Regla de progresión:** no se abre un hito sin que el anterior tenga su reporte cerrado en
 `001Reportes/Tareas_Realizadas.md`.

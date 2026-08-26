@@ -1,7 +1,7 @@
 # 05 — Continuar aquí
 
-**Punto de guardado:** 2026-08-26, tras la sesión **S027**
-**Commit:** rama `main` · 346 tests de Vitest + 6 recorridos E2E en verde · `npm audit` limpio
+**Punto de guardado:** 2026-08-26, tras la sesión **S028**
+**Commit:** rama `main` · 354 tests de Vitest + 6 recorridos E2E en verde · `npm audit` limpio
 
 Este documento existe para retomar el proyecto en otra máquina o en otra sesión sin releer las 26
 bitácoras. Si sólo vas a leer un fichero, que sea éste.
@@ -21,7 +21,7 @@ crecer con completitud por set.
 | H0 Fundamentos | ✅ **cerrado en S019** — Docker Compose (T-004) |
 | H1 Esquema · H2 Ingesta · H3 API · H4 Sobres · H5 Frontend · H6 Cuentas | ✅ |
 | **H7 Constructor de mazos** | ✅ **cerrado en S022** — motor, API, interfaz e import/export |
-| **H8 Endurecimiento** | 🟡 **H8a y H8b hechos** · H8c a **siete de ocho**: sólo queda T-034 |
+| **H8 Endurecimiento** | ✅ **cerrado en S028** — suite E2E, seguridad y las ocho de deuda técnica |
 
 ---
 
@@ -175,17 +175,17 @@ docker compose --profile e2e run --rm e2e
 La suite **no ingesta**: comprueba su precondición y se detiene diciendo el comando exacto. Atarla a
 tres APIs de terceros la haría fallar por motivos ajenos.
 
-### Deuda con impacto medido
+### Deuda con impacto medido — **la lista está vacía desde S028**
+
+Las ocho tareas de H8c están cerradas. Lo que queda abierto salió de hacerlas, y está abajo.
+
 | Tarea | Qué pasa si no se hace |
 |---|---|
-| **T-035** | Los iconos de set no se pueden mostrar: la API no los expone por P-022 |
-| **T-017 → hecho** | — |
-| **T-019** | Una URL de imagen rota se reintenta en cada ejecución, para siempre |
-| **T-034** | Los sets de YGO anteriores a 2020 topan la completitud en ~70,7 % (P-021) |
-| **T-040** | El volteo de las cartas **nunca se ha visto funcionar**: en S017 `requestAnimationFrame` estaba parado |
-| **T-016** | Nada verifica que `GAME_IDS` de TypeScript y el seed SQL digan lo mismo |
-| **T-022** | Crear la base de datos sigue siendo manual **en el camino local**; en Docker ya no |
-| **T-023** | La ingesta acotada procesa primero sets futuros y promocionales |
+| **T-068** | Siete de nueve sets de Pokémon tienen una carta *chase* inalcanzable (P-034) |
+| **T-069** | La aplicación ofrece abrir sobres de cajas de Structure Decks (P-033) |
+| **T-066** | Los iconos de set están cosechados y servidos, pero no se ven: el selector es un `<select>` |
+| **T-065** | La migración `0001` fija el nombre de la base; hay guarda, no arreglo (P-032) |
+| **T-067** | MAMO y MAMS no tienen comunes y la plantilla pide ocho: alcanzable pero no realista |
 
 ### Bloqueada por ti
 - **T-005 — API key de Pokémon TCG** (`dev.pokemontcg.io`). Sin ella la API responde igual pero con
@@ -200,9 +200,15 @@ tres APIs de terceros la haría fallar por motivos ajenos.
 | **P-003** | 🟠 | Residuo: 3 limitaciones de las plantillas de sobre (ver P-008) |
 | **P-008** | 🟡 | "The List" de MTG no se modela; el slot de tierra no filtra por tipo |
 | **P-016** | 🟠 | La API de Pokémon responde 200 sólo ~30 % de las veces. La ingesta **debe** poder reanudarse |
-| **P-021** | 🟡 | Sets de YGO pre-2020: completitud topada al 70,7 % |
+| **P-032** | 🟡 | La migración `0001` hace `USE proyecto_tcg` e ignora la conexión. Mitigado con una guarda |
+| **P-033** | 🟡 | Se pueden abrir sobres de productos que no son sobres |
+| **P-034** | 🟡 | Siete de nueve sets de Pokémon tienen una carta que ninguna plantilla pide |
 
-Los 31 problemas —25 cerrados, con su medición— están en `003Problemas/Registro_Problemas.md`.
+Los 34 problemas —27 cerrados, con su medición— están en `003Problemas/Registro_Problemas.md`.
+
+**P-021 se cerró en S028, y su entrada es la que más conviene leer**: llevaba trece sesiones citada
+en cinco documentos sin estar escrita, y al medirla resultó ser lo contrario de lo que decía la
+ficha.
 
 ---
 

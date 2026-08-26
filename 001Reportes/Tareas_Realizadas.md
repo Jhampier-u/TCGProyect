@@ -1,6 +1,6 @@
 # Tareas Realizadas
 
-**Última actualización:** 2026-08-26 (S027)
+**Última actualización:** 2026-08-26 (S028)
 
 | ID | Tarea | Agente | Fecha | Sesión | Evidencia |
 |---|---|---|---|---|---|
@@ -93,3 +93,4 @@
 | T-022 | `npm run db:migrate`. Destapó **P-032**: la 0001 fija el nombre de la base con un `USE` | Backend | 2026-08-26 | S025 | `apps/api/src/cli/migrate.ts` |
 | T-019 | **Una URL de imagen rota deja de reintentarse**: contador de intentos en la migración 0007, con `--retry-failed` para reactivar | Base de Datos / Backend | 2026-08-26 | S026 | `db/migrations/0007_*`, `apps/api/src/images/` |
 | T-035 | **Los iconos de set, cosechados y expuestos**: migración 0008, el mismo job de imágenes reutilizado y `iconPath` (ruta local) en la API. Cierra la mitad pendiente de **P-022** | Base de Datos / Backend | 2026-08-26 | S027 | `db/migrations/0008_*`, `apps/api/src/images/`, `apps/api/src/api/schemas.ts` |
+| T-034 | **Plantillas de sobre por época**: la época pasa a ser propiedad de la plantilla (`valid_from`/`valid_to`), no del set. Cierra **P-021** y el hueco moderno que la medición destapó. Añade `npm run packs:cobertura` | Base de Datos / Backend | 2026-08-26 | S028 | `db/migrations/0009-0011`, `apps/api/src/packs/coverage.ts` |

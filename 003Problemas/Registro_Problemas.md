@@ -1,6 +1,6 @@
 # Registro de Problemas
 
-**Última actualización:** 2026-08-26 (S025) · **Abiertos:** 6 · **Cerrados:** 25
+**Última actualización:** 2026-08-26 (S028) · **Abiertos:** 7 · **Cerrados:** 27
 
 Severidad: 🔴 crítica · 🟠 alta · 🟡 media · ⚪ baja
 
@@ -590,6 +590,65 @@ de duplicados. Cualquier regresión futura de la paginación falla ahí.
 
 ---
 
+## P-021 ✅ CERRADO · La completitud de los sets de Yu-Gi-Oh! tenía un techo
+**Estado:** CERRADO el 2026-08-26 (S028) — migraciones 0009, 0010 y 0011
+**Severidad:** 🟠
+**Origen:** comparar dos sets al terminar T-024 (S015).
+
+> **Nota de S028: esta entrada llevaba trece sesiones citada en cinco documentos y nunca se
+> redactó.** Existía en la bitácora de S015 y en las listas de tareas, pero no aquí. Se escribe ahora,
+> completa, y se cierra en el mismo acto. Un problema que se cita y no está escrito es un problema
+> que nadie puede leer.
+
+**Detalle.** La plantilla que la `0006` dejó describe la estructura vigente desde 2020. Los sets
+anteriores tenían otra:
+
+| Set | Pool | Alcanzables | Techo |
+|---|---|---|---|
+| *Supreme Darkness* (2025) | 125 | 125 | 100 % |
+| *Legend of Blue Eyes* (2002) | 358 | 253 | **70,7 %** |
+
+Inalcanzables en el set de 2002: `rare` (61), `short_print` (42), `super_short_print` (2).
+
+**Por qué el respaldo del motor no lo tapaba.** `#poolFor` actúa cuando la rareza **pedida** está
+vacía en el set: entonces entrega otra. Nunca añade una rareza que ninguna slot nombra. El motor hace
+exactamente lo que la plantilla dice, y no tiene forma de saber que le falta algo.
+
+### Lo que la medición de S028 destapó: no era un problema de los sets antiguos
+
+Al medir el techo de **todos** los sets antes de diseñar la solución, apareció que los **modernos
+estaban peor**:
+
+```
+LOB  Legend of Blue Eyes    2002-03-08   358   70,7 %   rare, short_print, super_short_print
+TDGS The Duelist Genesis    2008-09-02   111   72,1 %   rare, ultimate_rare, ghost_rare
+BOSH Breakers of Shadow     2016-01-14   100   76,0 %   rare, short_print
+ETCO Eternity Code          2020-04-30   105   95,2 %   starlight_rare
+MAMO Magnificent Monsters   2026-09-04   206   68,9 %   starlight_rare, grand_master_rare
+MAMS Magnificent Maestros   2026-11-12    66   36,4 %   starlight_rare, grand_master_rare
+```
+
+**P-019 se había dado por cerrado y el techo seguía ahí**, por debajo del set de 2002. La plantilla
+moderna pide `quarter_century_secret_rare` y estos sets traen `starlight_rare` y
+`grand_master_rare`. El coleccionista —uno de los tres usuarios objetivo de `01_Producto.md`— no
+podía cerrar **ningún** set de Yu-Gi-Oh!, ni antiguo ni moderno.
+
+**Solución.** La época pasa a ser una propiedad de la **plantilla** (`valid_from` / `valid_to`), no
+del set. La alternativa apuntada en S015 —una plantilla por set asignada según fecha— exigía un paso
+posterior a la ingesta, y ése era el bloqueo que mantuvo T-034 parada trece sesiones. Con la ventana
+en la plantilla, la resolución la hace la consulta que ya elegía plantilla y el paso desaparece.
+
+Verificado abriendo **300 sobres de LOB**: 9 cartas por sobre, `rare` en el slot 8 el 64,3 % de las
+veces, y las **siete** rarezas del set vistas, short prints incluidos.
+
+**Lección, y es la tercera vez.** Ni P-019 ni P-021 los detectó una prueba: los destapó mirar
+aperturas reales, con siete sesiones de diferencia, y el segundo se dio por resuelto sin volver a
+medir. Lo que faltaba no era una plantilla mejor sino **una comprobación**: `npm run packs:cobertura`
+mide ahora el techo de cada set y sale con código 1 si alguno tiene rarezas inalcanzables. En su
+primera ejecución encontró P-034, que nadie estaba buscando.
+
+---
+
 ## P-022 ✅ CERRADO · La API filtraba 1032 URLs externas en `iconUrl`
 **Estado:** CERRADO el 2026-08-25 (S016)
 **Origen:** **arrancar el servidor de verdad y mirar la respuesta.**
@@ -965,3 +1024,58 @@ ahora porque afecta al arranque de todas las instalaciones existentes y merece s
 
 **Leccion.** Una migracion que hace `USE` deja de ser relativa a la conexion y pasa a mandar sobre
 ella. Un fichero de esquema no deberia decidir en que base se aplica.
+
+---
+
+## P-033 🟡 ABIERTO · Se pueden abrir sobres de productos que no son sobres
+**Estado:** ABIERTO desde el 2026-08-26 (S028)
+**Severidad:** 🟡
+**Origen:** medir el techo de completitud de cada set (T-034).
+
+**Detalle.** *Legendary Arc-V Decks* (LAVD) es una caja de **Structure Decks**: tres mazos
+preconstruidos, no sobres. Sus **153 impresiones están marcadas `in_boosters = 1`**, así que el set
+tiene pool y la aplicación ofrece abrir un sobre de él.
+
+**Por qué la suposición de P-014 no bastaba.** Decía: *"en Yu-Gi-Oh! y Pokémon los productos que no
+son sobres son sets **aparte**, no cartas dentro de un set de sobres"*. Es cierta — y por eso mismo
+insuficiente: el adaptador marca `in_boosters = true` para **todos** los sets de esos dos juegos,
+incluidos los que son aparte precisamente por no ser sobres.
+
+**Cómo se ve.** LAVD aparece en el informe de cobertura con la rareza `new`, que es la cadena que
+YGOPRODeck usa para las cartas inéditas de esos mazos. Ninguna plantilla de Core Booster la nombra, y
+no debe nombrarla: meterla sería describir mal el producto para que un número suba.
+
+**Por qué no se arregla en T-034.** Distinguir un producto de sobres de uno que no lo es exige un
+criterio en el adaptador, no una plantilla. Es un problema de ingesta con su propio alcance.
+Registrado como **T-069**.
+
+---
+
+## P-034 🟡 ABIERTO · Siete de nueve sets de Pokémon tienen una carta inalcanzable
+**Estado:** ABIERTO desde el 2026-08-26 (S028)
+**Severidad:** 🟡
+**Origen:** **la primera ejecución de `npm run packs:cobertura`**, escrito para cerrar el techo de
+Yu-Gi-Oh!.
+
+**Detalle.** La comprobación se escribió para un juego y encontró el mismo defecto en otro, que
+nadie estaba mirando:
+
+```
+BLK   172 impresiones · techo 99,4 % · inalcanzables: black_white_rare
+WHT   173 impresiones · techo 99,4 % · inalcanzables: black_white_rare
+MEG   188 impresiones · techo 98,9 % · inalcanzables: mega_hyper_rare
+PFL · POR · CRI · PBL                · inalcanzables: mega_hyper_rare
+```
+
+**Por qué el 99 % engaña.** Son **una o dos cartas por set**, así que el techo apenas se mueve. Pero
+son precisamente las cartas *chase* —la Mega Hyper Rare de cada set, la Black White Rare— las que un
+coleccionista persigue, y son las únicas que no puede obtener jamás. Un techo del 99,4 % que deja
+fuera justo la carta que la gente quiere es peor que uno del 70 % repartido.
+
+**Por qué no se arregla en T-034.** El alcance acordado era Yu-Gi-Oh!. El arreglo tiene la misma
+forma —añadir las rarezas al slot del hit de `Booster Scarlet & Violet`— pero necesita sus propias
+tasas, y estimarlas de pasada dentro de otra tarea sería justo lo que la marca `[ESTIMADO]` intenta
+evitar. Registrado como **T-068**.
+
+**Lo que esto dice de la comprobación.** Es el argumento a favor de escribirla: una plantilla que no
+nombra una rareza del pool no falla, no avisa y no se nota. Sólo se ve si algo lo mide.

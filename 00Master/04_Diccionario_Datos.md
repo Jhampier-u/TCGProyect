@@ -95,8 +95,9 @@ Rareza **por juego** — no son intercambiables entre juegos.
 El corazón del simulador. **Datos, no código.** Un sobre = N *slots*; cada slot = una tabla de
 probabilidad sobre rarezas.
 
-`pack_templates`: `id`, `set_id` (NULL = plantilla por defecto del juego), `game_id`, `name`
-(`"Play Booster"`, `"Sobre de 9 cartas"`), `card_count`, `is_default`.
+`pack_templates`: `id`, `set_id` (NULL = no es de un set concreto), `game_id`, `valid_from DATE NULL`,
+`valid_to DATE NULL`, `name` (`"Play Booster"`, `"Core Booster (hasta Light of Destruction)"`),
+`card_count`, `is_default`.
 
 `pack_slots`: `id`, `pack_template_id`, `slot_index`, `distribution JSON`, `foil_chance DECIMAL(6,5)`.
 
@@ -104,6 +105,26 @@ probabilidad sobre rarezas.
 ```json
 [{"rarity":"rare","weight":865},{"rarity":"mythic","weight":135}]
 ```
+
+**La ventana de vigencia (migración 0009, T-034).** `valid_from` / `valid_to` acotan las
+fechas de salida que una plantilla describe. `findTemplate` resuelve en tres niveles:
+
+| Nivel | Condición |
+|---|---|
+| 1 | La plantilla propia del set (`set_id = s.id`) |
+| 2 | La de la **época** cuya ventana contiene `sets.released_at` |
+| 3 | La genérica del juego (`set_id`, `valid_from` y `valid_to` a NULL, `is_default = 1`) |
+
+Un NULL en cualquiera de las dos fechas significa **sin límite por ese lado**; las dos a NULL
+significan que la plantilla no es de época. Las de época llevan `is_default = 0` porque
+`uq_templates_one_default` sólo admite una marcada por (juego, set).
+
+Un set sin `released_at` cae al nivel 3: sin fecha no hay época.
+
+**Toda rareza del pool debe estar nombrada por alguna slot.** Si no, es inalcanzable: el respaldo del
+motor sólo actúa cuando la rareza *pedida* está vacía, nunca añade una que nadie pidió. Eso puso
+techo a la completitud de los sets de Yu-Gi-Oh! durante trece sesiones (P-021) y sigue afectando a
+Pokémon (P-034). `npm run packs:cobertura` lo mide.
 
 ### `users`, `user_collection`, `decks`, `deck_cards`, `pack_openings`, `pack_opening_cards`
 - `user_collection`: `(user_id, card_print_id, finish)` UNIQUE + `quantity`. Nunca borra filas, ajusta cantidad.
