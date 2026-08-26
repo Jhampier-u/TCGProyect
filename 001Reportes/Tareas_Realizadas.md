@@ -1,6 +1,6 @@
 # Tareas Realizadas
 
-**Última actualización:** 2026-08-26 (S022)
+**Última actualización:** 2026-08-26 (S023)
 
 | ID | Tarea | Agente | Fecha | Sesión | Evidencia |
 |---|---|---|---|---|---|
@@ -76,3 +76,9 @@
 | T-048b | `oracleKey` en `CARD_SUMMARY` y `POST /api/decks/resolve`, que resuelve sin mutar nada | Backend | 2026-08-26 | S022 | `apps/api/src/` |
 | T-048c | `DeckTransferencia`: exportar sin red e importar con informe de lo que falta | Frontend | 2026-08-26 | S022 | `apps/web/src/components/DeckTransferencia.tsx` |
 | T-048v | Verificación: ida y vuelta **idéntica byte a byte**, exportar con 0 peticiones, import parcial con su informe | QA | 2026-08-26 | S022 | Ver S022 en `005Registro` |
+| T-055 | **Andamiaje de Playwright** y primer test en verde dentro de Docker. Destapó P-028 | QA / Arquitectura | 2026-08-26 | S023 | `e2e/`, `docker/e2e.Dockerfile` |
+| T-056 | **ADR-009**: Playwright en lugar de Cypress, con su motivo y su coste | Documentador | 2026-08-26 | S023 | `004Arquitectura/00_ADR.md` |
+| T-057 | `fixtures.ts`: usuario propio por test, precondición de datos y sesión inyectada | QA | 2026-08-26 | S023 | `e2e/src/fixtures.ts` |
+| T-058 | Recorrido de humo con consola limpia, verificado inyectando un error | QA | 2026-08-26 | S023 | `e2e/src/humo.spec.ts` |
+| T-040 | **El volteo de las cartas se ha visto TERMINAR.** Bloqueada desde S017. Destapó P-029 | QA | 2026-08-26 | S023 | `e2e/src/sobres.spec.ts` |
+| T-053 | **La interfaz de mazos se ha visto de verdad.** Bloqueada desde S021. Destapó P-030 | QA / Frontend | 2026-08-26 | S023 | `e2e/src/mazos.spec.ts`, capturas |

@@ -2,7 +2,7 @@
 
 > **Rol:** Arquitecto Principal y Orquestador de Proyectos de Software.
 > **Producto:** Simulador de Apertura de Sobres + Constructor de Mazos unificado para MTG, Yu-Gi-Oh! y Pokémon TCG.
-> **Estado del Vault:** ACTIVO — última sesión S022 (2026-08-26)
+> **Estado del Vault:** ACTIVO — última sesión S023 (2026-08-26)
 
 ---
 
@@ -29,6 +29,10 @@ C:\ProyectoTCG\
 ├── README.md                    <- puesta en marcha (lo primero al clonar)
 ├── docker-compose.yml           <- entorno completo: mysql, redis, api, web (T-004)
 ├── docker\Dockerfile            <- imagenes propias de api y web (4 etapas)
+├── docker\e2e.Dockerfile        <- imagen de la suite E2E (ADR-009)
+├── e2e\                         <- suite Playwright. NO es workspace de npm
+│   ├── playwright.config.ts
+│   └── src\  fixtures · humo · sobres (T-040) · mazos (T-053)
 ├── Claude.md                    <- este archivo (Orquestador)
 ├── 00Master\                    <- contexto absoluto, verdad única
 │   ├── 00_Contexto_Global.md
@@ -80,7 +84,8 @@ C:\ProyectoTCG\
 │   ├── 2026-08-25_S019_DockerCompose.md
 │   ├── 2026-08-25_S020_ConstructorDeMazos.md
 │   ├── 2026-08-25_S021_InterfazDeMazos.md
-│   └── 2026-08-26_S022_ImportExport.md
+│   ├── 2026-08-26_S022_ImportExport.md
+│   └── 2026-08-26_S023_SuiteE2E.md
 │
 ├── db\                          <- esquema (fuera del Vault documental)
 │   ├── README.md

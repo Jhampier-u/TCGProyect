@@ -1,6 +1,6 @@
 # Registro de Problemas
 
-**Última actualización:** 2026-08-26 (S022) · **Abiertos:** 5 · **Cerrados:** 21
+**Última actualización:** 2026-08-26 (S023) · **Abiertos:** 5 · **Cerrados:** 24
 
 Severidad: 🔴 crítica · 🟠 alta · 🟡 media · ⚪ baja
 
@@ -801,3 +801,92 @@ reindexar. Sin ver el rojo no hay prueba de que esos tests cubrieran nada.
 `Nidoran` a secas, que no existe en ningun catalogo: P-013 registro que llevan los signos de macho y
 hembra. Corregida a los nombres reales. Tercera vez que aparece la misma leccion (P-020, P-022,
 esta): **la fidelidad de la fixture determina lo que el test puede detectar.**
+
+---
+
+## P-028 ✅ CERRADO · Vite bloqueaba a la suite E2E con un 403
+**Estado:** CERRADO el 2026-08-26 (S023)
+**Origen:** el primer test de Playwright dentro de la red de compose.
+
+**Detalle.** El documento cargaba pero con el titulo vacio. No era Playwright:
+
+```
+HTTP/1.1 403 Forbidden
+Blocked request. This host ("web") is not allowed.
+```
+
+Vite rechaza las peticiones cuyo `Host` no reconoce. Dentro de la red de compose el Host es el
+**nombre del servicio** (`web`), no `localhost`.
+
+**Solucion.** Se abre por variable de entorno (`VITE_ALLOWED_HOSTS`), no cableando `web` en el
+config: la proteccion existe por un motivo y quien la abre debe decir para quien. Mismo patron que
+`API_PROXY_TARGET` desde T-004.
+
+**Un segundo tropiezo del mismo asunto.** El arreglo no surtio efecto hasta **reconstruir la
+imagen**: el contenedor `web` monta solo `src/` e `index.html`, y `vite.config.ts` viaja dentro de
+la imagen. Facil perder media hora ahi.
+
+---
+
+## P-029 ✅ CERRADO · La salvaguarda del test del volteo era inerte
+**Estado:** CERRADO el 2026-08-26 (S023)
+**Origen:** **el paso del plan que exigia comprobar que el test no fuera vacuo.**
+
+**Detalle.** El spec de H8a insistia en fijar `reducedMotion: 'no-preference'` de forma explicita,
+porque `PackReveal` llama a `useReducedMotion()` y con movimiento reducido revela todas las cartas de
+golpe: un test corriendo asi pasaria sin ejercitar el volteo.
+
+Se puso en `playwright.config.ts`, se comento con tres lineas de justificacion, y al comprobarlo
+—forzando `'reduce'` para verlo en rojo— **el test paso igual**.
+
+Medidos los dos caminos en la misma ejecucion:
+
+```
+POR_CONFIG=false   POR_API=true
+```
+
+`reducedMotion` en el `use` del config **no llega al navegador** en esta version; en
+`browser.newContext()`, si. **La salvaguarda no hacia nada.** El test pasaba porque el valor por
+defecto coincidia con el deseado: suerte, no diseno.
+
+**Solucion.** Los tests crean su contexto a mano y **comprueban la media query** antes de medir:
+
+```ts
+expect(reduce, `la emulacion de movimiento no se aplico: se pidio "${movimiento}"`)
+  .toBe(movimiento === 'reduce');
+```
+
+Asi la salvaguarda no puede volver a ser inerte sin que un test lo diga. Verificado en rojo y en
+verde.
+
+**Leccion.** Una salvaguarda en la que se confia y que no hace nada es **peor** que no tenerla. Y la
+unica forma de saberlo fue el paso que obligaba a romperla a proposito. Es la cuarta vez que aparece
+la misma familia (P-020, P-022, P-024, esta).
+
+---
+
+## P-030 ✅ CERRADO · El selector de sets se salia de su columna
+**Estado:** CERRADO el 2026-08-26 (S023)
+**Origen:** **mirar una captura de pantalla**, que era el sentido entero de T-053.
+
+**Detalle.** En el editor de mazos, el `<select>` de sets se solapaba con el panel del mazo. Medido
+antes y despues:
+
+```
+antes:  selectRight=703   columnaRight=604   (614 px dentro de una columna de 530)
+ahora:  selectRight=589   columnaRight=604
+```
+
+Un `<select>` se dimensiona a su opcion mas larga, y los nombres de set de Yu-Gi-Oh! llegan a
+"THE CHRONICLES DECK: Spirit Charmers (All-Foil Edition)". En el Catalogo hay anchura de sobra; en la
+columna estrecha del editor, no.
+
+**Por que ninguna comprobacion anterior lo vio.** En S021 y S022 la interfaz se verifico por DOM y
+por panel de red. **Todo cuadraba**: los elementos existian, `.zona` eran 3, `.editor-columna` eran
+2, la validacion respondia. Un DOM correcto no dice nada sobre dos cajas encima de la otra.
+
+**Solucion.** `.filtros select { max-width: 100%; min-width: 0 }`. Y el hallazgo queda como
+**asercion** en el test de mazos, midiendo el desbordamiento, para que no vuelva en silencio.
+
+**Leccion.** Hay defectos que solo ve un ojo. Verificar por DOM es necesario y no es suficiente, y
+por eso T-053 existia como tarea aparte en vez de darse por hecha.

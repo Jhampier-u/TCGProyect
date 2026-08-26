@@ -1,9 +1,9 @@
 # 05 — Continuar aquí
 
-**Punto de guardado:** 2026-08-26, tras la sesión **S022**
-**Commit:** rama `main` · 332 tests en verde · `npm audit` limpio
+**Punto de guardado:** 2026-08-26, tras la sesión **S023**
+**Commit:** rama `main` · 332 tests de Vitest + 6 recorridos E2E en verde · `npm audit` limpio
 
-Este documento existe para retomar el proyecto en otra máquina o en otra sesión sin releer las 22
+Este documento existe para retomar el proyecto en otra máquina o en otra sesión sin releer las 23
 bitácoras. Si sólo vas a leer un fichero, que sea éste.
 
 ---
@@ -21,7 +21,7 @@ crecer con completitud por set.
 | H0 Fundamentos | ✅ **cerrado en S019** — Docker Compose (T-004) |
 | H1 Esquema · H2 Ingesta · H3 API · H4 Sobres · H5 Frontend · H6 Cuentas | ✅ |
 | **H7 Constructor de mazos** | ✅ **cerrado en S022** — motor, API, interfaz e import/export |
-| **H8 Endurecimiento** (Cypress, seguridad) | ⚪ **lo único que queda** |
+| **H8 Endurecimiento** | 🟡 **H8a hecho** (suite E2E). Quedan H8b (seguridad) y H8c (deuda) |
 
 ---
 
@@ -73,7 +73,7 @@ condicionan el día a día:
 
 ---
 
-## 4. Seis cosas que se rompen en silencio
+## 4. Ocho cosas que se rompen en silencio
 
 Esto es lo que de verdad hay que interiorizar antes de tocar código.
 
@@ -98,7 +98,23 @@ y datos que desaparecen sin un solo error en los logs.
 
 **Antes de elegir una clave natural, cuéntala.**
 
-### 4.3 La clave por la que agrupas no es la que crees
+### 4.3 Una salvaguarda puede no hacer nada
+En S023 se fijó `reducedMotion` en la configuración de Playwright para que el test del volteo no
+pasara en falso. Estaba escrito en el spec, defendido en el plan y comentado con tres líneas. **No
+llegaba al navegador**: medido en la misma ejecución daba `false` desde el config y `true` creando
+el contexto a mano (P-029). El test pasaba porque el valor por defecto coincidía con el deseado.
+
+Se descubrió sólo porque el plan **obligaba a romperlo a propósito** y verlo en rojo. Una salvaguarda
+en la que se confía y que no hace nada es peor que no tenerla.
+
+### 4.4 Hay defectos que sólo ve un ojo
+El editor de mazos se verificó dos sesiones por DOM y por panel de red, y todo cuadraba: los
+elementos existían, los conteos eran correctos, la validación respondía. La primera captura enseñó
+el selector de sets **solapando** el panel del mazo, 614 px dentro de una columna de 530 (P-030).
+
+Verificar por DOM es necesario y no es suficiente.
+
+### 4.5 La clave por la que agrupas no es la que crees
 RN-04 cuenta las copias **por nombre**. El motor agrupaba por `oracle_key`, que en Magic y Yu-Gi-Oh!
 equivale al nombre pero en Pokémon es **una clave por impresión**: 775 nombres en 1279 filas. El
 resultado, medido, era que 16 copias de la misma carta pasaban como mazo legal (P-027).
@@ -106,7 +122,7 @@ resultado, medido, era que 16 copias de la misma carta pasaban como mazo legal (
 No se vio durante dos sesiones porque las cartas de Pokémon se ingestaron **después** de escribir el
 validador, y los tests usaban claves inventadas, todas distintas.
 
-### 4.4 Un spec puede prometer algo que el código no hace
+### 4.6 Un spec puede prometer algo que el código no hace
 En S021 el spec decía que el detalle de una carta se cachearía y sólo se pediría una vez. El código
 llamaba a la API directamente, sin pasar por la caché. Compilaba, pasaba los tests y se leía bien.
 **Lo único que lo destapó fue mirar el panel de red** (P-026).
@@ -115,7 +131,7 @@ Del mismo día: la imagen web de Docker llevaba **dos sesiones rota** sin que na
 hasta entonces el frontend sólo importaba *tipos* de `@tcg/shared` — que se borran al compilar— y el
 módulo nunca se cargaba (P-025).
 
-### 4.5 Un test sólo vale si lo has visto fallar
+### 4.7 Un test sólo vale si lo has visto fallar
 En S020 el test que debía blindar P-024 fue **vacuo dos veces seguidas**: la primera porque el doble
 sustituía justo a la función bajo prueba, y la segunda porque `tsc` **excluye los ficheros de test**
 y la anotación de tipo no la comprobaba nadie. Sólo el tercero, que ejecuta la función de verdad,
@@ -124,8 +140,8 @@ falló al reintroducir el bug.
 Es la misma familia que P-022, donde el test pasaba porque la fixture devolvía `null`. **Antes de
 dar un test por bueno, rómpelo a propósito y compruébalo.**
 
-### 4.6 Los bugs que sólo aparecen a escala
-Ocho veces ha pasado (P-017, P-020, P-022, P-023, P-024, P-025, P-026, P-027): probar con una muestra elegida a mano **no
+### 4.8 Los bugs que sólo aparecen a escala
+Once veces ha pasado (P-017, P-020, P-022, P-023, P-024, P-025, P-026, P-027, P-028, P-029, P-030): probar con una muestra elegida a mano **no
 ejercita el mismo camino** que procesar el catálogo entero, arrancar el servidor de verdad o
 levantar los contenedores. Los dobles de prueba
 son útiles para la lógica, pero **la fidelidad de sus datos determina lo que el test puede detectar**.
@@ -135,15 +151,24 @@ son útiles para la lógica, pero **la fidelidad de sus datos determina lo que e
 ## 5. Lo que está pendiente, por orden de interés
 
 ### El siguiente paso natural
-**H7 está cerrado y con él la última épica de producto del alcance v1.0.** Lo que queda es **H8,
-endurecimiento**: suite de Cypress, auditoría de seguridad y la deuda técnica acumulada.
+**H8a está hecho:** hay suite E2E con Playwright (ADR-009) y con ella se cerraron T-040 y T-053, que
+llevaban bloqueadas desde S017 y S021. Quedan los otros dos sub-proyectos de H8:
 
-Dentro de H8, dos entradas que ya tienen dueño y motivo:
-- **T-053 — Revisión visual** de la interfaz de mazos. En S021 y S022 el panel del navegador no
-  componía imágenes, así que se verificó por DOM y por red: el comportamiento está comprobado, la
-  apariencia **no la ha visto nadie**.
-- **T-051 — Autenticación antes que validación de esquema.** Un `POST` anónimo con cuerpo inválido
-  responde 400 en vez de 401 en las rutas de H6 y H7.
+- **H8b — Seguridad.** **T-051** (un `POST` anónimo con cuerpo inválido responde 400 en vez de 401,
+  en las rutas de H6 y H7) y **T-062** (rate limiting por ruta y por usuario: hoy sólo hay un tope
+  global de 300/min y el del login).
+- **H8c — Deuda técnica.** Siete arreglos independientes, ninguno bloqueante y ninguno necesita
+  diseño.
+
+**Cómo se ejecuta la suite:**
+
+```bash
+docker compose --profile ingest run --rm ingest --game YGO --sets 4   # sólo si falta catálogo
+docker compose --profile e2e run --rm e2e
+```
+
+La suite **no ingesta**: comprueba su precondición y se detiene diciendo el comando exacto. Atarla a
+tres APIs de terceros la haría fallar por motivos ajenos.
 
 ### Deuda con impacto medido
 | Tarea | Qué pasa si no se hace |
@@ -172,7 +197,7 @@ Dentro de H8, dos entradas que ya tienen dueño y motivo:
 | **P-016** | 🟠 | La API de Pokémon responde 200 sólo ~30 % de las veces. La ingesta **debe** poder reanudarse |
 | **P-021** | 🟡 | Sets de YGO pre-2020: completitud topada al 70,7 % |
 
-Los 26 problemas —21 cerrados, con su medición— están en `003Problemas/Registro_Problemas.md`.
+Los 29 problemas —24 cerrados, con su medición— están en `003Problemas/Registro_Problemas.md`.
 
 ---
 

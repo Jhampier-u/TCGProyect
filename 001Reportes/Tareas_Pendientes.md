@@ -1,6 +1,6 @@
 # Tareas Pendientes
 
-**Última actualización:** 2026-08-26 (S022) · **Total abiertas:** 9 — 8 del proyecto + T-005, que depende de ti
+**Última actualización:** 2026-08-26 (S023) · **Total abiertas:** 9 — 8 del proyecto + T-005, que depende de ti
 
 Leyenda de prioridad: 🔴 crítica · 🟠 alta · 🟡 media · ⚪ baja
 
@@ -31,14 +31,24 @@ Motor de reglas (S020), interfaz (S021) e import/export (S022), los tres verific
 
 | ID | Tarea | Agente | Prio |
 |---|---|---|---|
-| T-053 | **Revisión visual de la interfaz de mazos.** En S021 y S022 el panel del navegador no componía imágenes: se verificó por DOM y por red, no por vista | Frontend / QA | 🟡 |
 | T-050 | Confirmar contra datos reales el lado **positivo** de dos predicados: la Energía Básica de Pokémon y la tierra nevada de Magic. Ninguno aparece en los sets ingestados hasta hoy (ver S020). Depende en parte de **T-023** | QA | 🟡 |
+| T-061 | En el buscador del editor, tres impresiones distintas de la misma carta se ven **idénticas**: la fila muestra tipo, set y número pero no la rareza. Visto en las capturas de S023 | Frontend | 🟡 |
 
-## Hito H8 — Endurecimiento
+## Hito H8 — Endurecimiento 🟡 EN CURSO
+
+**H8a — Suite E2E ✅ hecho (S023).** Playwright sobre Docker, 6 recorridos en verde. Cerró T-040 y
+T-053. Quedan los otros dos sub-proyectos:
+
+### H8b — Seguridad
 
 | ID | Tarea | Agente | Prio |
 |---|---|---|---|
-| T-051 | La validación del esquema del cuerpo corre **antes** que la del token: un `POST` anónimo con cuerpo inválido responde 400 en vez de 401. Afecta a las rutas de H6 y H7. Se arregla moviendo `requireUser` a un hook `preValidation` | Seguridad | ⚪ |
+| T-051 | La validación del esquema del cuerpo corre **antes** que la del token: un `POST` anónimo con cuerpo inválido responde 400 en vez de 401. Afecta a las rutas de H6 y H7. Se arregla moviendo `requireUser` a un hook `preValidation` | Seguridad | 🟠 |
+| T-062 | **Rate limiting propio**: hoy sólo hay un tope global de 300/min y el del login. Falta por ruta y por usuario, que es lo que pide el criterio de H8 | Seguridad | 🟠 |
+
+### H8c — Deuda técnica
+
+Los siete de abajo, ninguno bloqueante y ninguno necesita diseño.
 
 ## Deuda técnica detectada en S004
 

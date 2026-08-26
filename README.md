@@ -21,7 +21,7 @@ distribuciones de rareza reales** y ver su colección crecer hacia el 100 % de c
 | H5 · Frontend | ✅ Catálogo, sobres animados y colección |
 | H6 · Cuentas y colección | ✅ Argon2id + JWT |
 | H7 · Constructor de mazos | ✅ Motor de reglas, 6 endpoints, interfaz e import/export |
-| H8 · Endurecimiento | ⚪ Sin empezar |
+| H8 · Endurecimiento | 🟡 Suite E2E con Playwright (6 recorridos) |
 
 **332 tests · `tsc --build` limpio · `npm audit` limpio.**
 
@@ -146,15 +146,16 @@ El frontend redirige `/api` y `/images` al backend en desarrollo.
 00Master/        Contexto del proyecto: producto, stack, hitos, diccionario de datos
 001Reportes/     Tareas realizadas, pendientes y bloqueadas
 002Agents/       Roster de agentes y sus mandatos
-003Problemas/    26 problemas registrados, con su diagnóstico y su medición
-004Arquitectura/ 8 ADR, estrategia de las 3 APIs, flujos de datos, infraestructura, specs y planes de H7
-005Registro/     Bitácora de las 22 sesiones de trabajo
+003Problemas/    29 problemas registrados, con su diagnóstico y su medición
+004Arquitectura/ 9 ADR, estrategia de las 3 APIs, flujos de datos, infraestructura, specs y planes
+005Registro/     Bitácora de las 23 sesiones de trabajo
 Claude.md        Orquestador: contrato de operación y convenciones
 
 db/migrations/   SQL plano versionado, con migrador propio
 packages/shared/ @tcg/shared — contrato de dominio compartido entre API y frontend
 apps/api/        Backend: HTTP entrante, cliente saliente, ingesta, sobres, imágenes
 apps/web/        Frontend: React + Vite
+e2e/             Suite E2E con Playwright (ADR-009). No es workspace de npm
 ```
 
 **Empieza por [`Claude.md`](Claude.md) y [`00Master/00_Contexto_Global.md`](00Master/00_Contexto_Global.md).**
@@ -191,6 +192,7 @@ sembrado lleva anotado si es `[OFICIAL]`, `[DERIVADO]` (con el cálculo) o `[EST
 | `npm run dev:web` | Arranca el frontend |
 | `docker compose up --build` | Levanta el entorno completo: mysql, redis, api y web |
 | `docker compose --profile ingest run --rm ingest` | Ingesta dentro de Docker |
+| `docker compose --profile e2e run --rm e2e` | Suite E2E con Playwright |
 
 ---
 

@@ -11,12 +11,14 @@ haga una vez y la compartan backend y frontend.
 | `web` | propia, `node:22-bookworm-slim` (Vite dev) | 5173 | Proxy `/api` y `/images` → `api` |
 | `api` | propia, `node:22-bookworm-slim` | 3000 | Migra al arrancar; sirve `/images` |
 | `ingest` | la misma imagen que `api` | — | **Perfil**, no servicio: se ejecuta y termina |
+| `e2e` | oficial de Playwright | — | **Perfil**. Suite E2E (ADR-009). Vuelca capturas a `e2e/artefactos/` |
 | `mysql` | `mysql:8.0.42` | **3307** | Volumen `db_data`; crea la base y el usuario |
 | `redis` | `redis:7-alpine` | 6379 | Volumen `redis_data`, `appendonly` |
 
 ```bash
 docker compose up --build
 docker compose --profile ingest run --rm ingest --game YGO --sets 3
+docker compose --profile e2e run --rm e2e
 ```
 
 `./storage` se monta en `api` y en `ingest`: las imágenes re-hospedadas viven fuera de la imagen y
@@ -51,7 +53,7 @@ ProyectoTCG/
 │   └── shared/         Tipos de dominio compartidos (GameCode, DomainPrint, …)
 ├── storage/cards/      Imágenes re-hospedadas (NO en git)
 ├── db/migrations/      DDL versionado
-└── e2e/                Cypress
+└── e2e/                Playwright (ADR-009; el hito decia Cypress hasta S023)
 ```
 
 ## Variables de entorno
