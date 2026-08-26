@@ -121,9 +121,10 @@ export class CollectionRepository {
    */
   async completion(userId: number, game: GameCode): Promise<SetCompletion[]> {
     const rows = await this.db.select<{
-      external_id: string; code: string; name: string; pool_size: number; owned: number;
+      external_id: string; code: string; name: string; icon_local_path: string | null;
+      pool_size: number; owned: number;
     }>(
-      `SELECT s.external_id, s.code, s.name,
+      `SELECT s.external_id, s.code, s.name, s.icon_local_path,
               COUNT(DISTINCT p.id) AS pool_size,
               COUNT(DISTINCT uc.card_print_id) AS owned
        FROM sets s
@@ -144,6 +145,9 @@ export class CollectionRepository {
         setExternalId: r.external_id,
         setCode: r.code,
         setName: r.name,
+        // Ruta LOCAL, nunca la del origen (P-001, P-022). Nula si el icono no
+        // se ha cosechado todavia.
+        iconPath: r.icon_local_path,
         poolSize,
         owned,
         ratio: poolSize > 0 ? Number((owned / poolSize).toFixed(4)) : 0,

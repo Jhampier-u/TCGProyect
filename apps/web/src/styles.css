@@ -88,6 +88,91 @@ h2 { font-size: 17px; margin: 24px 0 10px; }
   min-width: 0;
 }
 
+/* ---------------------------------------------------------------------
+ * Selector de set con icono (T-066).
+ *
+ * La misma leccion de P-030, aplicada por adelantado: el control NO puede
+ * crecer con el nombre mas largo de la lista. `min-width: 0` es lo que permite
+ * que un hijo de flex se encoja por debajo de su contenido; sin el, la regla de
+ * max-width no basta.
+ * ------------------------------------------------------------------ */
+.selector-set {
+  position: relative;
+  min-width: 0;
+  max-width: 100%;
+  flex: 1 1 220px;
+}
+
+.selector-set-boton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+  text-align: left;
+  cursor: pointer;
+}
+.selector-set-boton:disabled { opacity: 0.55; cursor: not-allowed; }
+.selector-set-boton:focus-visible {
+  outline: 2px solid var(--acento-tenue);
+  outline-offset: 1px;
+}
+
+/* El nombre es lo unico elastico: el icono y la flecha mantienen su tamano. */
+.selector-set-nombre {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.selector-set-flecha { flex: none; opacity: 0.6; font-size: 11px; }
+
+.selector-set-icono {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+}
+
+.selector-set-lista {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  /* Alto acotado: con 900 sets, una lista sin tope taparia la pagina entera. */
+  max-height: 320px;
+  overflow-y: auto;
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 35%);
+}
+
+.selector-set-opcion {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 8px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+.selector-set-opcion[data-resaltado='true'] { background: var(--fondo-alt); }
+.selector-set-opcion[aria-selected='true'] .selector-set-nombre { font-weight: 600; }
+.selector-set-detalle { flex: none; font-size: 12px; opacity: 0.6; }
+
+/* El icono en el panel de completitud de la coleccion. */
+.fila-set .icono-set {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  flex: none;
+}
+
 input, select, button {
   font: inherit;
   color: var(--texto);
@@ -199,7 +284,10 @@ button.primario:hover:not(:disabled) { filter: brightness(1.08); }
 .completitud { display: flex; flex-direction: column; gap: 8px; }
 .fila-set {
   display: grid;
-  grid-template-columns: 70px 1fr 110px;
+  /* La primera columna es el icono del set (T-066). Ocupa su hueco aunque el
+     icono falte: si no, las filas sin cosechar desalinean el codigo del set y la
+     lista se lee peor que sin iconos. */
+  grid-template-columns: 22px 70px 1fr 110px;
   align-items: center;
   gap: 12px;
   padding: 9px 12px;

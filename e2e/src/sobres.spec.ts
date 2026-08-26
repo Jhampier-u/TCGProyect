@@ -55,15 +55,19 @@ async function paginaCon(
   return { page, cerrar: () => contexto.close() };
 }
 
-async function abrirUnSobre(page: Page, setId: number): Promise<void> {
+async function abrirUnSobre(page: Page, nombreDeSet: string): Promise<void> {
   await page.goto('/sobres');
   await expect(page.getByRole('heading', { name: 'Abrir sobres' })).toBeVisible();
 
-  // Los tres select del filtro: juego, set y cantidad.
+  // Juego y cantidad siguen siendo `<select>` nativos; el de SET ya no lo es.
+  // Desde T-066 es un control propio, porque un `<option>` no puede llevar un
+  // icono dentro. Elegir en el es abrir y hacer clic en la opcion.
   const selects = page.locator('.filtros select');
   await selects.nth(0).selectOption('YGO');
-  await selects.nth(1).selectOption(String(setId));
-  await selects.nth(2).selectOption('1');
+  await selects.nth(1).selectOption('1');
+
+  await page.locator('.selector-set-boton').first().click();
+  await page.locator(`.selector-set-opcion:has-text("${nombreDeSet}")`).first().click();
 
   await page.getByRole('button', { name: 'Abrir' }).click();
   await expect(page.locator('.sobre')).toBeVisible();
@@ -75,7 +79,7 @@ test('las cartas llegan boca abajo y el volteo TERMINA', async ({ browser, reque
     const set = await setAbribleDeYgo(request);
     await iniciarSesion(page, usuario.token);
 
-    await abrirUnSobre(page, set.id);
+    await abrirUnSobre(page, set.name);
 
     const primera = page.locator('.volteador').first();
 
@@ -113,7 +117,7 @@ test('T-040 no es vacuo: con movimiento reducido NO hay volteo que probar', asyn
     const set = await setAbribleDeYgo(request);
     await iniciarSesion(page, usuario.token);
 
-    await abrirUnSobre(page, set.id);
+    await abrirUnSobre(page, set.name);
 
     // Ya reveladas, sin un solo clic.
     const volteadores = page.locator('.volteador');

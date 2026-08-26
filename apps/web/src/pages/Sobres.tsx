@@ -4,6 +4,7 @@ import type { GameCode } from '@tcg/shared';
 import { api, ApiError, type PackOpening } from '../lib/api.js';
 import { useAuth } from '../lib/auth.js';
 import { PackReveal } from '../components/PackReveal.js';
+import { SelectorDeSet } from '../components/SelectorDeSet.js';
 
 /**
  * Apertura de sobres.
@@ -82,18 +83,18 @@ export function Sobres() {
           <option value="PTCG">Pokemon TCG</option>
         </select>
 
-        <select
-          value={setId ?? ''}
-          onChange={(e) => setSetId(e.target.value ? Number(e.target.value) : null)}
-          style={{ minWidth: 260 }}
-        >
-          <option value="">Elige un set...</option>
-          {abribles.map((s) => (
-            <option key={s.id} value={s.id}>
-              {s.name} ({s.poolSize} cartas)
-            </option>
-          ))}
-        </select>
+        <SelectorDeSet
+          etiqueta="Set"
+          vacio="Elige un set..."
+          valor={setId === null ? '' : String(setId)}
+          onCambio={(v) => setSetId(v ? Number(v) : null)}
+          opciones={abribles.map((s) => ({
+            id: String(s.id),
+            nombre: s.name,
+            iconPath: s.iconPath,
+            detalle: `${s.poolSize} cartas`,
+          }))}
+        />
 
         <select value={count} onChange={(e) => setCount(Number(e.target.value))}>
           <option value={1}>1 sobre</option>

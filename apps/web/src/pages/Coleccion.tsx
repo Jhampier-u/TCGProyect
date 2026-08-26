@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import type { GameCode } from '@tcg/shared';
-import { api } from '../lib/api.js';
+import { api, imageUrl } from '../lib/api.js';
 import { useAuth } from '../lib/auth.js';
 import { CardTile } from '../components/CardTile.js';
 
@@ -78,6 +78,13 @@ export function Coleccion() {
         <div className="completitud">
           {conCartas.map((c) => (
             <div className="fila-set" key={c.setExternalId}>
+              {/* Ruta LOCAL, nunca la del origen (P-001). `alt` vacio a
+                  proposito: el codigo y el nombre del set van al lado en texto. */}
+              {c.iconPath ? (
+                <img className="icono-set" src={imageUrl(c.iconPath)!} alt="" loading="lazy" />
+              ) : (
+                <span className="icono-set" aria-hidden="true" />
+              )}
               <strong>{c.setCode}</strong>
               <div>
                 <div style={{ fontSize: 12.5, marginBottom: 4 }}>{c.setName}</div>

@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { GameCode } from '@tcg/shared';
 import { api, imageUrl, type CardSummary } from '../lib/api.js';
 import type { DraftCard } from '../lib/deck-draft.js';
+import { SelectorDeSet } from './SelectorDeSet.js';
 
 export interface DeckBuscadorProps {
   /** Lo fija el mazo, no el usuario: es lo que evita un game_mismatch. */
@@ -85,14 +86,17 @@ export function DeckBuscador({ game, onAnadir }: DeckBuscadorProps) {
           value={texto}
           onChange={(e) => setTexto(e.target.value)}
         />
-        <select value={set} onChange={(e) => setSet(e.target.value)}>
-          <option value="">Todos los sets</option>
-          {(sets.data ?? []).map((s) => (
-            <option key={s.externalId} value={s.externalId}>
-              {s.name}
-            </option>
-          ))}
-        </select>
+        <SelectorDeSet
+          etiqueta="Set"
+          vacio="Todos los sets"
+          valor={set}
+          onCambio={setSet}
+          opciones={(sets.data ?? []).map((s) => ({
+            id: s.externalId,
+            nombre: s.name,
+            iconPath: s.iconPath,
+          }))}
+        />
       </div>
 
       {error && <div className="aviso error">{error}</div>}

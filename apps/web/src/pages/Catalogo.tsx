@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import type { GameCode } from '@tcg/shared';
 import { api } from '../lib/api.js';
+import { SelectorDeSet } from '../components/SelectorDeSet.js';
 import { CardTile } from '../components/CardTile.js';
 
 /**
@@ -67,16 +68,20 @@ export function Catalogo() {
           <option value="PTCG">Pokemon TCG</option>
         </select>
 
-        <select value={set} onChange={(e) => reiniciar(() => setSet(e.target.value))}>
-          <option value="">Todos los sets</option>
-          {(sets.data ?? [])
+        <SelectorDeSet
+          etiqueta="Set"
+          vacio="Todos los sets"
+          valor={set}
+          onCambio={(v) => reiniciar(() => setSet(v))}
+          opciones={(sets.data ?? [])
             .filter((s) => s.poolSize > 0)
-            .map((s) => (
-              <option key={s.externalId} value={s.externalId}>
-                {s.name} ({s.poolSize})
-              </option>
-            ))}
-        </select>
+            .map((s) => ({
+              id: s.externalId,
+              nombre: s.name,
+              iconPath: s.iconPath,
+              detalle: String(s.poolSize),
+            }))}
+        />
 
         <select value={rarity} onChange={(e) => reiniciar(() => setRarity(e.target.value))}>
           <option value="">Todas las rarezas</option>

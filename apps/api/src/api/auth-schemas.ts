@@ -198,6 +198,9 @@ export const COLLECTION_COMPLETION = {
               setExternalId: { type: 'string' },
               setCode: { type: 'string' },
               setName: { type: 'string' },
+              // Ruta LOCAL del icono (T-035, T-066). `icon_url` -- la del
+              // origen -- no sale de aqui ni de ningun otro sitio (P-022).
+              iconPath: { type: ['string', 'null'] },
               poolSize: { type: 'integer' },
               owned: { type: 'integer' },
               ratio: { type: 'number' },

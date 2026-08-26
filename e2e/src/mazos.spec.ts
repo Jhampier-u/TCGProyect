@@ -23,16 +23,19 @@ test('el editor de mazos se pinta y valida en cliente', async ({ page, request, 
   await expect(page.locator('.zona')).toHaveCount(3);
   await expect(page.locator('.editor .editor-columna')).toHaveCount(2);
 
-  // P-030: el <select> de sets se dimensiona a su opcion mas larga, y los
-  // nombres de set de Yu-Gi-Oh! son largos. En la columna estrecha del editor
-  // medía 614 px dentro de 530 y se solapaba con el panel del mazo. Salio al
-  // MIRAR una captura, no del DOM: por eso queda como asercion.
+  // P-030: el selector de sets se salia de su columna. El `<select>` original se
+  // dimensionaba a su opcion mas larga y los nombres de set de Yu-Gi-Oh! son
+  // largos: en la columna estrecha del editor medía 614 px dentro de 530 y se
+  // solapaba con el panel del mazo. Salio al MIRAR una captura, no del DOM.
+  //
+  // Desde T-066 el control es propio y NO hereda ese comportamiento -- pero
+  // tampoco hereda la leccion, asi que la asercion se mantiene sobre el nuevo.
   const desbordamiento = await page.evaluate(() => {
     const filtros = document.querySelector('.filtros') as HTMLElement;
-    const select = filtros.querySelector('select') as HTMLElement;
+    const control = filtros.querySelector('.selector-set') as HTMLElement;
     const columna = filtros.closest('.editor-columna') as HTMLElement;
     return (
-      Math.round(select.getBoundingClientRect().right) -
+      Math.round(control.getBoundingClientRect().right) -
       Math.round(columna.getBoundingClientRect().right)
     );
   });

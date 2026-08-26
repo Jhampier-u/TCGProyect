@@ -153,3 +153,25 @@ export async function crearMazo(
   const cuerpo = (await res.json()) as { data: { id: number } };
   return cuerpo.data.id;
 }
+
+/**
+ * Abre un sobre por API para dejar cartas en la coleccion.
+ *
+ * Existe para que el test del panel de completitud no dependa de que OTRO test
+ * haya abierto sobres antes. Un test que se salta por falta de datos no prueba
+ * nada, y uno que depende del orden de ejecucion falla el dia que ese orden
+ * cambie.
+ */
+export async function abrirUnSobrePorApi(
+  request: APIRequestContext,
+  token: string,
+  setId: number,
+): Promise<void> {
+  const res = await request.post(`${API}/api/packs/open`, {
+    headers: { authorization: `Bearer ${token}` },
+    data: { setId, count: 1 },
+  });
+  if (!res.ok()) {
+    throw new Error(`No se pudo abrir el sobre de precondicion: ${res.status()} ${await res.text()}`);
+  }
+}

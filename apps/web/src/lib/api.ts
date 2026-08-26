@@ -175,6 +175,8 @@ export interface SetCompletion {
   setExternalId: string;
   setCode: string;
   setName: string;
+  /** Ruta LOCAL del icono del set. Nula si aun no se ha cosechado (T-035). */
+  iconPath: string | null;
   poolSize: number;
   owned: number;
   ratio: number;
