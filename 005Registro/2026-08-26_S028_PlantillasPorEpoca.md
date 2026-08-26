@@ -1,4 +1,4 @@
-# S028 — Plantillas por época en los dos juegos, y un rollback que no lo era (T-034, T-068)
+# S028 — El techo de completitud, en los tres juegos (T-034, T-068, T-069, T-070)
 **Fecha:** 2026-08-26 · **Orquestador:** Claude.md
 
 ## Requerimiento del usuario
@@ -212,12 +212,95 @@ funcionado nunca en ninguna parte es un script roto, no un cambio de esquema.
 | Los tres guardianes de Pokémon | vistos en rojo, incluido el que rechaza una rareza de **otro juego** |
 | Los pesos de las plantillas de PTCG | suman 1000, verificado con `JSON_TABLE` |
 
+---
+
+# Tercera parte: T-070 y T-069
+
+## T-070 — que el informe vea lo que tuve que contar a mano
+
+El informe medía el techo **set a set**, y por eso no vio el 28,5 % del slot de Pokémon: que una
+plantilla pida algo que un set concreto no tiene es normal. Que pida algo que **no existe en todo el
+juego** no lo es.
+
+`pesoSinDestino` lo mide, y en la primera ejecución salieron los dos:
+
+```
+[YGO]  AVISO "Core Booster (Eternity Code en adelante)" slot 8: el 4.2% del peso
+       pide rarezas que ningun set de YGO tiene (quarter_century_secret_rare)
+[PTCG] AVISO "Booster Scarlet & Violet" slot 9: el 28.5% del peso
+       pide rarezas que ningun set de PTCG tiene (hyper_rare, rare_holo)
+```
+
+**Avisa y no rompe, y el de Yu-Gi-Oh! explica por qué:** *Supreme Darkness* —el set con 25 Quarter
+Century Secret Rare— no está ingestado ahora mismo. La plantilla es correcta y el aviso también.
+Fallar ahí sería fallar sobre un estado legítimo.
+
+## T-069 — qué set es de verdad un producto de sobres
+
+Dos reglas. La primera **no es una heurística**: un set que declara menos cartas de las que lleva un
+sobre de su juego no puede ser un producto de sobres. Son **937 de 2254** sets del catálogo. La
+segunda son patrones de nombre, que sí son juicio, y por eso **todo lo que descartan sale en el
+informe**.
+
+**Comprobado contra los 2254 nombres reales antes de conectarlo a nada.** Ningún set de 100+ cartas
+lo descarta la aritmética, y todas las exclusiones grandes por nombre son productos de mazos —también
+en Magic, cuyos nombres no usé para ajustar los patrones.
+
+**Y un patrón que dejé fuera con los datos delante.** `Tin` parecía obvio:
+
+```
+2025 Mega-Pack Tin                    450 cartas
+25th Anniversary Tin: Dueling Mirrors 398 cartas
+```
+
+Los Mega Pack dentro de un tin sí son sobres. El patrón habría quitado más contenido real del que
+arregla.
+
+Vive en `sets.is_openable`, no en `in_boosters`: son dos cosas distintas y confundirlas es justo lo
+que P-033 describe. Y así corregir una mala clasificación es un `UPDATE` de una fila.
+
+**Con Arc-V Decks fuera, el informe dice `Todos los sets son completables`** en los tres juegos: su
+rareza `new` no era un hueco, era un producto mal clasificado.
+
+## El otro fallo de la sesión, y lo destapó la suite E2E (P-036)
+
+El test de humo falló con **quince 404 de imágenes**. La causa era mía: había lanzado las cosechas
+con `STORAGE_PATH=C:/TCGProyect/storage`, y lo que el proyecto documenta —y el contenedor usa— es
+`./storage/cards`. 3101 imágenes escritas donde la API no las busca.
+
+**Lo que lo convierte en problema y no en errata: nada avisa.** El cosechador termina en verde, la
+API arranca sin quejarse, la base dice que 2000 impresiones tienen imagen, y el único síntoma es un
+404 por imagen en el navegador. Peor: la salvaguarda 1 del cosechador consulta la raíz equivocada,
+así que la siguiente ejecución con la raíz buena volvería a pedirle al origen 3101 imágenes que ya
+se tenían — justo lo que P-001 existe para evitar.
+
+Ficheros movidos a su sitio; la causa queda como **P-036** y **T-071**. Y conviene subrayarlo: **lo
+encontró la suite E2E**, que es exactamente para lo que se escribió en H8a.
+
+## Y una limitación de la propia suite (T-072)
+
+Al relanzarla varias veces seguidas empezó a fallar con `429 Too Many Requests`: cada test registra
+un usuario y el límite de `/api/auth/register` es por IP y por hora (T-062, H8b). El rate limiting
+hacía su trabajo. Hoy se sortea reiniciando la API —los contadores están en memoria— y eso es un
+apaño, no una solución.
+
+## Verificación de la tercera parte
+
+| Comprobación | Resultado |
+|---|---|
+| `npm test` | **368/368** en 29 ficheros |
+| Suite E2E | 6 passed, con la API reiniciada |
+| `vite build` · `npm audit` | limpios |
+| `npm run packs:cobertura` | **"Todos los sets son completables"**, los tres juegos |
+| Clasificador contra los 2254 nombres reales | 1165 abribles · 1089 descartados · cero falsos positivos revisables |
+| Reclasificación de lo ya ingestado | 1089 filas, exactamente las que predijo la simulación |
+
 ## Lo que NO se ha hecho, y por qué
 
 | ID | Qué queda |
 |---|---|
-| **T-069** (P-033) | LAVD es una caja de Structure Decks con sus 153 impresiones marcadas `in_boosters = 1`. Es un criterio del adaptador, no una plantilla |
-| **T-070** | El informe mide el techo **por set**, y por eso no vio que el 28,5 % del slot de Pokémon pedía rarezas que **ningún** set del juego tiene. Se midió a mano con SQL; debería salir del informe |
+| **T-071** (P-036) | Una cosecha con el `STORAGE_PATH` equivocado deja la base diciendo que hay imágenes y la API devolviendo 404 |
+| **T-072** | La suite E2E no se puede relanzar dentro de la misma hora: choca con su propio rate limit |
 | **T-067** | **MAMO y MAMS** no tienen ni una carta común y la plantilla pide ocho. **Black Bolt y White Flare** tienen el 40 % del set en Illustration Rare y su plantilla les da el 10,2 %. En los cuatro, la carta del chase ya es alcanzable; lo que falta es que el sobre se parezca al producto |
 
 Los tres salieron de medir. Ninguno se ha tapado subiendo un número.
@@ -230,6 +313,7 @@ que hace la aplicación, pero conviene saberlo antes de sacar conclusiones de es
 
 ## Estado
 - **H8 cerrado.** H8a (suite E2E), H8b (seguridad) y H8c (las ocho de deuda técnica).
-- **T-068 cerrada también**, fuera de H8c: salió del informe que se escribió para T-034.
-- Abiertas: T-065, T-066, T-067, T-069, T-070 y T-005, que depende del usuario.
-- Problemas: 7 abiertos · 28 cerrados.
+- **T-068, T-069 y T-070 cerradas también**, fuera de H8c: las tres salieron del informe que se
+  escribió para T-034.
+- Abiertas: T-065, T-066, T-067, T-071, T-072 y T-005, que depende del usuario.
+- Problemas: 7 abiertos · 29 cerrados.

@@ -1,6 +1,6 @@
 # Registro de Problemas
 
-**Última actualización:** 2026-08-26 (S028) · **Abiertos:** 7 · **Cerrados:** 28
+**Última actualización:** 2026-08-26 (S028) · **Abiertos:** 7 · **Cerrados:** 29
 
 Severidad: 🔴 crítica · 🟠 alta · 🟡 media · ⚪ baja
 
@@ -1027,8 +1027,8 @@ ella. Un fichero de esquema no deberia decidir en que base se aplica.
 
 ---
 
-## P-033 🟡 ABIERTO · Se pueden abrir sobres de productos que no son sobres
-**Estado:** ABIERTO desde el 2026-08-26 (S028)
+## P-033 ✅ CERRADO · Se podían abrir sobres de productos que no son sobres
+**Estado:** CERRADO el 2026-08-26 (S028) — migración 0013
 **Severidad:** 🟡
 **Origen:** medir el techo de completitud de cada set (T-034).
 
@@ -1045,9 +1045,42 @@ incluidos los que son aparte precisamente por no ser sobres.
 YGOPRODeck usa para las cartas inéditas de esos mazos. Ninguna plantilla de Core Booster la nombra, y
 no debe nombrarla: meterla sería describir mal el producto para que un número suba.
 
-**Por qué no se arregla en T-034.** Distinguir un producto de sobres de uno que no lo es exige un
-criterio en el adaptador, no una plantilla. Es un problema de ingesta con su propio alcance.
-Registrado como **T-069**.
+**Por qué no se arregló dentro de T-034.** Distinguir un producto de sobres de uno que no lo es exige
+un criterio de catálogo, no una plantilla. Se hizo aparte, como **T-069**, en la misma sesión.
+
+**Solución: dos reglas, y la primera no es una heurística.**
+
+1. **Aritmética.** Un set que declara menos cartas de las que lleva un sobre de su juego no puede ser
+   un producto de sobres. Sobre el catálogo entero, **937 de 2254 sets**: 520 de Yu-Gi-Oh! y 417 de
+   Magic. Cero juicios.
+2. **Patrones de nombre.** Aquí sí hay juicio, así que **todo lo que descartan sale en
+   `npm run packs:cobertura`**: un patrón demasiado ancho quitaría del catálogo un set de sobres
+   real, y eso sería peor que el problema que arregla.
+
+**Comprobado contra los 2254 nombres reales antes de conectarlo a nada.** Ningún set de 100+ cartas
+lo descarta la aritmética, y todas las exclusiones grandes por nombre son productos de mazos de
+verdad — también en Magic, cuyos nombres no se usaron para ajustar los patrones (`Duel Decks`,
+`Starter Commander Decks`, `Magic Online Theme Decks`).
+
+**Un patrón que parecía obvio y se dejó fuera con datos delante.** `Tin` habría sido un error:
+
+```
+2025 Mega-Pack Tin                    450 cartas
+25th Anniversary Tin: Dueling Mirrors 398 cartas
+2014 Mega-Tin Mega Pack               247 cartas
+```
+
+Los Mega Pack que vienen dentro de un tin **sí** son sobres sellados. El patrón habría quitado más
+contenido real del que arregla.
+
+**Dónde vive, y por qué no en `in_boosters`.** En `sets.is_openable` (migración 0013).
+`card_prints.in_boosters` significa *"esta impresión puede salir de un sobre de su set"* y es por
+impresión; *"este set es un producto de sobres"* es por set. Confundirlas es exactamente el error que
+este problema describe. Además, corregir una mala clasificación aquí es un `UPDATE` de una fila; en
+`in_boosters` obligaría a reingestar el set entero.
+
+**Con Arc-V Decks fuera, el informe de cobertura dice "todos los sets son completables"** en los tres
+juegos: su rareza `new` era el último hueco y no era un hueco, era un producto mal clasificado.
 
 ---
 
@@ -1170,3 +1203,38 @@ script roto, no un cambio de esquema.
 **Lección.** Una prueba de rollback sin datos que dependan de lo que se borra no prueba el rollback.
 Es la misma familia que P-022 —un test que pasaba porque la fixture devolvía `null`— y que P-029: la
 comprobación existía, se ejecutó, y el caso que la hacía valer no estaba dentro.
+
+---
+
+## P-036 🟡 ABIERTO · Una cosecha con el `STORAGE_PATH` equivocado no la detecta nadie
+**Estado:** ABIERTO desde el 2026-08-26 (S028)
+**Severidad:** 🟡
+**Origen:** **la suite E2E**, al fallar el test de humo con quince 404 de imágenes.
+
+**Detalle.** `card_prints.image_local_path` guarda una ruta **relativa** a `STORAGE_PATH`. La base de
+datos no guarda en ningún sitio bajo qué raíz se escribió el fichero.
+
+En S028 se lanzaron varias cosechas desde el host con `STORAGE_PATH=C:/TCGProyect/storage`, cuando lo
+que el proyecto documenta y el contenedor usan es `./storage/cards`. Resultado: 3101 imágenes en
+`storage/{mtg,ygo,ptcg}` y un contenedor buscándolas en `storage/cards/{mtg,ygo,ptcg}`.
+
+**Lo que hace que sea un problema y no una errata.** Nada avisa:
+
+- El cosechador termina en verde: escribió sus ficheros y marcó sus filas.
+- La API arranca sin quejarse.
+- La base de datos dice que 2000 impresiones **tienen** imagen.
+- El único síntoma es un 404 por imagen en el navegador.
+
+Y es contagioso: la salvaguarda 1 del cosechador —"si ya está en disco, no lo pidas al origen"—
+consulta la raíz **equivocada**, así que la siguiente ejecución con la raíz buena volvería a pedirle
+al origen 3101 imágenes que ya se tenían. Contra YGOPRODeck eso es justo lo que P-001 evita.
+
+**Mitigación aplicada:** ninguna, sólo mover los ficheros a su sitio. La causa sigue ahí.
+
+**Lo que falta para cerrarlo (T-071).** Que la API compruebe al arrancar la coherencia entre lo que
+la base dice y lo que hay bajo `STORAGE_PATH`: si la base afirma que hay miles de imágenes y el
+directorio está vacío, eso es un error de configuración y debe decirse al arrancar, no descubrirse
+por un 404.
+
+**Lección.** Una ruta relativa sin registrar su raíz no es una referencia: es una referencia a medias.
+Y lo destapó la suite E2E, que es exactamente para lo que se escribió (H8a).

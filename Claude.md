@@ -108,7 +108,8 @@ C:\ProyectoTCG\
 │       ├── 0009_template_eras.{up,down}.sql
 │       ├── 0010_ygo_era_templates.{up,down}.sql
 │       ├── 0011_ygo_modern_gaps.{up,down}.sql
-│       └── 0012_ptcg_era_templates.{up,down}.sql
+│       ├── 0012_ptcg_era_templates.{up,down}.sql
+│       └── 0013_set_is_openable.{up,down}.sql
 │
 ├── packages\shared\             <- @tcg/shared: contrato de dominio
 │   └── src\
@@ -143,6 +144,7 @@ C:\ProyectoTCG\
 │       │                       deck-repository (H7)
 │       ├── cli\                ingest.ts: CLI para poblar el catalogo
 │       ├── ingest\             IngestService: el orquestador (T-021)
+│       │                       openable: que set es un producto de sobres (T-069)
 │       ├── images\             image-harvest: descarga unica + WebP (T-014)
 │       │                       cartas y iconos de set, el mismo job (T-035)
 │       │                       harvester · sharp-encoder · file-store

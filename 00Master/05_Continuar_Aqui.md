@@ -1,7 +1,7 @@
 # 05 — Continuar aquí
 
 **Punto de guardado:** 2026-08-26, tras la sesión **S028**
-**Commit:** rama `main` · 358 tests de Vitest + 6 recorridos E2E en verde · `npm audit` limpio
+**Commit:** rama `main` · 368 tests de Vitest + 6 recorridos E2E en verde · `npm audit` limpio
 
 Este documento existe para retomar el proyecto en otra máquina o en otra sesión sin releer las 26
 bitácoras. Si sólo vas a leer un fichero, que sea éste.
@@ -181,8 +181,8 @@ Las ocho tareas de H8c están cerradas. Lo que queda abierto salió de hacerlas,
 
 | Tarea | Qué pasa si no se hace |
 |---|---|
-| **T-069** | La aplicación ofrece abrir sobres de cajas de Structure Decks (P-033) |
-| **T-070** | El informe de cobertura no ve las rarezas que **ningún** set de un juego tiene: en Pokémon eran el 28,5 % del slot del hit |
+| **T-071** | Una cosecha con el `STORAGE_PATH` equivocado deja la base mintiendo y la API en 404 (P-036) |
+| **T-072** | La suite E2E no se puede relanzar dentro de la misma hora: choca con su propio rate limit |
 | **T-066** | Los iconos de set están cosechados y servidos, pero no se ven: el selector es un `<select>` |
 | **T-065** | La migración `0001` fija el nombre de la base; hay guarda, no arreglo (P-032) |
 | **T-067** | MAMO y MAMS no tienen comunes y la plantilla pide ocho: alcanzable pero no realista |
@@ -201,9 +201,9 @@ Las ocho tareas de H8c están cerradas. Lo que queda abierto salió de hacerlas,
 | **P-008** | 🟡 | "The List" de MTG no se modela; el slot de tierra no filtra por tipo |
 | **P-016** | 🟠 | La API de Pokémon responde 200 sólo ~30 % de las veces. La ingesta **debe** poder reanudarse |
 | **P-032** | 🟡 | La migración `0001` hace `USE proyecto_tcg` e ignora la conexión. Mitigado con una guarda |
-| **P-033** | 🟡 | Se pueden abrir sobres de productos que no son sobres |
+| **P-036** | 🟡 | Una cosecha con el `STORAGE_PATH` equivocado no la detecta nadie: 404 por imagen |
 
-Los 35 problemas —28 cerrados, con su medición— están en `003Problemas/Registro_Problemas.md`.
+Los 36 problemas —29 cerrados, con su medición— están en `003Problemas/Registro_Problemas.md`.
 
 **P-021 se cerró en S028, y su entrada es la que más conviene leer**: llevaba trece sesiones citada
 en cinco documentos sin estar escrita, y al medirla resultó ser lo contrario de lo que decía la
