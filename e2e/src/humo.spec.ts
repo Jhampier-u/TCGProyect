@@ -1,7 +1,6 @@
-import { test, expect } from '@playwright/test';
-import { crearUsuario, iniciarSesion } from './fixtures.js';
+import { test, expect, iniciarSesion } from './fixtures.js';
 
-test('la aplicacion carga y navega sin errores de consola', async ({ page, request }) => {
+test('la aplicacion carga y navega sin errores de consola', async ({ page, request, usuario }) => {
   // Los errores de consola se recogen ANTES de navegar: si se engancha despues,
   // los del arranque se pierden. Es lo que habria cazado P-025 —la imagen web
   // rota durante dos sesiones— en el momento de romperse.
@@ -10,8 +9,6 @@ test('la aplicacion carga y navega sin errores de consola', async ({ page, reque
     if (msg.type() === 'error') errores.push(msg.text());
   });
   page.on('pageerror', (e) => errores.push(e.message));
-
-  const usuario = await crearUsuario(request, 'humo');
   await iniciarSesion(page, usuario.token);
 
   await page.goto('/');
@@ -25,8 +22,7 @@ test('la aplicacion carga y navega sin errores de consola', async ({ page, reque
   expect(errores).toEqual([]);
 });
 
-test('el HTML renderizado no contiene ninguna URL externa (P-001)', async ({ page, request }) => {
-  const usuario = await crearUsuario(request, 'p001');
+test('el HTML renderizado no contiene ninguna URL externa (P-001)', async ({ page, request, usuario }) => {
   await iniciarSesion(page, usuario.token);
 
   await page.goto('/');

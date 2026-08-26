@@ -1,3 +1,4 @@
+import { test as base, request as playwrightRequest } from '@playwright/test';
 import type { APIRequestContext, Page } from '@playwright/test';
 
 /**
@@ -18,20 +19,71 @@ export interface Usuario {
 }
 
 /**
- * Crea un usuario nuevo con correo unico.
+ * UN usuario por ejecucion, no uno por test (T-072).
  *
- * Unico por ejecucion Y por test: sin estado compartido no hay orden obligatorio
- * entre tests, que es de donde sale la mitad de la intermitencia de una suite
- * E2E.
+ * Antes era uno por test, buscando que ninguno dependiera del estado de otro. La
+ * intencion era buena y el precio aparecio al usarla: `/api/auth/register` admite
+ * 20 altas por IP y hora (T-062), asi que con SEIS altas por vuelta la suite se
+ * quedaba sin cupo a la tercera y fallaba con 429 en todos los tests a la vez.
+ * Una suite que no se puede relanzar cuando hace falta deja de usarse, y
+ * entonces no verifica nada. Medido: de 6 altas por vuelta a 1, contando filas
+ * de `users` antes y despues.
+ *
+ * TIENE QUE SER UNA FIXTURE DE AMBITO WORKER. Una variable de modulo no vale:
+ * Playwright carga los modulos de test de forma aislada, asi que el cache no
+ * sobrevive de un test al siguiente. `scope: 'worker'` si vive lo que vive el
+ * proceso del worker.
+ *
+ * QUE SE PIERDE. Los tests ya no arrancan de una cuenta virgen, y UNO SI
+ * dependia de eso: "la lista de mazos muestra el mazo creado" exigia que la
+ * lista tuviera exactamente una fila. Se arreglo el test, no la fixture, porque
+ * su sujeto nunca fue cuantos mazos hay sino que el mazo creado aparece. Los
+ * demas comprueban datos que ellos mismos crean con nombre propio, asi que
+ * compartir cuenta no los toca. El correo cambia en cada vuelta, de modo que el
+ * estado tampoco se arrastra de una ejecucion a la siguiente.
+ *
+ * LO QUE NO SE HACE es subir el limite en el entorno de la suite: bajarle la
+ * guardia justo donde se prueba de verdad seria dejar de probar la guardia.
  */
-export async function crearUsuario(request: APIRequestContext, etiqueta: string): Promise<Usuario> {
+export const test = base.extend<Record<string, never>, { usuario: Usuario }>({
+  usuario: [
+    async ({}, use, workerInfo) => {
+      const request = await playwrightRequest.newContext();
+      try {
+        await use(await registrar(request, `w${workerInfo.workerIndex}`));
+      } finally {
+        await request.dispose();
+      }
+    },
+    { scope: 'worker' },
+  ],
+});
+
+export { expect } from '@playwright/test';
+
+async function registrar(request: APIRequestContext, etiqueta: string): Promise<Usuario> {
   const email = `e2e-${etiqueta}-${Date.now()}-${Math.floor(Math.random() * 100000)}@example.com`;
   const res = await request.post(`${API}/api/auth/register`, {
     data: { email, displayName: 'E2E', password: 'contrasena-larga-e2e-1' },
   });
+
+  if (res.status() === 429) {
+    // El mensaje por defecto ("retry in N minutes") no dice que se puede hacer,
+    // y lo primero que uno piensa es que la suite esta rota.
+    throw new Error(
+      [
+        'CUPO DE ALTAS AGOTADO: la API admite 20 registros por IP y hora (T-062) y esta',
+        'ejecucion no tiene sitio. No es un fallo de la suite ni de la aplicacion: es el',
+        'rate limiting funcionando. Los contadores viven en memoria, asi que se vacian',
+        'con:  docker compose restart api',
+        `Respuesta: ${await res.text()}`,
+      ].join('\n'),
+    );
+  }
   if (!res.ok()) {
     throw new Error(`No se pudo crear el usuario de prueba: ${res.status()} ${await res.text()}`);
   }
+
   const cuerpo = (await res.json()) as { token: string };
   return { email, token: cuerpo.token };
 }
@@ -40,6 +92,7 @@ export interface SetAbrible {
   id: number;
   name: string;
   poolSize: number;
+  isOpenable: boolean;
 }
 
 /**
@@ -56,7 +109,11 @@ export async function setAbribleDeYgo(request: APIRequestContext): Promise<SetAb
     throw new Error(`La API no responde en ${API}: ${res.status()}`);
   }
   const { data } = (await res.json()) as { data: SetAbrible[] };
-  const abrible = data.find((s) => s.poolSize > 0);
+  // Las MISMAS dos condiciones que usa la pagina de sobres. Con solo `poolSize`
+  // la fixture podria elegir un set que la aplicacion no ofrece -- una caja de
+  // Structure Decks tiene pool de sobra (T-069) -- y el test fallaria acusando
+  // a la interfaz de no pintar algo que hace bien en no pintar.
+  const abrible = data.find((s) => s.poolSize > 0 && s.isOpenable);
   if (!abrible) {
     throw new Error(
       'FALTAN DATOS: no hay ningun set de Yu-Gi-Oh! con cartas abribles.\n' +

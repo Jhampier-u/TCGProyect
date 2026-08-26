@@ -70,6 +70,13 @@ const SECRETOS_PROHIBIDOS = new Set(['cambiame', 'changeme', 'secret', 'jwt_secr
  * `image_source_url` llegue al navegador (P-001).
  */
 export function buildServer(options: ApiOptions): FastifyInstance {
+  const app = crearInstancia(options);
+  registrarRutasDeCatalogo(app, options);
+  return app;
+}
+
+/** La instancia desnuda, sin una sola ruta. */
+function crearInstancia(options: ApiOptions): FastifyInstance {
   const app = Fastify({
     logger: options.logger ?? false,
     // Sin esto Fastify rechaza como 400 cualquier query no declarada en el
@@ -77,6 +84,17 @@ export function buildServer(options: ApiOptions): FastifyInstance {
     ajv: { customOptions: { removeAdditional: false, coerceTypes: 'array' } },
   });
 
+  return app;
+}
+
+/**
+ * Las rutas publicas del catalogo.
+ *
+ * Estan aparte para poder registrarlas DESPUES del limitador de tasa. Un plugin
+ * de Fastify solo afecta a las rutas declaradas despues de el, y durante cinco
+ * hitos estas quedaron delante: el tope global no las cubria (P-038).
+ */
+function registrarRutasDeCatalogo(app: FastifyInstance, options: ApiOptions): void {
   const { catalog } = options;
 
   app.get('/api/health', async () => ({ status: 'ok' }));
@@ -133,8 +151,6 @@ export function buildServer(options: ApiOptions): FastifyInstance {
   app.setNotFoundHandler(async (request, reply) =>
     reply.code(404).send({ error: 'not_found', message: `Ruta desconocida: ${request.url}` }),
   );
-
-  return app;
 }
 
 /**
@@ -147,7 +163,11 @@ export function buildServer(options: ApiOptions): FastifyInstance {
 export async function buildFullServer(options: ApiOptions & { auth: NonNullable<ApiOptions['auth']> }): Promise<FastifyInstance> {
   assertStrongSecret(options.auth.jwtSecret);
 
-  const app = buildServer(options);
+  // El orden es lo que arregla P-038: la instancia primero, el limitador
+  // despues y las rutas AL FINAL. Un plugin de Fastify solo afecta a lo que se
+  // declara despues de el, y con `buildServer` construyendo las rutas de golpe
+  // el tope global se quedaba sin cubrir el catalogo entero.
+  const app = crearInstancia(options);
 
   await app.register(fastifyRateLimit, {
     // Tope global generoso y ultima linea: las rutas caras llevan el suyo,
@@ -163,7 +183,23 @@ export async function buildFullServer(options: ApiOptions & { auth: NonNullable<
     // veces el configurado; ese dia hay que conectarlo a un almacen compartido.
     max: 300,
     timeWindow: '1 minute',
+
+    // LAS IMAGENES NO CUENTAN (P-037). Medido: exactamente 300 peticiones a
+    // `/images/` y la 301 es un 429. Desde que las imagenes se sirven de verdad,
+    // una sola pagina del catalogo pide decenas, asi que un usuario navegando
+    // agota su propio presupuesto en un par de minutos y ve su catalogo lleno de
+    // huecos. Detras de un NAT -- una oficina, un aula -- llega mucho antes.
+    //
+    // El limite existe para proteger lo CARO: abrir sobres escribe en tres
+    // tablas, registrarse calcula un Argon2id, buscar recorre un FULLTEXT.
+    // Servir un fichero inmutable de 18 KB con `sendfile` no se parece a nada de
+    // eso, y ademas va con `immutable` y un ano de cache, asi que el navegador
+    // deja de pedirlo solo. Las rutas caras conservan su propio limite, que es
+    // el que de verdad protege (T-062).
+    allowList: (request) => request.url.startsWith('/images/'),
   });
+
+  registrarRutasDeCatalogo(app, options);
 
   if (options.storagePath) {
     // Las imagenes las servimos NOSOTROS desde disco. Es la contrapartida del

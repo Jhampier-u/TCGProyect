@@ -1,5 +1,4 @@
-import { test, expect } from '@playwright/test';
-import { crearMazo, crearUsuario, iniciarSesion, setAbribleDeYgo } from './fixtures.js';
+import { test, expect, crearMazo, iniciarSesion, setAbribleDeYgo } from './fixtures.js';
 
 /**
  * T-053 — la interfaz de mazos, vista de verdad.
@@ -9,8 +8,7 @@ import { crearMazo, crearUsuario, iniciarSesion, setAbribleDeYgo } from './fixtu
  * apariencia no la vio nadie. Las capturas de este test son lo que cierra eso.
  */
 
-test('el editor de mazos se pinta y valida en cliente', async ({ page, request }) => {
-  const usuario = await crearUsuario(request, 'mazos');
+test('el editor de mazos se pinta y valida en cliente', async ({ page, request, usuario }) => {
   await setAbribleDeYgo(request); // precondicion: hay catalogo que buscar
   const deckId = await crearMazo(request, usuario.token, 'Mazo E2E');
   await iniciarSesion(page, usuario.token);
@@ -53,14 +51,19 @@ test('el editor de mazos se pinta y valida en cliente', async ({ page, request }
   await page.screenshot({ path: 'artefactos/mazos-editor-con-carta.png', fullPage: true });
 });
 
-test('la lista de mazos muestra el mazo creado', async ({ page, request }) => {
-  const usuario = await crearUsuario(request, 'mazos-lista');
+test('la lista de mazos muestra el mazo creado', async ({ page, request, usuario }) => {
   await crearMazo(request, usuario.token, 'Mazo en la lista');
   await iniciarSesion(page, usuario.token);
 
   await page.goto('/mazos');
-  await expect(page.getByRole('link', { name: 'Mazo en la lista' })).toBeVisible();
-  await expect(page.locator('.mazo-fila')).toHaveCount(1);
+
+  // Lo que este test comprueba es que el mazo CREADO sale en la lista. Antes
+  // exigia ademas que la lista tuviera exactamente una fila, y eso ataba el test
+  // a que la cuenta estuviera recien hecha: al compartir usuario entre tests
+  // (T-072) empezo a ver dos. La cuenta de filas nunca fue el sujeto.
+  const fila = page.locator('.mazo-fila', { hasText: 'Mazo en la lista' });
+  await expect(fila).toHaveCount(1);
+  await expect(fila.getByRole('link', { name: 'Mazo en la lista' })).toBeVisible();
 
   await page.screenshot({ path: 'artefactos/mazos-lista.png', fullPage: true });
 });

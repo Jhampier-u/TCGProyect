@@ -1,5 +1,5 @@
-import { test, expect, type Browser, type Page } from '@playwright/test';
-import { crearUsuario, iniciarSesion, setAbribleDeYgo } from './fixtures.js';
+import type { Browser, Page } from '@playwright/test';
+import { test, expect, iniciarSesion, setAbribleDeYgo } from './fixtures.js';
 
 /**
  * T-040 — el volteo de las cartas.
@@ -69,10 +69,9 @@ async function abrirUnSobre(page: Page, setId: number): Promise<void> {
   await expect(page.locator('.sobre')).toBeVisible();
 }
 
-test('las cartas llegan boca abajo y el volteo TERMINA', async ({ browser, request }) => {
+test('las cartas llegan boca abajo y el volteo TERMINA', async ({ browser, request, usuario }) => {
   const { page, cerrar } = await paginaCon(browser, 'no-preference');
   try {
-    const usuario = await crearUsuario(request, 'sobres');
     const set = await setAbribleDeYgo(request);
     await iniciarSesion(page, usuario.token);
 
@@ -104,13 +103,13 @@ test('las cartas llegan boca abajo y el volteo TERMINA', async ({ browser, reque
 test('T-040 no es vacuo: con movimiento reducido NO hay volteo que probar', async ({
   browser,
   request,
+  usuario,
 }) => {
   // Si este test se comportara igual que el anterior, el anterior no estaria
   // tocando el camino de la animacion. `PackReveal` llama a `useReducedMotion()`
   // y con movimiento reducido revela TODAS las cartas de golpe.
   const { page, cerrar } = await paginaCon(browser, 'reduce');
   try {
-    const usuario = await crearUsuario(request, 'sobres-reducido');
     const set = await setAbribleDeYgo(request);
     await iniciarSesion(page, usuario.token);
 
