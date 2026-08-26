@@ -10,6 +10,10 @@ export interface BulkCapable {
 export interface IngestRepository {
   upsertSets(sets: DomainSet[]): Promise<void>;
   findPendingSets(game: GameCode, limit: number): Promise<Array<{ id: number; externalId: string }>>;
+  findSetsByExternalId(
+    game: GameCode,
+    externalIds: readonly string[],
+  ): Promise<Array<{ id: number; externalId: string }>>;
   savePrints(game: GameCode, setId: number, prints: DomainPrint[]): Promise<number>;
   markSetIngested(setId: number): Promise<void>;
 }
@@ -43,6 +47,15 @@ export interface IngestReport {
 }
 
 export const DEFAULT_MAX_SETS_PER_RUN = 50;
+
+/** Opciones de UNA ejecucion. Distintas de `IngestOptions`, que es del constructor. */
+export interface IngestRunOptions {
+  /**
+   * Ids de origen de sets concretos. Si viene, se ingestan esos y solo esos,
+   * ignorando el orden por fecha y el marcador de ya ingestado.
+   */
+  soloSets?: readonly string[];
+}
 
 /**
  * Orquestador de ingesta. Une las piezas construidas entre S004 y S010.
@@ -81,7 +94,7 @@ export class IngestService {
     this.#preferIncremental = options.preferIncremental ?? false;
   }
 
-  async ingest(adapter: GameAdapter): Promise<IngestReport> {
+  async ingest(adapter: GameAdapter, opciones: IngestRunOptions = {}): Promise<IngestReport> {
     const game = adapter.game;
     const report: IngestReport = {
       game,
@@ -101,7 +114,11 @@ export class IngestService {
     report.setsDescubiertos = sets.length;
     this.#progress({ type: 'sets_discovered', game, count: sets.length });
 
-    const pendientes = await this.#repo.findPendingSets(game, this.#maxSets);
+    // Con `soloSets` se piden esos y punto, ingestados o no. Sin el, el orden
+    // por fecha de publicacion (T-023).
+    const pendientes = opciones.soloSets?.length
+      ? await this.#repo.findSetsByExternalId(game, opciones.soloSets)
+      : await this.#repo.findPendingSets(game, this.#maxSets);
     if (pendientes.length === 0) return report;
 
     if (!this.#preferIncremental && isBulkCapable(adapter) && adapter.supportsBulk()) {

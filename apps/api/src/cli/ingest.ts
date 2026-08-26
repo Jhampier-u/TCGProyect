@@ -29,10 +29,14 @@ interface Opciones {
   images: boolean;
   imagesOnly: boolean;
   maxImages: number;
+  /** Ids de origen concretos, de `--set`. Vacio = orden por fecha. */
+  soloSets: string[];
 }
 
 function parseArgs(argv: string[]): Opciones {
-  const opciones: Opciones = { game: 'ALL', sets: 3, images: true, imagesOnly: false, maxImages: 2000 };
+  const opciones: Opciones = {
+    game: 'ALL', sets: 3, images: true, imagesOnly: false, maxImages: 2000, soloSets: [],
+  };
 
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
@@ -46,6 +50,10 @@ function parseArgs(argv: string[]): Opciones {
       i += 1;
     } else if (arg === '--sets' && valor) {
       opciones.sets = Math.max(1, Number(valor));
+      i += 1;
+    } else if (arg === '--set' && valor) {
+      // Repetible y tambien admite lista separada por comas.
+      opciones.soloSets.push(...valor.split(',').map((v) => v.trim()).filter((v) => v !== ''));
       i += 1;
     } else if (arg === '--max-images' && valor) {
       opciones.maxImages = Math.max(0, Number(valor));
@@ -99,7 +107,7 @@ async function main(): Promise<void> {
             if (e.type === 'set_done') console.log(`  ${e.set}: ${e.prints} impresiones`);
             if (e.type === 'set_failed') console.log(`  ${e.set}: FALLO — ${e.reason.slice(0, 90)}`);
           },
-        }).ingest(adapter);
+        }).ingest(adapter, { soloSets: opciones.soloSets });
 
         console.log(
           `  via=${informe.via} · sets descubiertos ${informe.setsDescubiertos} · ` +

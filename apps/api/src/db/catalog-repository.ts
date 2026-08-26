@@ -63,14 +63,43 @@ export class CatalogRepository implements ImageRepository {
   /**
    * Sets aun sin ingestar. Es el checkpoint de ADR-004: si el worker muere a
    * mitad, la siguiente ejecucion retoma por aqui sin reprocesar lo hecho.
+   *
+   * SE EXCLUYEN LOS SETS SIN PUBLICAR (T-023). Los origenes listan producto
+   * anunciado y todavia no salido, y con `released_at DESC` esos van PRIMEROS:
+   * una ejecucion acotada se llevaba lo que aun no existe en vez de lo jugable.
+   * Medido el 2026-08-26 sobre el catalogo real: en Magic los dos primeros eran
+   * `Star Trek Commander` (41 cartas) y `Star Trek Tokens` (UNA carta).
+   *
+   * Los sets sin fecha SI entran, y quedan los ultimos: en MySQL un `DESC`
+   * ordena los NULL al final. Excluirlos les habria cerrado la puerta para
+   * siempre.
    */
   async findPendingSets(game: GameCode, limit: number): Promise<PendingSet[]> {
     const rows = await this.db.select<SetRow>(
       `SELECT id, external_id FROM sets
        WHERE game_id = ? AND ingested_at IS NULL
+         AND (released_at IS NULL OR released_at <= CURDATE())
        ORDER BY released_at DESC, id DESC
        LIMIT ?`,
       [GAME_IDS[game], limit],
+    );
+    return rows.map((r) => ({ id: Number(r.id), externalId: r.external_id }));
+  }
+
+  /**
+   * Sets concretos por su id de origen, ingestados o no.
+   *
+   * Existe para poder pedir UN set: el orden por fecha es correcto para ponerse
+   * al dia, pero inutil cuando hace falta un set concreto que esta 35 posiciones
+   * abajo. Deliberadamente NO filtra por `ingested_at`, para poder reingestar.
+   */
+  async findSetsByExternalId(game: GameCode, externalIds: readonly string[]): Promise<PendingSet[]> {
+    if (externalIds.length === 0) return [];
+    const huecos = externalIds.map(() => '?').join(', ');
+    const rows = await this.db.select<SetRow>(
+      `SELECT id, external_id FROM sets
+       WHERE game_id = ? AND external_id IN (${huecos})`,
+      [GAME_IDS[game], ...externalIds],
     );
     return rows.map((r) => ({ id: Number(r.id), externalId: r.external_id }));
   }
