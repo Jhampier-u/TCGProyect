@@ -41,8 +41,16 @@ const DECK_CARD = {
   properties: {
     printId: { type: 'integer' },
     cardId: { type: 'integer' },
+    // El cliente agrupa las copias por CARTA, no por impresion (RN-04). Sin
+    // esto no puede reproducir la validacion del servidor.
+    oracleKey: { type: 'string' },
     name: { type: 'string' },
     typeLine: { type: ['string', 'null'] },
+    // Lleva la banlist de Yu-Gi-Oh! y el subtipo de las Energias de Pokemon.
+    // Viaja igual que en CARD_DETAIL desde H3: los adaptadores construyen
+    // game_data con lista blanca y ninguno de los tres perfiles contiene una
+    // URL, asi que no abre el agujero de P-001.
+    gameData: { type: 'object', additionalProperties: true },
     setCode: { type: 'string' },
     setName: { type: 'string' },
     collectorNumber: { type: 'string' },

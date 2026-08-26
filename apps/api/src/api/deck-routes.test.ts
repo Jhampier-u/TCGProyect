@@ -353,6 +353,25 @@ describe('rutas de mazos', () => {
     expect(res.body).not.toContain('http');
   });
 
+  it('T-052: cada carta del mazo viaja con oracleKey y gameData', async () => {
+    // Sin estos dos campos el cliente no puede llamar a validateDeck: uno
+    // agrupa las copias y el otro lleva la banlist de Yu-Gi-Oh! y el subtipo de
+    // las Energias de Pokemon. El repositorio ya los produce desde T-045; lo
+    // que faltaba era declararlos en el esquema.
+    const id = await crear(tokenA, 'Con datos');
+    await app.inject({
+      method: 'PUT',
+      url: `/api/decks/${id}/cards`,
+      headers: auth(tokenA),
+      payload: { cards: [{ printId: 10, zone: 'main', quantity: 1 }] },
+    });
+
+    const res = await app.inject({ method: 'GET', url: `/api/decks/${id}`, headers: auth(tokenA) });
+    const carta = res.json().data.cards[0];
+    expect(carta.oracleKey).toBe('carta-10');
+    expect(carta.gameData).toEqual({});
+  });
+
   it('borra el mazo', async () => {
     const id = await crear(tokenA, 'Efimero');
     const borrado = await app.inject({
