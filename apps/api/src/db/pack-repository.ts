@@ -24,10 +24,20 @@ export class PackRepositoryMysql implements PackRepository {
   constructor(private readonly db: Database) {}
 
   /**
-   * Plantilla del set, con respaldo a la por defecto del juego.
+   * Plantilla del set, con dos respaldos.
    *
-   * El `ORDER BY (t.set_id IS NULL)` pone primero la plantilla propia del set y
-   * deja la generica como segunda opcion: una sola consulta resuelve el respaldo.
+   * Precedencia, de mas especifica a menos:
+   *   1. La propia del set (`set_id`)
+   *   2. La de la EPOCA cuya ventana contiene `sets.released_at` (T-034)
+   *   3. La generica del juego
+   *
+   * Un `CASE` explicito y no un `ORDER BY (x IS NULL)`: con tres niveles, el
+   * truco de ordenar por un booleano deja de leerse solo.
+   *
+   * Un set sin `released_at` cae al nivel 3, que es lo correcto: sin fecha no
+   * hay epoca. Y una plantilla de epoca lleva `is_default = 0` a proposito --
+   * `uq_templates_one_default` solo admite una por (juego, set), asi que
+   * marcarlas por defecto haria que la segunda no se pudiera insertar.
    */
   async findTemplate(setId: number): Promise<TemplateConfig | null> {
     const rows = await this.db.select<{
@@ -36,8 +46,20 @@ export class PackRepositoryMysql implements PackRepository {
       `SELECT t.id, t.game_id, t.name, t.card_count
        FROM pack_templates t
        JOIN sets s ON s.game_id = t.game_id AND s.id = ?
-       WHERE (t.set_id = s.id OR t.set_id IS NULL) AND t.is_default = 1
-       ORDER BY (t.set_id IS NULL) ASC
+       WHERE
+             (t.set_id = s.id AND t.is_default = 1)
+          OR (t.set_id IS NULL
+              AND (t.valid_from IS NOT NULL OR t.valid_to IS NOT NULL)
+              AND s.released_at IS NOT NULL
+              AND (t.valid_from IS NULL OR s.released_at >= t.valid_from)
+              AND (t.valid_to   IS NULL OR s.released_at <= t.valid_to))
+          OR (t.set_id IS NULL AND t.is_default = 1
+              AND t.valid_from IS NULL AND t.valid_to IS NULL)
+       ORDER BY CASE
+                  WHEN t.set_id = s.id THEN 1
+                  WHEN t.valid_from IS NOT NULL OR t.valid_to IS NOT NULL THEN 2
+                  ELSE 3
+                END
        LIMIT 1`,
       [setId],
     );
