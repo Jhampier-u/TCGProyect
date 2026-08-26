@@ -21,6 +21,12 @@ class FakeRepo implements ImageRepository {
   }
   async markStored(printId: number, localPath: string): Promise<void> {
     this.stored.set(printId, localPath);
+    this.fallos.delete(printId);
+  }
+  /** Intentos fallidos por impresion, con la misma semantica que el real (T-019). */
+  readonly fallos = new Map<number, number>();
+  async markImageFailed(printId: number): Promise<void> {
+    this.fallos.set(printId, (this.fallos.get(printId) ?? 0) + 1);
   }
 }
 
@@ -142,6 +148,44 @@ describe('P-001: no pedir dos veces la misma imagen', () => {
 });
 
 describe('resiliencia', () => {
+  it('T-019: una imagen que falla se anota, para dejar de reintentarla algun dia', async () => {
+    await withTempStore(async (store) => {
+      const items = [
+        pending({ printId: 1, externalId: 'a' }),
+        pending({ printId: 2, externalId: 'b', imageSourceUrl: 'https://rota/x.jpg' }),
+      ];
+      const repo = new FakeRepo(items);
+      const downloader = new CountingDownloader(undefined, (url) => url.includes('rota'));
+
+      await new ImageHarvester({
+        repository: repo, downloader, encoder: fakeEncoder, store,
+      }).run();
+
+      // Solo la rota. Sin este contador, esa URL volvia a la cola en CADA
+      // ejecucion: peticiones inutiles al origen y un informe que siempre trae
+      // las mismas fallidas, hasta que nadie lo lee.
+      expect(repo.fallos.get(2)).toBe(1);
+      expect(repo.fallos.has(1)).toBe(false);
+    });
+  });
+
+  it('T-019: al bajarse bien, el contador de fallos se limpia', async () => {
+    await withTempStore(async (store) => {
+      const repo = new FakeRepo([pending({ printId: 7, externalId: 'g' })]);
+      // Como si hubiera fallado dos veces en ejecuciones anteriores.
+      await repo.markImageFailed(7);
+      await repo.markImageFailed(7);
+
+      await new ImageHarvester({
+        repository: repo, downloader: new CountingDownloader(), encoder: fakeEncoder, store,
+      }).run();
+
+      // Una racha vieja no debe contar contra un reintento futuro.
+      expect(repo.fallos.has(7)).toBe(false);
+      expect(repo.stored.get(7)).toBeDefined();
+    });
+  });
+
   it('una imagen que falla no tumba la cosecha', async () => {
     await withTempStore(async (store) => {
       const avisos: IngestWarning[] = [];

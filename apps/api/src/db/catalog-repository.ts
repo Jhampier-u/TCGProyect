@@ -243,6 +243,15 @@ export class CatalogRepository implements ImageRepository {
 
   // -------------------------------------------------------------- imagenes
 
+  /**
+   * Intentos antes de dejar de pedir una imagen (T-019).
+   *
+   * Tres, no uno: un origen caido no debe condenar una imagen para siempre. Y
+   * no diez, porque entonces una URL rota sigue costando peticiones durante
+   * diez ejecuciones.
+   */
+  static readonly MAX_IMAGE_ATTEMPTS = 3;
+
   async findPending(limit: number): Promise<PendingImage[]> {
     const rows = await this.db.select<{
       id: number; game_id: number; code: string; external_id: string; image_source_url: string;
@@ -250,9 +259,10 @@ export class CatalogRepository implements ImageRepository {
       `SELECT p.id, s.game_id, s.code, p.external_id, p.image_source_url
        FROM card_prints p JOIN sets s ON s.id = p.set_id
        WHERE p.image_local_path IS NULL AND p.image_source_url IS NOT NULL
+         AND p.image_fail_count < ?
        ORDER BY p.id
        LIMIT ?`,
-      [limit],
+      [CatalogRepository.MAX_IMAGE_ATTEMPTS, limit],
     );
     return rows.map((r) => ({
       printId: Number(r.id),
@@ -264,10 +274,49 @@ export class CatalogRepository implements ImageRepository {
   }
 
   async markStored(printId: number, localPath: string): Promise<void> {
-    await this.db.query(`UPDATE card_prints SET image_local_path = ? WHERE id = ?`, [
-      localPath,
-      printId,
-    ]);
+    // Se limpia el contador: si acabo de bajarse, lo que fallara antes ya no
+    // importa y una racha vieja no debe contar contra un reintento futuro.
+    await this.db.query(
+      `UPDATE card_prints
+          SET image_local_path = ?, image_fail_count = 0, image_failed_at = NULL
+        WHERE id = ?`,
+      [localPath, printId],
+    );
+  }
+
+  /**
+   * Anota que la imagen de esta impresion no se pudo cosechar (T-019).
+   *
+   * Al llegar a `MAX_IMAGE_ATTEMPTS`, `findPending` deja de devolverla: una URL
+   * permanentemente rota se reintentaba en CADA ejecucion, gastando peticiones
+   * contra el origen y llenando el informe de las mismas fallidas de siempre.
+   */
+  async markImageFailed(printId: number): Promise<void> {
+    await this.db.query(
+      `UPDATE card_prints
+          SET image_fail_count = image_fail_count + 1, image_failed_at = CURRENT_TIMESTAMP
+        WHERE id = ?`,
+      [printId],
+    );
+  }
+
+  /**
+   * Devuelve a la cola las imagenes agotadas. Cuantas filas se reactivan.
+   *
+   * Existe porque el contador no distingue causas: si el origen estuvo caido
+   * una tarde, unas cuantas imagenes buenas pueden haber agotado sus intentos.
+   * Sin esto no habria forma de recuperarlas salvo SQL a mano.
+   */
+  async resetImageFailures(): Promise<number> {
+    const filas = await this.db.select<{ n: number }>(
+      `SELECT COUNT(*) AS n FROM card_prints
+        WHERE image_local_path IS NULL AND image_fail_count > 0`,
+    );
+    await this.db.query(
+      `UPDATE card_prints SET image_fail_count = 0, image_failed_at = NULL
+        WHERE image_local_path IS NULL AND image_fail_count > 0`,
+    );
+    return Number(filas[0]?.n ?? 0);
   }
 }
 

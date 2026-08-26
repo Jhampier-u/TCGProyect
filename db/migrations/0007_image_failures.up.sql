@@ -1,0 +1,52 @@
+-- =====================================================================
+-- ProyectoTCG - Migracion 0007 - card_prints.image_failed_at
+-- Agente: Base de Datos - Tarea: T-019 - Sesion: S026
+-- =====================================================================
+-- POR QUE ESTA MIGRACION EXISTE
+--
+-- El job de imagenes busca las impresiones con `image_local_path IS NULL` y las
+-- intenta. Una URL que esta permanentemente rota -- un 404 del origen, una
+-- carta retirada, una ruta que cambio -- nunca deja de cumplir esa condicion,
+-- asi que se reintenta EN CADA EJECUCION, para siempre.
+--
+-- Dos costes, y el segundo es el peor:
+--   1. Peticiones inutiles al origen, que en YGOPRODeck cuentan para el limite
+--      de tasa y en Pokemon para la cuota diaria.
+--   2. El informe de la cosecha lleva siempre las mismas fallidas, asi que
+--      nadie distingue "fallo algo nuevo" de "siguen las de siempre". Un aviso
+--      que sale siempre deja de leerse.
+--
+-- QUE SE GUARDA, Y POR QUE UN CONTADOR Y NO UNA MARCA DE "ROTA"
+--
+-- Distinguir un fallo permanente de uno transitorio exigiria clasificar el
+-- error, y esa clasificacion es fragil: un 503 del origen, un DNS caido o un
+-- timeout se parecen mucho a un fallo definitivo desde aqui. En vez de acertar
+-- con la causa se cuentan los intentos: lo transitorio se reintenta y acaba
+-- pasando, y lo permanente se agota y deja de molestar.
+--
+-- NO LLEVA `USE`: la migracion 0001 fija el nombre de la base con un
+-- `USE proyecto_tcg` y eso es P-032. No se puede corregir alli, porque las
+-- migraciones publicadas son inmutables, pero si se puede dejar de repetirlo.
+-- Al ejecutarse en la misma conexion que las anteriores, esta aplica sobre la
+-- base que ya estaba seleccionada.
+-- =====================================================================
+
+-- ---------------------------------------------------------------------
+-- 1. Cuantas veces ha fallado y cuando fue la ultima.
+--
+--    El contador es el que decide; la fecha es para poder mirar cuando se
+--    estropeo algo sin tener que cruzar con los logs.
+-- ---------------------------------------------------------------------
+ALTER TABLE card_prints
+  ADD COLUMN image_fail_count SMALLINT UNSIGNED NOT NULL DEFAULT 0 AFTER image_local_path,
+  ADD COLUMN image_failed_at  TIMESTAMP NULL DEFAULT NULL AFTER image_fail_count;
+
+-- ---------------------------------------------------------------------
+-- 2. No se anade indice, y es deliberado.
+--
+--    La consulta del job ya era un recorrido filtrado por
+--    `image_local_path IS NULL`, sin indice que la sirva: anadir una condicion
+--    mas sobre la misma fila no cambia el plan. Es un trabajo por lotes que
+--    corre a mano, no una consulta de usuario, y un indice mas encarece cada
+--    INSERT de la ingesta -- que si es caliente -- para no ganar nada aqui.
+-- ---------------------------------------------------------------------

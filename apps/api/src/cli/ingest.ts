@@ -17,6 +17,8 @@ import type { GameAdapter, GameCode, IngestWarning } from '@tcg/shared';
  *   npm run ingest -- --game YGO --sets 3
  *   npm run ingest -- --game MTG --sets 2 --no-images
  *   npm run ingest -- --images-only --max-images 500
+ *   npm run ingest -- --set khm --no-images
+ *   npm run ingest -- --images-only --retry-failed
  *
  * Es SEGURO relanzarlo: la ingesta es idempotente (upsert sobre claves
  * naturales) y el job de imagenes detecta las que ya estan en disco y no vuelve
@@ -31,11 +33,14 @@ interface Opciones {
   maxImages: number;
   /** Ids de origen concretos, de `--set`. Vacio = orden por fecha. */
   soloSets: string[];
+  /** `--retry-failed`: devuelve a la cola las imagenes que agotaron intentos. */
+  retryFailed: boolean;
 }
 
 function parseArgs(argv: string[]): Opciones {
   const opciones: Opciones = {
     game: 'ALL', sets: 3, images: true, imagesOnly: false, maxImages: 2000, soloSets: [],
+    retryFailed: false,
   };
 
   for (let i = 0; i < argv.length; i += 1) {
@@ -62,6 +67,8 @@ function parseArgs(argv: string[]): Opciones {
       opciones.images = false;
     } else if (arg === '--images-only') {
       opciones.imagesOnly = true;
+    } else if (arg === '--retry-failed') {
+      opciones.retryFailed = true;
     }
   }
   return opciones;
@@ -120,6 +127,15 @@ async function main(): Promise<void> {
         console.error(`  [${game}] abortado: ${error instanceof Error ? error.message : String(error)}`);
       }
     }
+  }
+
+  if (opciones.retryFailed) {
+    // El contador de T-019 no distingue causas: si el origen estuvo caido una
+    // tarde, imagenes perfectamente buenas pueden haber agotado sus intentos.
+    // Esto las devuelve a la cola.
+    const reactivadas = await repo.resetImageFailures();
+    console.log(`
+[imagenes] ${reactivadas} vuelven a la cola tras --retry-failed.`);
   }
 
   if (opciones.images || opciones.imagesOnly) {

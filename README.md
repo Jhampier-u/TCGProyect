@@ -120,7 +120,17 @@ npm run ingest -- --game YGO --sets 5 --no-images
 
 # sólo cosechar imágenes pendientes
 npm run ingest -- --images-only --max-images 500
+
+# un set concreto, por su id de origen
+npm run ingest -- --set khm --no-images
+
+# devolver a la cola las imágenes que agotaron sus intentos
+npm run ingest -- --images-only --retry-failed
 ```
+
+Una imagen que falla se anota, y a los **tres intentos** deja de pedirse al origen: una URL
+permanentemente rota se reintentaba en cada ejecución, para siempre. `--retry-failed` las reactiva
+si el fallo fue una caída pasajera.
 
 **Es seguro relanzarlo.** La ingesta es idempotente y el job de imágenes detecta las que ya están en
 disco y **no vuelve a pedirlas al origen** — YGOPRODeck castiga el hotlinking con lista negra de IP.

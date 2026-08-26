@@ -27,6 +27,11 @@ export interface ImageRepository {
   findPending(limit: number): Promise<PendingImage[]>;
   /** Fija `image_local_path`. Solo se llama cuando el fichero ya esta en disco. */
   markStored(printId: number, localPath: string): Promise<void>;
+  /**
+   * Suma un intento fallido (T-019). Al agotarlos, `findPending` deja de
+   * devolver esa impresion: una URL rota se reintentaba en cada ejecucion.
+   */
+  markImageFailed(printId: number): Promise<void>;
 }
 
 /**

@@ -113,6 +113,13 @@ export class ImageHarvester {
         // Una imagen que falla no puede tumbar la cosecha entera: quedaria un
         // catalogo a medio ilustrar y sin forma de saber donde se corto.
         const motivo = error instanceof Error ? error.message : String(error);
+
+        // Se anota el intento (T-019). Sin esto, una URL permanentemente rota
+        // vuelve a la cola en cada ejecucion: gasta peticiones contra el origen
+        // y llena el informe de las mismas fallidas de siempre, hasta que nadie
+        // lo lee.
+        await this.#repo.markImageFailed(pending.printId);
+
         report.fallidas += 1;
         report.errores.push({ printId: pending.printId, url: pending.imageSourceUrl, motivo });
         this.#warn({
