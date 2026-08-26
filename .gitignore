@@ -19,3 +19,7 @@ Thumbs.db
 
 # Configuracion local del entorno de desarrollo de Claude Code
 .claude/launch.json
+
+# suite E2E
+e2e/node_modules/
+e2e/artefactos/

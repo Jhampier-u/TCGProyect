@@ -1,0 +1,13 @@
+{
+  "name": "e2e",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Suite E2E con Playwright. NO es un workspace de npm a proposito: si lo fuera, el npm ci de las imagenes de api y web arrastraria Playwright a dos contenedores que no lo necesitan.",
+  "scripts": {
+    "test": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.62.1"
+  }
+}

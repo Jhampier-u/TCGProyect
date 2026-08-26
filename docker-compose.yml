@@ -123,6 +123,9 @@ services:
       API_PROXY_TARGET: http://api:3000
       # El bind mount desde Windows no propaga eventos inotify al contenedor.
       VITE_USE_POLLING: "1"
+      # Dentro de la red de compose el Host es el nombre del servicio, y Vite
+      # responde 403 a lo que no reconoce. Lo necesita la suite E2E (P-028).
+      VITE_ALLOWED_HOSTS: web
     ports:
       - "${WEB_PORT:-5173}:5173"
     volumes:
@@ -148,6 +151,26 @@ services:
     entrypoint: ["node", "apps/api/dist/cli/ingest.js"]
     volumes:
       - ./storage:/app/storage
+
+  # Suite E2E (H8a). Perfil, no servicio: se ejecuta a mano y termina.
+  #   docker compose --profile e2e run --rm e2e
+  e2e:
+    profiles: ["e2e"]
+    build:
+      context: .
+      dockerfile: docker/e2e.Dockerfile
+    depends_on:
+      api:
+        condition: service_healthy
+      web:
+        condition: service_started
+    environment:
+      E2E_BASE_URL: http://web:5173
+      E2E_API_URL: http://api:3000
+    volumes:
+      # Los artefactos salen al host para poder mirarlos: es medio sentido de
+      # T-053.
+      - ./e2e/artefactos:/app/artefactos
 
 volumes:
   db_data:
