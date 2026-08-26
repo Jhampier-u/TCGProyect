@@ -6,6 +6,7 @@ import { useDeckEditor } from '../lib/use-deck-editor.js';
 import { DeckBuscador } from '../components/DeckBuscador.js';
 import { DeckZona } from '../components/DeckZona.js';
 import { DeckValidacion, zonasDe } from '../components/DeckValidacion.js';
+import { DeckTransferencia } from '../components/DeckTransferencia.js';
 
 export function MazoEditor() {
   const { id } = useParams();
@@ -52,6 +53,13 @@ function Editor({ deck, token }: { deck: DeckDetail; token: string }) {
         errorGuardado={editor.errorGuardado}
         discrepancia={editor.discrepancia}
         onGuardar={editor.guardar}
+      />
+
+      <DeckTransferencia
+        game={deck.game}
+        draft={editor.draft}
+        token={token}
+        onReemplazar={editor.reemplazar}
       />
 
       <div className="editor">

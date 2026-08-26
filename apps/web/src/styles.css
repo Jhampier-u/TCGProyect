@@ -426,3 +426,19 @@ button.primario:hover:not(:disabled) { filter: brightness(1.08); }
 .barra-guardar .estado { font-size: 13px; }
 .barra-guardar .estado.valido { color: var(--exito); }
 .barra-guardar .estado.invalido { color: var(--texto-tenue); }
+
+.transferencia { margin-bottom: 16px; }
+.transferencia-acciones { display: flex; align-items: center; gap: 8px; }
+
+.transferencia-texto {
+  width: 100%;
+  margin-top: 10px;
+  font-family: ui-monospace, monospace;
+  font-size: 12px;
+  background: var(--fondo-alt);
+  color: var(--texto);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  padding: 10px;
+  resize: vertical;
+}

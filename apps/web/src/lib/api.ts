@@ -1,4 +1,4 @@
-import type { DeckValidation, DeckZone, GameCode, GameData } from '@tcg/shared';
+import type { DeckLine, DeckValidation, DeckZone, GameCode, GameData } from '@tcg/shared';
 
 /**
  * Cliente de la API.
@@ -95,6 +95,30 @@ export interface DeckCard {
 export interface DeckDetail extends DeckSummary {
   cards: DeckCard[];
   validation: DeckValidation;
+}
+
+/** Una linea de una lista pegada que SI esta en nuestro catalogo. */
+export interface ResolvedLine {
+  printId: number;
+  cardId: number;
+  oracleKey: string;
+  name: string;
+  typeLine: string | null;
+  gameData: GameData;
+  setCode: string;
+  collectorNumber: string;
+  rarity: string;
+  imagePath: string | null;
+  zone: DeckZone;
+  quantity: number;
+}
+
+/** Una que no. Se muestra al usuario para que sepa exactamente que falta. */
+export interface UnresolvedLine {
+  name: string | null;
+  externalId: string | null;
+  quantity: number;
+  zone: DeckZone;
 }
 
 export interface SetSummary {
@@ -252,6 +276,13 @@ export const api = {
 
   deleteDeck: (token: string, id: number) =>
     request<{ data: { id: number } }>(`/decks/${id}`, { method: 'DELETE' }, token),
+
+  resolveDeck: (token: string, game: GameCode, lines: DeckLine[]) =>
+    request<{ data: { resolved: ResolvedLine[]; unresolved: UnresolvedLine[] } }>(
+      '/decks/resolve',
+      { method: 'POST', body: JSON.stringify({ game, lines }) },
+      token,
+    ),
 
   register: (body: { email: string; displayName: string; password: string }) =>
     request<{ data: AuthUser; token: string }>('/auth/register', {

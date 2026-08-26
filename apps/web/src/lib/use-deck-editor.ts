@@ -26,6 +26,8 @@ export interface DeckEditor {
   anadir: (card: DraftCard) => void;
   cambiarCantidad: (printId: number, zone: DeckZone, n: number) => void;
   moverZona: (printId: number, from: DeckZone, to: DeckZone) => void;
+  /** Reemplaza el borrador entero. Lo usa la importacion. */
+  reemplazar: (draft: Draft) => void;
   guardar: () => void;
 }
 
@@ -92,6 +94,7 @@ export function useDeckEditor(deck: DeckDetail, token: string): DeckEditor {
     anadir,
     cambiarCantidad,
     moverZona,
+    reemplazar: (nuevo: Draft) => setDraft(nuevo),
     guardar: () => mutacion.mutate(),
   };
 }
