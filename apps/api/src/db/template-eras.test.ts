@@ -3,11 +3,14 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 /**
- * T-034 - dos formas de romper las plantillas de epoca sin que falle nada.
+ * T-034 y T-068 - dos formas de romper las plantillas de epoca sin que falle
+ * nada.
  *
- * 1. VENTANAS SOLAPADAS. Si dos epocas cubren la misma fecha, la plantilla que
- *    se elige depende del orden en que MySQL devuelva las filas. Funcionaria, y
- *    un dia dejaria de funcionar sin que nadie hubiera tocado nada.
+ * 1. VENTANAS SOLAPADAS. Si dos epocas del MISMO juego cubren la misma fecha, la
+ *    plantilla que se elige depende del orden en que MySQL devuelva las filas.
+ *    Funcionaria, y un dia dejaria de funcionar sin que nadie hubiera tocado
+ *    nada. Entre juegos distintos no importa: `findTemplate` filtra por
+ *    `game_id`, asi que la comprobacion se hace por juego.
  *
  * 2. UNA RAREZA QUE NO EXISTE. `pack_slots.distribution` es JSON libre: un
  *    `super_rar` en vez de `super_rare` deja esa entrada MUERTA -- el pool nunca
@@ -20,63 +23,99 @@ import { fileURLToPath } from 'node:url';
  * solo cuando alguien se acuerda de mirar.
  */
 
-const dir = (n: string) => fileURLToPath(new URL(`../../../../db/migrations/${n}`, import.meta.url));
+const leer = (n: string) =>
+  readFileSync(fileURLToPath(new URL(`../../../../db/migrations/${n}`, import.meta.url)), 'utf8');
 
-const ERAS = readFileSync(dir('0010_ygo_era_templates.up.sql'), 'utf8');
-const MODERNA = readFileSync(dir('0011_ygo_modern_gaps.up.sql'), 'utf8');
-const BASE_MODERNA = readFileSync(dir('0006_ygo_modern_booster.up.sql'), 'utf8');
-const SEED = readFileSync(dir('0002_seed_games_rarities.sql'), 'utf8');
+const SEED = leer('0002_seed_games_rarities.sql');
+const YGO_MODERNA_BASE = leer('0006_ygo_modern_booster.up.sql');
+const YGO_ERAS = leer('0010_ygo_era_templates.up.sql');
+const YGO_MODERNA = leer('0011_ygo_modern_gaps.up.sql');
+const PTCG_ERAS = leer('0012_ptcg_era_templates.up.sql');
+
+interface Juego {
+  id: number;
+  nombre: string;
+  /** Migraciones que insertan plantillas con ventana. */
+  ventanasEn: string[];
+  /** Migraciones cuyas `distribution` hay que revisar. */
+  plantillasEn: string[];
+  /** Migraciones que siembran rarezas de este juego. */
+  siembrasEn: string[];
+  ventanasEsperadas: number;
+}
+
+const JUEGOS: Juego[] = [
+  {
+    id: 2,
+    nombre: 'Yu-Gi-Oh!',
+    ventanasEn: [YGO_ERAS],
+    plantillasEn: [YGO_ERAS, YGO_MODERNA, YGO_MODERNA_BASE],
+    siembrasEn: [SEED, YGO_MODERNA],
+    ventanasEsperadas: 3,
+  },
+  {
+    id: 3,
+    nombre: 'Pokemon',
+    ventanasEn: [PTCG_ERAS],
+    plantillasEn: [PTCG_ERAS],
+    siembrasEn: [SEED],
+    ventanasEsperadas: 2,
+  },
+];
 
 interface Ventana { desde: string | null; hasta: string | null; nombre: string }
 
-/** Filas del INSERT INTO pack_templates de la 0010. */
-function ventanas(): Ventana[] {
-  const bloque = /INSERT INTO pack_templates \([^)]*\) VALUES([\s\S]*?);/.exec(ERAS);
-  if (!bloque?.[1]) throw new Error('No se encontro el INSERT INTO pack_templates en la 0010');
-
-  const fila = /\(\s*2,\s*NULL,\s*(NULL|'[\d-]+'),\s*(NULL|'[\d-]+'),\s*'([^']+)'/g;
+/** Filas del INSERT INTO pack_templates de un juego. */
+function ventanas(juego: Juego): Ventana[] {
   const salida: Ventana[] = [];
-  for (const m of bloque[1].matchAll(fila)) {
-    const val = (s: string) => (s === 'NULL' ? null : s.slice(1, -1));
-    salida.push({ desde: val(m[1]!), hasta: val(m[2]!), nombre: m[3]! });
+  for (const sql of juego.ventanasEn) {
+    const bloque = /INSERT INTO pack_templates \([^)]*\) VALUES([\s\S]*?);/.exec(sql);
+    if (!bloque?.[1]) throw new Error(`No se encontro el INSERT INTO pack_templates de ${juego.nombre}`);
+
+    const fila = new RegExp(
+      String.raw`\(\s*${juego.id},\s*NULL,\s*(NULL|'[\d-]+'),\s*(NULL|'[\d-]+'),\s*'([^']+)'`,
+      'g',
+    );
+    for (const m of bloque[1].matchAll(fila)) {
+      const val = (s: string) => (s === 'NULL' ? null : s.slice(1, -1));
+      salida.push({ desde: val(m[1]!), hasta: val(m[2]!), nombre: m[3]! });
+    }
   }
   return salida;
 }
 
 /**
- * Codigos de rareza de Yu-Gi-Oh! sembrados por una migracion.
+ * Codigos de rareza sembrados para un juego.
  *
- * Solo `game_id = 2`: las plantillas que este test vigila son todas de
- * Yu-Gi-Oh!, y colar aqui las rarezas de los otros dos juegos haria que una
- * errata que casara con una rareza de Magic pasara desapercibida.
+ * Se filtra por `game_id`: colar aqui las rarezas de los otros dos juegos haria
+ * que una errata que casara con una rareza de Magic pasara desapercibida.
  */
-function rarezasSembradas(): Set<string> {
+function rarezasSembradas(juego: Juego): Set<string> {
   const codigos = new Set<string>();
-  for (const sql of [SEED, MODERNA]) {
-    for (const m of sql.matchAll(/\(\s*2,\s*'([a-z_]+)',\s*'[^']*',\s*\d+\s*\)/g)) {
-      codigos.add(m[1]!);
-    }
+  const fila = new RegExp(String.raw`\(\s*${juego.id},\s*'([a-z_]+)',\s*'[^']*',\s*\d+\s*\)`, 'g');
+  for (const sql of juego.siembrasEn) {
+    for (const m of sql.matchAll(fila)) codigos.add(m[1]!);
   }
   return codigos;
 }
 
-/** Rarezas nombradas en cualquier `distribution` de las migraciones de YGO. */
-function rarezasDeLasPlantillas(): Set<string> {
+/** Rarezas nombradas en cualquier `distribution` de las migraciones del juego. */
+function rarezasDeLasPlantillas(juego: Juego): Set<string> {
   const codigos = new Set<string>();
-  for (const sql of [ERAS, MODERNA, BASE_MODERNA]) {
+  for (const sql of juego.plantillasEn) {
     for (const m of sql.matchAll(/"rarity":"([a-z_]+)"/g)) codigos.add(m[1]!);
   }
   return codigos;
 }
 
-describe('las ventanas de epoca', () => {
-  it('son las tres esperadas', () => {
-    expect(ventanas()).toHaveLength(3);
+describe.each(JUEGOS)('las ventanas de epoca de $nombre', (juego) => {
+  it('son las esperadas', () => {
+    expect(ventanas(juego)).toHaveLength(juego.ventanasEsperadas);
   });
 
   it('no se solapan entre si', () => {
     const dia = (s: string | null, porDefecto: string) => Date.parse(s ?? porDefecto);
-    const rangos = ventanas()
+    const rangos = ventanas(juego)
       .map((v) => ({ ...v, d: dia(v.desde, '1900-01-01'), h: dia(v.hasta, '2999-12-31') }))
       .sort((a, b) => a.d - b.d);
 
@@ -91,16 +130,16 @@ describe('las ventanas de epoca', () => {
   });
 
   it('ninguna deja la fecha de fin por delante de la de inicio', () => {
-    for (const v of ventanas()) {
+    // Una ventana de un solo dia SI es valida: `Booster Black Bolt / White
+    // Flare` cubre dos sets gemelos publicados el mismo dia.
+    for (const v of ventanas(juego)) {
       if (v.desde && v.hasta) expect(Date.parse(v.desde) <= Date.parse(v.hasta)).toBe(true);
     }
   });
-});
 
-describe('las rarezas que las plantillas nombran', () => {
-  it('existen todas en el seed', () => {
-    const sembradas = rarezasSembradas();
-    const huerfanas = [...rarezasDeLasPlantillas()].filter((r) => !sembradas.has(r)).sort();
+  it('toda rareza que nombran existe en el seed', () => {
+    const sembradas = rarezasSembradas(juego);
+    const huerfanas = [...rarezasDeLasPlantillas(juego)].filter((r) => !sembradas.has(r)).sort();
     expect(huerfanas).toEqual([]);
   });
 });
