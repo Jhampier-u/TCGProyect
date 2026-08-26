@@ -19,17 +19,21 @@ export default defineConfig({
   outputDir: './artefactos/salida',
   use: {
     baseURL,
-    /**
-     * EXPLICITO a proposito, no por confiar en el valor por defecto.
-     *
-     * `PackReveal` llama a `useReducedMotion()`: con movimiento reducido revela
-     * TODAS las cartas de golpe, sin volteo y sin clics. Un test que corriera
-     * asi pasaria sin ejercitar la animacion (ver 5.2 del spec de H8a).
-     */
-    reducedMotion: 'no-preference',
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
+    /**
+     * AQUI NO SE PONE `reducedMotion`, y no es un olvido.
+     *
+     * MEDIDO en esta version: puesto aqui **no llega al navegador**. Comparando
+     * en la misma ejecucion, la media query daba `false` con el valor del config
+     * y `true` creando el contexto a mano (P-029). Una salvaguarda que no hace
+     * nada es peor que no tenerla, porque se confia en ella.
+     *
+     * Los tests que dependen del movimiento crean su contexto con
+     * `browser.newContext({ reducedMotion })` y COMPRUEBAN la media query antes
+     * de medir nada.
+     */
   },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
 });
