@@ -1,6 +1,6 @@
 # Tareas Pendientes
 
-**Última actualización:** 2026-08-26 (S028) · **Total abiertas:** 6 — 5 del proyecto (T-065, T-066, T-067, T-071, T-072) + T-005, que depende de ti
+**Última actualización:** 2026-08-26 (S028) · **Total abiertas:** 4 — 3 del proyecto (T-065, T-066, T-067) + T-005, que depende de ti
 
 Leyenda de prioridad: 🔴 crítica · 🟠 alta · 🟡 media · ⚪ baja
 
@@ -53,14 +53,17 @@ sets anteriores a 2020; medido, los modernos estaban peor (MAMS al 36,4 %, por d
 
 ### Lo que salió de medir el techo de completitud (S028)
 
+**T-071 y T-072 también cerradas.** T-072 empezó como "la suite no se puede relanzar" y acabó
+destapando dos defectos del límite de tasa: **P-037** (las imágenes se comían el presupuesto del
+usuario) y **P-038** (el tope global no cubría ninguna ruta del catálogo, incluida la búsqueda
+FULLTEXT).
+
 **T-068, T-069 y T-070 cerradas en la misma sesión.** El techo de completitud ya no existe en ningún
 juego y los productos que no son sobres han dejado de ofrecerse. Lo que sigue abierto salió de
 hacerlas.
 
 | ID | Tarea | Agente | Prio |
 |---|---|---|---|
-| T-071 | **P-036**: una cosecha con el `STORAGE_PATH` equivocado deja la base diciendo que hay imágenes y la API devolviendo 404, sin que nada avise. Que la API lo compruebe al arrancar | Backend | 🟡 |
-| T-072 | La suite E2E **no se puede relanzar dentro de la misma hora**: cada test registra un usuario y el límite de `/api/auth/register` es por IP (T-062). Hoy se sortea reiniciando la API, que es un apaño. La suite debería poder correr cuando haga falta | QA | 🟡 |
 | T-067 | Plantilla propia para los sets de composición atípica. **MAMO y MAMS** no tienen ni una carta común y la plantilla pide ocho. **Black Bolt y White Flare** tienen 69 Illustration Rare de 172 impresiones —el 40 % del set frente al 8 % de un booster normal— y su plantilla les da el 10,2 %. En los cuatro casos la carta del chase ya es alcanzable; lo que falta es que el sobre se parezca al producto | Base de Datos | ⚪ |
 
 ### Además, anotado al hacer T-035 y T-022

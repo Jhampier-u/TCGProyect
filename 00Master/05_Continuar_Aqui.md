@@ -1,7 +1,7 @@
 # 05 — Continuar aquí
 
 **Punto de guardado:** 2026-08-26, tras la sesión **S028**
-**Commit:** rama `main` · 368 tests de Vitest + 6 recorridos E2E en verde · `npm audit` limpio
+**Commit:** rama `main` · 373 tests de Vitest + 6 recorridos E2E en verde · `npm audit` limpio
 
 Este documento existe para retomar el proyecto en otra máquina o en otra sesión sin releer las 26
 bitácoras. Si sólo vas a leer un fichero, que sea éste.
@@ -181,8 +181,6 @@ Las ocho tareas de H8c están cerradas. Lo que queda abierto salió de hacerlas,
 
 | Tarea | Qué pasa si no se hace |
 |---|---|
-| **T-071** | Una cosecha con el `STORAGE_PATH` equivocado deja la base mintiendo y la API en 404 (P-036) |
-| **T-072** | La suite E2E no se puede relanzar dentro de la misma hora: choca con su propio rate limit |
 | **T-066** | Los iconos de set están cosechados y servidos, pero no se ven: el selector es un `<select>` |
 | **T-065** | La migración `0001` fija el nombre de la base; hay guarda, no arreglo (P-032) |
 | **T-067** | MAMO y MAMS no tienen comunes y la plantilla pide ocho: alcanzable pero no realista |
@@ -201,15 +199,16 @@ Las ocho tareas de H8c están cerradas. Lo que queda abierto salió de hacerlas,
 | **P-008** | 🟡 | "The List" de MTG no se modela; el slot de tierra no filtra por tipo |
 | **P-016** | 🟠 | La API de Pokémon responde 200 sólo ~30 % de las veces. La ingesta **debe** poder reanudarse |
 | **P-032** | 🟡 | La migración `0001` hace `USE proyecto_tcg` e ignora la conexión. Mitigado con una guarda |
-| **P-036** | 🟡 | Una cosecha con el `STORAGE_PATH` equivocado no la detecta nadie: 404 por imagen |
 
-Los 36 problemas —29 cerrados, con su medición— están en `003Problemas/Registro_Problemas.md`.
+Los 38 problemas —32 cerrados, con su medición— están en `003Problemas/Registro_Problemas.md`.
 
 **P-021 se cerró en S028, y su entrada es la que más conviene leer**: llevaba trece sesiones citada
 en cinco documentos sin estar escrita, y al medirla resultó ser lo contrario de lo que decía la
 ficha. Después están **P-034** —la misma familia en Pokémon, encontrada por la comprobación que se
-escribió para Yu-Gi-Oh!— y **P-035**, un rollback que dejaba la base a medias y que sólo apareció al
-probarlo con datos que dependían de lo que borraba.
+escribió para Yu-Gi-Oh!—, **P-035**, un rollback que dejaba la base a medias, y sobre todo **P-038**:
+el tope global de peticiones llevaba desde H3 sin cubrir **ninguna** ruta del catálogo, porque un
+plugin de Fastify sólo afecta a lo que se declara después de él. Estaba escrito, revisado y
+comentado; lo que no estaba era medido.
 
 ---
 

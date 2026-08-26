@@ -295,6 +295,72 @@ apaño, no una solución.
 | Clasificador contra los 2254 nombres reales | 1165 abribles · 1089 descartados · cero falsos positivos revisables |
 | Reclasificación de lo ya ingestado | 1089 filas, exactamente las que predijo la simulación |
 
+---
+
+# Cuarta parte: T-071 y T-072, y el límite de tasa que no limitaba
+
+## T-071 — que un almacén mal configurado se note al arrancar
+
+La API compara al arrancar veinte de las rutas más recientes que la base dice tener. Reproduciendo
+la configuración mala de la tercera parte:
+
+```
+ALMACEN DE IMAGENES: La base dice que 2000 impresiones tienen imagen y NINGUNA de
+las 20 comprobadas esta bajo "C:\TCGProyect\storage".
+  Es casi seguro un STORAGE_PATH distinto del que se uso al cosechar (P-036).
+```
+
+No bloquea el arranque —quien borre `storage/` a propósito tiene que poder levantar la API— y
+distingue "faltan unos ficheros" de "la raíz es otra": tratarlos igual convertiría el aviso en ruido.
+
+## T-072 — empezó siendo una molestia de los tests
+
+De 6 altas por vuelta a **1**, con una fixture de ámbito worker. Una variable de módulo no vale:
+Playwright carga los módulos de test aislados. Y **un test sí dependía de la cuenta virgen** —"la
+lista de mazos muestra el mazo creado" exigía exactamente una fila—; se arregló el test, porque su
+sujeto nunca fue cuántos mazos hay.
+
+Pero al relanzar diez veces seguía fallando a la cuarta, y el cupo de altas ya no era la causa.
+
+## P-037 — las imágenes se comían el presupuesto del usuario
+
+```
+300 respuestas 200  ·  la peticion 301 -> 429
+```
+
+El tope global es de 300 peticiones por minuto y por IP, y `/images/` contaba dentro. **Desde que las
+imágenes se sirven de verdad** (tercera parte), una página del catálogo pide decenas: un usuario
+navegando agota su propio presupuesto en un par de minutos y ve el catálogo lleno de huecos. Detrás
+de un NAT, mucho antes. No era una molestia de la suite: era un defecto de producto que la suite
+destapó.
+
+## P-038 — y al medirlo, el tope no cubría el catálogo en absoluto
+
+Con las imágenes ya exentas, el catálogo tampoco cortaba:
+
+```
+GET /api/games  x340  ->  340 respuestas 200      (registrada ANTES del limitador)
+GET /api/decks  x340  ->  300 pasan, 40 son 429   (registrada DESPUES)
+```
+
+Un plugin de Fastify sólo afecta a lo declarado **después** de él. `buildServer` registraba todas las
+rutas del catálogo y `buildFullServer` metía el limitador detrás. **Desde H3, el tope global no
+cubría `/api/games`, `/api/cards` —que recorre un FULLTEXT— ni ninguna otra ruta pública.** El
+comentario del código las llamaba *"última línea"*, y no había línea.
+
+Es P-029 otra vez: una salvaguarda escrita, revisada y comentada, que no hacía nada. Y no la encontró
+la auditoría de seguridad de H8b —que iba exactamente de esto—, sino intentar relanzar unos tests.
+
+## Verificación de la cuarta parte
+
+| Comprobación | Resultado |
+|---|---|
+| `npm test` | **373/373** en 30 ficheros |
+| `/api/games` x340 | 299 pasan · 41 son 429 — **antes pasaban las 340** |
+| `/images/` x500 | 500 con 200 — exentas |
+| Suite E2E, **diez vueltas seguidas** | 6 passed cada una — antes fallaba a la tercera |
+| Aviso de almacén | reproducido con la raíz mala y visto callar con la buena |
+
 ## Lo que NO se ha hecho, y por qué
 
 | ID | Qué queda |
@@ -315,5 +381,5 @@ que hace la aplicación, pero conviene saberlo antes de sacar conclusiones de es
 - **H8 cerrado.** H8a (suite E2E), H8b (seguridad) y H8c (las ocho de deuda técnica).
 - **T-068, T-069 y T-070 cerradas también**, fuera de H8c: las tres salieron del informe que se
   escribió para T-034.
-- Abiertas: T-065, T-066, T-067, T-071, T-072 y T-005, que depende del usuario.
-- Problemas: 7 abiertos · 29 cerrados.
+- Abiertas: T-065, T-066, T-067 y T-005, que depende del usuario.
+- Problemas: 6 abiertos · 32 cerrados.

@@ -1,6 +1,6 @@
 # Registro de Problemas
 
-**Última actualización:** 2026-08-26 (S028) · **Abiertos:** 7 · **Cerrados:** 29
+**Última actualización:** 2026-08-26 (S028) · **Abiertos:** 6 · **Cerrados:** 32
 
 Severidad: 🔴 crítica · 🟠 alta · 🟡 media · ⚪ baja
 
@@ -1206,8 +1206,8 @@ comprobación existía, se ejecutó, y el caso que la hacía valer no estaba den
 
 ---
 
-## P-036 🟡 ABIERTO · Una cosecha con el `STORAGE_PATH` equivocado no la detecta nadie
-**Estado:** ABIERTO desde el 2026-08-26 (S028)
+## P-036 ✅ CERRADO · Una cosecha con el `STORAGE_PATH` equivocado no la detectaba nadie
+**Estado:** CERRADO el 2026-08-26 (S028) — T-071
 **Severidad:** 🟡
 **Origen:** **la suite E2E**, al fallar el test de humo con quince 404 de imágenes.
 
@@ -1229,12 +1229,81 @@ Y es contagioso: la salvaguarda 1 del cosechador —"si ya está en disco, no lo
 consulta la raíz **equivocada**, así que la siguiente ejecución con la raíz buena volvería a pedirle
 al origen 3101 imágenes que ya se tenían. Contra YGOPRODeck eso es justo lo que P-001 evita.
 
-**Mitigación aplicada:** ninguna, sólo mover los ficheros a su sitio. La causa sigue ahí.
+**Solución (T-071).** La API comprueba al arrancar veinte de las rutas más recientes que la base dice
+tener. Veinte y no una, para que un fichero borrado a mano no se confunda con la raíz equivocada; y
+las más recientes en vez de al azar, porque `ORDER BY RAND()` sobre 116.000 filas es un recorrido
+completo en cada arranque.
 
-**Lo que falta para cerrarlo (T-071).** Que la API compruebe al arrancar la coherencia entre lo que
-la base dice y lo que hay bajo `STORAGE_PATH`: si la base afirma que hay miles de imágenes y el
-directorio está vacío, eso es un error de configuración y debe decirse al arrancar, no descubrirse
-por un 404.
+```
+ALMACEN DE IMAGENES: La base dice que 2000 impresiones tienen imagen y NINGUNA de
+las 20 comprobadas esta bajo "C:\TCGProyect\storage".
+  Es casi seguro un STORAGE_PATH distinto del que se uso al cosechar (P-036).
+  Ejemplo que se buscaba: mtg/mbc/ad077996-....245.webp
+  La API arrancara igual, pero devolvera 404 en cada imagen.
+```
+
+**No bloquea el arranque**, y es deliberado: quien haya borrado `storage/` a propósito para volver a
+cosechar tiene que poder levantar la API. Lo que no puede es no enterarse. Y **que falten unos pocos
+ficheros se dice distinto**: tratarlo igual convertiría el aviso en ruido, y un aviso que sale
+siempre deja de leerse (T-019).
+
+**Verificado reproduciendo la configuración mala** y viendo aparecer el mensaje, y después con la
+raíz buena, viéndolo callar.
 
 **Lección.** Una ruta relativa sin registrar su raíz no es una referencia: es una referencia a medias.
 Y lo destapó la suite E2E, que es exactamente para lo que se escribió (H8a).
+
+---
+
+## P-037 ✅ CERRADO · Las imágenes se comían el límite de tasa del usuario
+**Estado:** CERRADO el 2026-08-26 (S028) — T-072
+**Severidad:** 🟠
+**Origen:** relanzar la suite E2E diez veces seguidas y verla fallar a la cuarta.
+
+**Detalle.** El tope global es de **300 peticiones por minuto y por IP**, y `/images/` contaba dentro.
+Medido, sin margen de interpretación:
+
+```
+300 respuestas 200  ·  la peticion 301 -> 429
+```
+
+**Por qué importa fuera de la suite.** Desde que las imágenes se sirven de verdad, una sola página del
+catálogo pide decenas. Un usuario navegando **agota su propio presupuesto en un par de minutos** y ve
+el catálogo lleno de huecos, sin ningún mensaje que lo explique. Detrás de un NAT —una oficina, un
+aula, una red móvil— llega mucho antes. No era una molestia de los tests: era un defecto de producto
+que los tests destaparon.
+
+**Solución.** `/images/` queda fuera del contador. El límite existe para proteger lo **caro** —abrir
+sobres escribe en tres tablas, registrarse calcula un Argon2id, buscar recorre un FULLTEXT—; servir
+un fichero inmutable de 18 KB con `sendfile` no se parece a nada de eso, y además va con un año de
+caché, así que el navegador deja de pedirlo solo. Las rutas caras conservan su límite propio (T-062).
+
+**Verificado:** 500 de 500 imágenes con 200, y el catálogo cortando en 300.
+
+---
+
+## P-038 ✅ CERRADO · El tope global no cubría ninguna ruta del catálogo
+**Estado:** CERRADO el 2026-08-26 (S028) — T-072
+**Severidad:** 🟠
+**Origen:** medir P-037 y no cuadrar las cuentas.
+
+**Detalle.** Al comprobar que las imágenes ya no contaban, el catálogo tampoco cortaba. La medición:
+
+```
+GET /api/games  x340  ->  340 respuestas 200      (registrada ANTES del limitador)
+GET /api/decks  x340  ->  300 pasan, 40 son 429   (registrada DESPUES)
+```
+
+**Causa.** Un plugin de Fastify sólo afecta a las rutas declaradas **después** de él. `buildServer`
+registraba todas las rutas del catálogo de golpe, y `buildFullServer` registraba el limitador
+**después**. El tope global llevaba desde H3 sin cubrir nada del catálogo.
+
+**Qué quedaba sin proteger.** Justo lo público y sin autenticar: `/api/games`, `/api/games/:game/sets`,
+`/api/games/:game/rarities`, `/api/cards/:printId` y **`/api/cards`, que recorre un índice FULLTEXT**.
+El comentario del código las llamaba *"última línea"* y no había línea.
+
+**Solución.** Se separa crear la instancia de registrar las rutas, y el limitador va en medio.
+
+**Lección, y ya van varias de la misma familia.** El límite estaba escrito, revisado y comentado; lo
+que no estaba era medido. Es P-029 otra vez —una salvaguarda que existe y no hace nada— y no lo
+encontró una auditoría de seguridad (H8b, que iba de esto), sino intentar relanzar unos tests.
