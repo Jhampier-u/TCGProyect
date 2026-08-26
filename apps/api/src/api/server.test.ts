@@ -44,7 +44,7 @@ function fakeCatalog(over: Partial<CatalogQueryRepository> = {}): {
 }
 
 const CARTA: CardDetail = {
-  cardId: 7, printId: 42, game: 'YGO', name: 'Blue-Eyes White Dragon',
+  cardId: 7, oracleKey: '89631139', printId: 42, game: 'YGO', name: 'Blue-Eyes White Dragon',
   typeLine: 'Normal Monster', setCode: 'LOB', setName: 'Legend of Blue Eyes',
   collectorNumber: '001', rarity: 'ultra_rare',
   imagePath: 'ygo/lob/lob-en001-ultra_rare.245.webp',
@@ -167,6 +167,7 @@ describe('rutas', () => {
     // lados lo rompe.
     const fila: CardRow = {
       id: 7,
+      oracle_key: '89631139',
       game_id: 2,
       name: 'Blue-Eyes White Dragon',
       type_line: 'Normal Monster',

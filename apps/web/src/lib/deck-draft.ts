@@ -16,6 +16,8 @@ export const MAX_QUANTITY = 99;
 export interface DraftCard {
   printId: number;
   cardId: number;
+  /** Passcode en Yu-Gi-Oh!. Lo necesita la exportacion a .ydk (T-048). */
+  oracleKey: string;
   name: string;
   typeLine: string | null;
   gameData: GameData;
@@ -92,13 +94,14 @@ export function moveZone(draft: Draft, printId: number, from: DeckZone, to: Deck
 /**
  * Entrada del motor de reglas.
  *
- * `oracleKey` sale de `cardId`: dos impresiones distintas de la misma carta lo
- * comparten, que es exactamente la identidad que pide RN-04. Solo esta
- * disponible en el cliente desde que se corrigio P-024.
+ * El motor agrupa las copias por NOMBRE desde P-027, asi que `oracleKey` no es
+ * la clave de agrupacion: viaja para que los problemas puedan referenciar la
+ * carta. Se manda el real, que llega del catalogo, y no uno fabricado con
+ * `cardId`.
  */
 export function toDeckEntries(draft: Draft): DeckEntry[] {
   return draft.map((e) => ({
-    oracleKey: String(e.cardId),
+    oracleKey: e.oracleKey,
     name: e.name,
     typeLine: e.typeLine,
     gameData: e.gameData,
@@ -124,6 +127,7 @@ export function fromDeckDetail(cards: readonly DraftEntry[]): Draft {
   return cards.map((c) => ({
     printId: c.printId,
     cardId: c.cardId,
+    oracleKey: c.oracleKey,
     name: c.name,
     typeLine: c.typeLine,
     gameData: c.gameData,

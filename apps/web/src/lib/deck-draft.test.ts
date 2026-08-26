@@ -16,6 +16,7 @@ function carta(over: Partial<DraftCard> = {}): DraftCard {
   return {
     printId: 1,
     cardId: 100,
+    oracleKey: '89631139',
     name: 'Carta',
     typeLine: 'Effect Monster',
     gameData: {},
@@ -126,22 +127,31 @@ describe('moveZone', () => {
 });
 
 describe('toDeckEntries', () => {
-  it('dos impresiones de la MISMA carta comparten oracleKey', () => {
-    // Es RN-04: cuatro impresiones distintas son una sola carta a efectos del
-    // limite de copias. `cardId` es esa identidad, y solo esta disponible en el
-    // cliente desde que se corrigio P-024.
-    let draft: Draft = addCard([], carta({ printId: 1, cardId: 100 }), 'YGO');
-    draft = addCard(draft, carta({ printId: 2, cardId: 100 }), 'YGO');
+  it('manda el oracleKey REAL del catalogo, no uno fabricado', () => {
+    // Antes se mandaba `String(cardId)`. Ahora viaja el de verdad, que en
+    // Yu-Gi-Oh! es el passcode y es lo que necesita la exportacion a .ydk.
+    let draft: Draft = addCard([], carta({ printId: 1, oracleKey: '89631139' }), 'YGO');
+    draft = addCard(draft, carta({ printId: 2, oracleKey: '89631139' }), 'YGO');
     const entries = toDeckEntries(draft);
     expect(entries).toHaveLength(2);
-    expect(entries[0]?.oracleKey).toBe(entries[1]?.oracleKey);
-    expect(entries[0]?.oracleKey).toBe('100');
+    expect(entries[0]?.oracleKey).toBe('89631139');
+    expect(entries[1]?.oracleKey).toBe('89631139');
+  });
+
+  it('dos impresiones de la MISMA carta se agrupan por NOMBRE (P-027)', () => {
+    // La clave de agrupacion del motor es el nombre, no el oracleKey: en
+    // Pokemon ese campo es uno por impresion y agrupar por ahi dejaba pasar 16
+    // copias. Aqui se comprueba que el nombre viaja identico en las dos filas.
+    let draft: Draft = addCard([], carta({ printId: 1, oracleKey: 'me1-113' }), 'YGO');
+    draft = addCard(draft, carta({ printId: 2, oracleKey: 'me1-165' }), 'YGO');
+    const entries = toDeckEntries(draft);
+    expect(entries[0]?.name).toBe(entries[1]?.name);
   });
 
   it('lleva lo que el motor necesita', () => {
     const draft = addCard([], carta({ typeLine: 'Effect Monster', gameData: { atk: 1200 } }), 'YGO');
     expect(toDeckEntries(draft)[0]).toEqual({
-      oracleKey: '100',
+      oracleKey: '89631139',
       name: 'Carta',
       typeLine: 'Effect Monster',
       gameData: { atk: 1200 },

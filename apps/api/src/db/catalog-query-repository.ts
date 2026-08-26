@@ -23,6 +23,12 @@ export interface CardSummary {
    * Fastify descarta el campo sin decir nada (P-024).
    */
   cardId: number;
+  /**
+   * Identidad de la carta en su origen: `oracle_id` en Magic, passcode en
+   * Yu-Gi-Oh!, `set-numero` en Pokemon. El cliente la necesita para exportar
+   * un `.ydk`, cuyo contenido son passcodes (T-048).
+   */
+  oracleKey: string;
   game: GameCode;
   name: string;
   typeLine: string | null;
@@ -175,7 +181,7 @@ export class CatalogQueryRepository {
     // un COUNT(*) aparte, que sobre un catalogo grande cuesta tanto como la
     // propia consulta.
     const rows = await this.db.select<CardRow>(
-      `SELECT c.id, c.game_id, c.name, c.type_line,
+      `SELECT c.id, c.oracle_key, c.game_id, c.name, c.type_line,
               s.code AS set_code, s.name AS set_name,
               p.id AS print_id, p.collector_number, p.image_local_path,
               r.code AS rarity
@@ -205,7 +211,7 @@ export class CatalogQueryRepository {
       rules_text: string | null; game_data: unknown; released_at: string | null;
       finishes: unknown; in_boosters: number;
     }>(
-      `SELECT c.id, c.game_id, c.name, c.type_line, c.rules_text, c.game_data,
+      `SELECT c.id, c.oracle_key, c.game_id, c.name, c.type_line, c.rules_text, c.game_data,
               s.code AS set_code, s.name AS set_name, s.released_at,
               p.id AS print_id, p.collector_number, p.image_local_path,
               p.finishes, p.in_boosters,
@@ -241,7 +247,7 @@ export class CatalogQueryRepository {
 }
 
 export interface CardRow {
-  id: number; game_id: number; name: string; type_line: string | null;
+  id: number; oracle_key: string; game_id: number; name: string; type_line: string | null;
   set_code: string; set_name: string; print_id: number;
   collector_number: string; image_local_path: string | null; rarity: string;
 }
@@ -259,6 +265,7 @@ export function toSummary(row: CardRow): CardSummary {
   const game = gameCodeOf(Number(row.game_id));
   return {
     cardId: Number(row.id),
+    oracleKey: row.oracle_key,
     game,
     name: row.name,
     typeLine: row.type_line,

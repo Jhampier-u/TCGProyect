@@ -59,6 +59,7 @@ export function DeckBuscador({ game, onAnadir }: DeckBuscadorProps) {
       onAnadir({
         printId: detalle.printId,
         cardId: detalle.cardId,
+        oracleKey: detalle.oracleKey,
         name: detalle.name,
         typeLine: detalle.typeLine,
         gameData: detalle.gameData,

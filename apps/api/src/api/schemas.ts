@@ -15,6 +15,8 @@ export const CARD_SUMMARY = {
   properties: {
     printId: { type: 'integer' },
     cardId: { type: 'integer' },
+    // Passcode en Yu-Gi-Oh!, que es lo que lleva un .ydk (T-048).
+    oracleKey: { type: 'string' },
     game: { type: 'string' },
     name: { type: 'string' },
     typeLine: { type: ['string', 'null'] },

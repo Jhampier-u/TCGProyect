@@ -28,6 +28,8 @@ export class ApiError extends Error {
 export interface CardSummary {
   printId: number;
   cardId: number;
+  /** Passcode en Yu-Gi-Oh!. Lo necesita la exportacion a .ydk (T-048). */
+  oracleKey: string;
   game: GameCode;
   name: string;
   typeLine: string | null;
