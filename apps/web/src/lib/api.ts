@@ -1,4 +1,4 @@
-import type { GameCode } from '@tcg/shared';
+import type { DeckValidation, DeckZone, GameCode, GameData } from '@tcg/shared';
 
 /**
  * Cliente de la API.
@@ -42,6 +42,57 @@ export interface CardSummary {
 export interface CardPage {
   data: CardSummary[];
   nextCursor: string | null;
+}
+
+export interface CardDetail extends CardSummary {
+  rulesText: string | null;
+  gameData: GameData;
+  releasedAt: string | null;
+  finishes: string[];
+  inBoosters: boolean;
+}
+
+export interface DeckCounts {
+  main: number;
+  extra: number;
+  side: number;
+  commander: number;
+}
+
+export interface DeckSummary {
+  id: number;
+  game: GameCode;
+  name: string;
+  description: string | null;
+  format: string | null;
+  isPublic: boolean;
+  counts: DeckCounts;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface DeckCard {
+  printId: number;
+  cardId: number;
+  /** Identidad de la CARTA. Agrupa las copias de RN-04 (T-052). */
+  oracleKey: string;
+  name: string;
+  typeLine: string | null;
+  gameData: GameData;
+  setCode: string;
+  setName: string;
+  collectorNumber: string;
+  rarity: string;
+  zone: DeckZone;
+  quantity: number;
+  imagePath: string | null;
+  /** Copias que el usuario posee. 0 no impide nada (RN-03). */
+  owned: number;
+}
+
+export interface DeckDetail extends DeckSummary {
+  cards: DeckCard[];
+  validation: DeckValidation;
 }
 
 export interface SetSummary {
@@ -163,6 +214,42 @@ export const api = {
     }
     return request<CardPage>(`/cards?${search.toString()}`);
   },
+
+  /**
+   * Detalle de una impresion. El editor de mazos lo necesita porque `/cards` no
+   * trae `gameData`, y sin el no se puede validar la banlist de Yu-Gi-Oh! ni
+   * distinguir la Energia Basica de la Especial en Pokemon.
+   */
+  card: (printId: number) => request<{ data: CardDetail }>(`/cards/${printId}`),
+
+  decks: (token: string, game?: GameCode) =>
+    request<{ data: DeckSummary[] }>(`/decks${game ? `?game=${game}` : ''}`, {}, token),
+
+  createDeck: (token: string, body: { game: GameCode; name: string }) =>
+    request<{ data: DeckSummary }>('/decks', { method: 'POST', body: JSON.stringify(body) }, token),
+
+  deck: (token: string, id: number) => request<{ data: DeckDetail }>(`/decks/${id}`, {}, token),
+
+  patchDeck: (token: string, id: number, body: { name?: string; format?: string | null }) =>
+    request<{ data: DeckSummary }>(
+      `/decks/${id}`,
+      { method: 'PATCH', body: JSON.stringify(body) },
+      token,
+    ),
+
+  putDeckCards: (
+    token: string,
+    id: number,
+    cards: Array<{ printId: number; zone: DeckZone; quantity: number }>,
+  ) =>
+    request<{ data: DeckDetail }>(
+      `/decks/${id}/cards`,
+      { method: 'PUT', body: JSON.stringify({ cards }) },
+      token,
+    ),
+
+  deleteDeck: (token: string, id: number) =>
+    request<{ data: { id: number } }>(`/decks/${id}`, { method: 'DELETE' }, token),
 
   register: (body: { email: string; displayName: string; password: string }) =>
     request<{ data: AuthUser; token: string }>('/auth/register', {
