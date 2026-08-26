@@ -397,6 +397,65 @@ ahora además estorbaría.
 
 Con esto **P-032 queda cerrado** y por fin se puede tener una base de pruebas.
 
+---
+
+# Sexta parte: T-066, los iconos por fin visibles
+
+Llevaban cosechados desde S027 y la API los servía, pero **nadie podía ver uno**: un `<option>` no
+puede contener una imagen, y no hay CSS que lo arregle. O se cambia el control o los iconos no
+existen para el usuario.
+
+## Dos sitios, dos soluciones distintas
+
+**El panel de completitud** de la colección ya era una rejilla de `<div>`: el icono entra como
+columna nueva, y esa columna **mantiene su ancho aunque el icono falte** — si no, las filas con y sin
+icono dejan de alinear y la lista se lee peor que sin iconos.
+
+**Los tres selectores de set** (sobres, catálogo y buscador de mazos) pasan a un control propio.
+
+## Lo que hay que devolver al sustituir un `<select>`
+
+Un `<select>` nativo trae gratis cosas que se dan por hechas hasta que faltan. Están reimplementadas
+a mano y **cubiertas por tests**, que es lo que impide que se pierdan sin que nadie lo note:
+
+- roles `combobox` y `listbox`, con `aria-expanded`, `aria-selected` y `aria-activedescendant`
+- teclado completo: flechas, Inicio/Fin, Enter, Espacio, Escape y Tab
+- **buscar tecleando**: escribir "sup" salta a *Supreme Darkness*. Con cientos de sets, sin esto el
+  control es inservible desde el teclado
+- cerrar al hacer clic fuera, y devolver el foco al botón
+
+**Y lo que NO se recupera, dicho en el propio componente:** en móvil, un `<select>` nativo abre la
+ruleta del sistema, que es mejor que cualquier lista pintada en la página. Si algún día molesta, la
+salida es volver al nativo por debajo de cierto ancho, no apedazar éste.
+
+## La lección de P-030, aplicada por adelantado
+
+El `<select>` anterior se dimensionaba a su opción más larga y se salía de su columna. El control
+nuevo **no hereda ese comportamiento, pero tampoco hereda la lección**: la aserción de P-030 se mueve
+al control nuevo en vez de borrarse con el viejo, y se añade otra igual en la página de sobres.
+
+## Y algo que sólo se ve mirando
+
+Los "iconos" no son lo mismo en los tres juegos. Magic da SVG limpios y Pokémon el símbolo del set;
+**Yu-Gi-Oh! da la portada del sobre**, una imagen vertical que a 20 px se reconoce por color pero no
+por detalle. Es lo que el origen ofrece y no hay nada que arreglar, pero conviene saberlo antes de
+esperar tres cosas iguales. Del DOM no se deduce: sale de abrir la captura.
+
+## Verificación de la sexta parte
+
+| Comprobación | Resultado |
+|---|---|
+| Suite E2E | **10 passed**, ninguno saltado |
+| `npm test` · `vite build` · `npm audit` | 381/381 · limpios |
+| Iconos del selector | todos `^/images/`, ninguno apuntando al origen (P-001) |
+| Que hayan **cargado** de verdad | `naturalWidth > 0`; un `<img>` roto también "está visible" |
+| Desbordamiento | selector dentro de su columna en sobres y en el editor |
+| Las capturas | miradas, no sólo generadas |
+
+**Un test que se saltaba, arreglado en el momento.** El del panel se saltaba porque la cuenta de
+prueba no tenía cartas. Un test que nunca corre no prueba nada, así que ahora abre un sobre él mismo
+en vez de depender de que otro lo haya hecho — y de paso deja de depender del orden de ejecución.
+
 ## Lo que NO se ha hecho, y por qué
 
 | ID | Qué queda |
@@ -417,5 +476,5 @@ que hace la aplicación, pero conviene saberlo antes de sacar conclusiones de es
 - **H8 cerrado.** H8a (suite E2E), H8b (seguridad) y H8c (las ocho de deuda técnica).
 - **T-068, T-069 y T-070 cerradas también**, fuera de H8c: las tres salieron del informe que se
   escribió para T-034.
-- Abiertas: T-066, T-067 y T-005, que depende del usuario. Ninguna bloquea nada.
+- Abiertas: T-067 y T-005, que depende del usuario. Ninguna bloquea nada.
 - Problemas: 5 abiertos · 33 cerrados.

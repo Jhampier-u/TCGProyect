@@ -1,7 +1,7 @@
 # 05 — Continuar aquí
 
 **Punto de guardado:** 2026-08-26, tras la sesión **S028**
-**Commit:** rama `main` · 381 tests de Vitest + 6 recorridos E2E en verde · `npm audit` limpio
+**Commit:** rama `main` · 381 tests de Vitest + 10 recorridos E2E en verde · `npm audit` limpio
 
 Este documento existe para retomar el proyecto en otra máquina o en otra sesión sin releer las 26
 bitácoras. Si sólo vas a leer un fichero, que sea éste.
@@ -155,12 +155,9 @@ son útiles para la lógica, pero **la fidelidad de sus datos determina lo que e
 ## 5. Lo que está pendiente, por orden de interés
 
 ### El siguiente paso natural
-**Los ocho hitos están cerrados** y no queda nada bloqueante. Lo abierto son dos tareas de producto,
-las dos con una decisión detrás que conviene tomar antes de teclear:
+**Los ocho hitos están cerrados** y no queda nada bloqueante. Lo único abierto del proyecto es una tarea de
+producto, y tiene una decisión detrás que conviene tomar antes de teclear:
 
-- **T-066** — enseñar los iconos de set. Están cosechados y la API los sirve en `iconPath`, pero el
-  selector es un `<select>` nativo y un `<option>` **no puede** contener una imagen. Hay que cambiar
-  el control, y eso es diseño.
 - **T-067** — plantilla propia para los sets de composición atípica. MAMO y MAMS no tienen ni una
   carta común y la plantilla pide ocho; *Black Bolt* y *White Flare* tienen el 40 % del set en
   Illustration Rare. Las cartas del chase ya son alcanzables: lo que falta es que el sobre se parezca
@@ -182,7 +179,6 @@ Las ocho tareas de H8c están cerradas. Lo que queda abierto salió de hacerlas,
 
 | Tarea | Qué pasa si no se hace |
 |---|---|
-| **T-066** | Los iconos de set están cosechados y servidos, pero no se ven: el selector es un `<select>` |
 | **T-067** | MAMO y MAMS no tienen comunes y la plantilla pide ocho: alcanzable pero no realista |
 
 ### Bloqueada por ti

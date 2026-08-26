@@ -1,6 +1,6 @@
 # Tareas Pendientes
 
-**Última actualización:** 2026-08-26 (S028) · **Total abiertas:** 3 — 2 del proyecto (T-066, T-067) + T-005, que depende de ti
+**Última actualización:** 2026-08-26 (S028) · **Total abiertas:** 2 — 1 del proyecto (T-067) + T-005, que depende de ti
 
 Leyenda de prioridad: 🔴 crítica · 🟠 alta · 🟡 media · ⚪ baja
 
@@ -70,7 +70,6 @@ hacerlas.
 
 | ID | Tarea | Agente | Prio |
 |---|---|---|---|
-| T-066 | **Mostrar los iconos de set en la interfaz.** Ya están cosechados y la API los sirve en `iconPath`, pero el selector es un `<select>` nativo y un `<option>` **no puede** contener una imagen. Enseñarlos exige cambiar el control, que es una decisión de diseño, no un retoque: se deja fuera de T-035 en vez de hacerla a escondidas | Frontend | ⚪ |
 
 ## Deuda técnica detectada en S004
 
