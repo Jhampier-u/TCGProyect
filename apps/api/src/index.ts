@@ -4,6 +4,7 @@ import { loadConfig } from './config.js';
 import { Database, Migrator, CatalogQueryRepository, CollectionRepository, PackRepositoryMysql, DeckRepository } from './db/index.js';
 import { UserRepository, warmUp } from './auth/index.js';
 import { PackService } from './packs/index.js';
+import { revisarAlmacen, FileImageStore } from './images/index.js';
 import { buildFullServer } from './api/index.js';
 
 /**
@@ -29,6 +30,13 @@ async function main(): Promise<void> {
   // esto el servidor arranca igual, pero /images devuelve 404 hasta que alguien
   // ejecuta el CLI, y el aviso pasa desapercibido entre los logs de arranque.
   await mkdir(config.storagePath, { recursive: true });
+
+  // T-071. Que la base y el disco digan lo mismo sobre las imagenes. Una
+  // cosecha lanzada con otro STORAGE_PATH deja la base afirmando que las hay y
+  // la API devolviendo 404 en cada una, sin que nada falle (P-036). No bloquea
+  // el arranque: quien haya borrado storage/ a proposito tiene que poder
+  // levantar la API. Lo que no puede es no enterarse.
+  await avisarSiElAlmacenNoCuadra(db, config.storagePath);
 
   // Precalcula el hash señuelo para que el primer login no pague su coste y
   // delate, por lentitud, que es el primero (ADR-008).
@@ -58,6 +66,39 @@ async function main(): Promise<void> {
 
   await app.listen({ port: config.port, host: config.host });
   console.log(`API escuchando en http://${config.host}:${config.port}`);
+}
+
+/**
+ * Saca la muestra de la base y grita si no cuadra (T-071).
+ *
+ * Veinte rutas, no una: con una sola, un fichero borrado a mano se confundiria
+ * con la raiz equivocada. Y se toman las mas recientes en vez de al azar porque
+ * `ORDER BY RAND()` sobre 116.000 filas es un recorrido completo en cada
+ * arranque, y lo ultimo cosechado es justo lo que mas probablemente se escribio
+ * con la configuracion de ahora.
+ */
+async function avisarSiElAlmacenNoCuadra(db: Database, storagePath: string): Promise<void> {
+  const [conteo] = await db.select<{ n: number }>(
+    `SELECT COUNT(*) AS n FROM card_prints WHERE image_local_path IS NOT NULL`,
+  );
+  const declaradas = Number(conteo?.n ?? 0);
+  if (declaradas === 0) return;
+
+  const filas = await db.select<{ image_local_path: string }>(
+    `SELECT image_local_path FROM card_prints
+      WHERE image_local_path IS NOT NULL
+      ORDER BY id DESC LIMIT 20`,
+  );
+
+  const revision = await revisarAlmacen({
+    declaradas,
+    muestra: filas.map((f) => f.image_local_path),
+    store: new FileImageStore(storagePath),
+    storagePath,
+  });
+
+  if (revision.estado === 'raiz_equivocada') console.error(`\nALMACEN DE IMAGENES: ${revision.mensaje}\n`);
+  else if (revision.estado === 'faltan_ficheros') console.warn(`ALMACEN DE IMAGENES: ${revision.mensaje}`);
 }
 
 main().catch((error: unknown) => {
