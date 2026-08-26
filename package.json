@@ -20,6 +20,7 @@
     "dev:web": "npm run dev --workspace @tcg/web",
     "dev:api": "node apps/api/dist/index.js",
     "db:migrate": "node apps/api/dist/cli/migrate.js",
+    "packs:cobertura": "node apps/api/dist/cli/coverage.js",
     "ingest": "node apps/api/dist/cli/ingest.js"
   },
   "devDependencies": {
