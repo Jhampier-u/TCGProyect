@@ -55,7 +55,8 @@ C:\ProyectoTCG\
 │   ├── 06_Spec_T047_Interfaz_Mazos.md <- spec de la interfaz (H7, 2a pasada)
 │   ├── 07_Plan_T047_Interfaz_Mazos.md <- plan de implementacion, 8 tareas
 │   ├── 08_Spec_T048_ImportExport.md  <- spec de import/export (H7, 3a pasada)
-│   └── 09_Plan_T048_ImportExport.md  <- plan de implementacion, 9 tareas
+│   ├── 09_Plan_T048_ImportExport.md  <- plan de implementacion, 9 tareas
+│   └── 10_Spec_H8a_SuiteE2E.md      <- spec de la suite E2E (H8a) + ADR-009
 ├── 005Registro\
 │   ├── 2026-08-25_S001_Inicializacion.md
 │   ├── 2026-08-25_S002_DDL_MySQL.md
