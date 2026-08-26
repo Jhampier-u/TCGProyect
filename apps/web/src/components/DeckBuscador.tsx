@@ -108,7 +108,11 @@ export function DeckBuscador({ game, onAnadir }: DeckBuscadorProps) {
             <div>
               <div className="nombre">{carta.name}</div>
               <div className="tipo">
-                {carta.typeLine ?? 'sin tipo'} · {carta.setCode} {carta.collectorNumber}
+                {carta.typeLine ?? 'sin tipo'} · {carta.setCode} {carta.collectorNumber} ·{' '}
+                {/* T-061. Sin la rareza, tres impresiones de la misma carta en el
+                    mismo set se ven IDENTICAS y no hay forma de elegir. Salio de
+                    mirar las capturas de S023. */}
+                {carta.rarity.replace(/_/g, ' ')}
               </div>
             </div>
             <button onClick={() => void anadir(carta)} disabled={pidiendo === carta.printId}>
