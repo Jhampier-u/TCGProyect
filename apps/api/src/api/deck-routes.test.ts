@@ -260,12 +260,22 @@ describe('rutas de mazos', () => {
     expect(res.statusCode).toBe(401);
   });
 
-  it('el esquema del cuerpo se valida ANTES que el token (400, no 401)', async () => {
-    // Queda registrado a proposito: es el orden del ciclo de vida de Fastify, y
-    // vale igual para las rutas de H6. Solo revela la forma del cuerpo, que es
-    // superficie publica, pero conviene que este escrito y no descubierto.
+  it('T-051: el hook NO se escapa de su ambito: el catalogo sigue siendo publico', async () => {
+    // Las rutas de mazos van en un `register` encapsulado. Si ese encapsulado
+    // se rompiera, el hook protegeria todo el servidor y el catalogo publico
+    // dejaria de responder sin token. Este test es el que lo notaria.
+    const res = await app.inject({ method: 'GET', url: '/api/games' });
+    expect(res.statusCode).toBe(200);
+  });
+
+  it('T-051: el token se comprueba ANTES que el esquema del cuerpo (401, no 400)', async () => {
+    // Antes respondia 400: `requireUser` vivia dentro del manejador y el esquema
+    // de Fastify corria primero, asi que un anonimo podia descubrir la forma del
+    // cuerpo de cualquier ruta. Ahora la comprobacion es un hook de
+    // `preValidation`, que corre antes de validar.
     const res = await app.inject({ method: 'POST', url: '/api/decks', payload: {} });
-    expect(res.statusCode).toBe(400);
+    expect(res.statusCode).toBe(401);
+    expect(res.json().error).toBe('unauthorized');
   });
 
   it('crea un mazo vacio y lo lista', async () => {

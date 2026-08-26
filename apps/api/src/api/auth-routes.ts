@@ -9,7 +9,7 @@ import {
 import { EmailAlreadyExistsError, type UserRepository } from '../auth/user-repository.js';
 import type { CollectionRepository } from '../db/collection-repository.js';
 import type { CatalogQueryRepository } from '../db/catalog-query-repository.js';
-import { requireUser } from './require-user.js';
+import { exigirUsuario, usuarioDe } from './require-user.js';
 import { DuplicateSeedError, EmptyPoolError, NoTemplateError, type PackService } from '../packs/index.js';
 import {
   COLLECTION_COMPLETION,
@@ -104,9 +104,8 @@ export async function registerAuthRoutes(
     },
   );
 
-  app.get('/api/auth/me', { schema: ME }, async (request, reply) => {
-    const auth = await requireUser(request, reply);
-    if (!auth) return;
+  app.get('/api/auth/me', { schema: ME, preValidation: exigirUsuario }, async (request, reply) => {
+    const auth = usuarioDe(request);
 
     const user = await users.findById(auth.id);
     if (!user) {
@@ -120,10 +119,9 @@ export async function registerAuthRoutes(
 
   app.post<{ Body: { setId: number; count?: number } }>(
     '/api/packs/open',
-    { schema: OPEN_PACK },
+    { schema: OPEN_PACK, preValidation: exigirUsuario },
     async (request, reply) => {
-      const auth = await requireUser(request, reply);
-      if (!auth) return;
+      const auth = usuarioDe(request);
 
       // El userId sale del TOKEN, jamas del cuerpo de la peticion. Aceptarlo del
       // cliente seria una referencia directa a objetos: cualquiera podria abrir
@@ -158,10 +156,9 @@ export async function registerAuthRoutes(
 
   app.get<{ Params: { openingId: number } }>(
     '/api/packs/openings/:openingId',
-    { schema: GET_OPENING },
+    { schema: GET_OPENING, preValidation: exigirUsuario },
     async (request, reply) => {
-      const auth = await requireUser(request, reply);
-      if (!auth) return;
+      const auth = usuarioDe(request);
 
       // `replay` filtra por user_id: una apertura ajena responde 404, no 403.
       // Un 403 confirmaria que esa apertura existe.
@@ -177,10 +174,9 @@ export async function registerAuthRoutes(
 
   app.get<{ Querystring: { game?: GameCode; cursor?: string; limit?: number } }>(
     '/api/collection',
-    { schema: LIST_COLLECTION },
+    { schema: LIST_COLLECTION, preValidation: exigirUsuario },
     async (request, reply) => {
-      const auth = await requireUser(request, reply);
-      if (!auth) return;
+      const auth = usuarioDe(request);
       const page = await collection.list(auth.id, request.query);
       return reply.send({ data: page.items, nextCursor: page.nextCursor });
     },
@@ -188,17 +184,15 @@ export async function registerAuthRoutes(
 
   app.get<{ Params: { game: GameCode } }>(
     '/api/collection/completion/:game',
-    { schema: COLLECTION_COMPLETION },
+    { schema: COLLECTION_COMPLETION, preValidation: exigirUsuario },
     async (request, reply) => {
-      const auth = await requireUser(request, reply);
-      if (!auth) return;
+      const auth = usuarioDe(request);
       return reply.send({ data: await collection.completion(auth.id, request.params.game) });
     },
   );
 
-  app.get('/api/collection/summary', { schema: COLLECTION_SUMMARY }, async (request, reply) => {
-    const auth = await requireUser(request, reply);
-    if (!auth) return;
+  app.get('/api/collection/summary', { schema: COLLECTION_SUMMARY, preValidation: exigirUsuario }, async (request, reply) => {
+    const auth = usuarioDe(request);
     return reply.send({ data: await collection.summary(auth.id) });
   });
 }

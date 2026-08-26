@@ -3,4 +3,4 @@ export type { ApiOptions } from './server.js';
 export { registerAuthRoutes } from './auth-routes.js';
 export { registerDeckRoutes } from './deck-routes.js';
 export type { DeckRoutesOptions } from './deck-routes.js';
-export { requireUser } from './require-user.js';
+export { exigirUsuario, usuarioDe } from './require-user.js';

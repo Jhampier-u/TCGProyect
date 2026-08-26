@@ -7,7 +7,7 @@ import type {
   DeckLineInput,
   DeckRepository,
 } from '../db/deck-repository.js';
-import { requireUser } from './require-user.js';
+import { exigirUsuario, usuarioDe } from './require-user.js';
 import {
   CREATE_DECK,
   DELETE_DECK,
@@ -58,17 +58,23 @@ export async function registerDeckRoutes(
 ): Promise<void> {
   const { decks } = options;
 
-  app.get<{ Querystring: { game?: GameCode } }>(
+  // ENCAPSULADO a proposito (T-051). Las seis rutas de mazos son autenticadas,
+  // asi que el hook se registra una vez para todas. Sin este `register`, el
+  // hook se aplicaria a TODO el servidor: el catalogo publico dejaria de serlo
+  // y el propio login exigiria estar logueado.
+  await app.register(async (scope) => {
+    scope.addHook('preValidation', exigirUsuario);
+
+    scope.get<{ Querystring: { game?: GameCode } }>(
     '/api/decks',
     { schema: LIST_DECKS },
     async (request, reply) => {
-      const user = await requireUser(request, reply);
-      if (!user) return;
+      const user = usuarioDe(request);
       return { data: await decks.listByUser(user.id, request.query.game) };
     },
   );
 
-  app.post<{
+    scope.post<{
     Body: {
       game: GameCode;
       name: string;
@@ -77,32 +83,29 @@ export async function registerDeckRoutes(
       isPublic?: boolean;
     };
   }>('/api/decks', { schema: CREATE_DECK }, async (request, reply) => {
-    const user = await requireUser(request, reply);
-    if (!user) return;
+    const user = usuarioDe(request);
     const mazo = await decks.create(user.id, request.body);
     return reply.code(201).send({ data: mazo });
   });
 
   // Se registra ANTES de `/api/decks/:id`: si no, Fastify intentaria leer
   // "resolve" como un id de mazo.
-  app.post<{ Body: { game: GameCode; lines: DeckLineInput[] } }>(
+    scope.post<{ Body: { game: GameCode; lines: DeckLineInput[] } }>(
     '/api/decks/resolve',
     { schema: RESOLVE_DECK },
     async (request, reply) => {
-      const user = await requireUser(request, reply);
-      if (!user) return;
+      const user = usuarioDe(request);
       // No muta nada: resolver es una consulta. El cliente decide que hace con
       // el resultado y guarda cuando quiere (D5 del spec de H7).
       return { data: await decks.resolveLines(request.body.game, request.body.lines) };
     },
   );
 
-  app.get<{ Params: { id: number } }>(
+    scope.get<{ Params: { id: number } }>(
     '/api/decks/:id',
     { schema: GET_DECK },
     async (request, reply) => {
-      const user = await requireUser(request, reply);
-      if (!user) return;
+      const user = usuarioDe(request);
       const detalle = await decks.findById(request.params.id, user.id);
       // 404 y no 403: decir "existe pero no es tuyo" convierte la API en un
       // enumerador de identificadores (D6 del spec).
@@ -111,7 +114,7 @@ export async function registerDeckRoutes(
     },
   );
 
-  app.patch<{
+    scope.patch<{
     Params: { id: number };
     Body: {
       name?: string;
@@ -120,19 +123,17 @@ export async function registerDeckRoutes(
       isPublic?: boolean;
     };
   }>('/api/decks/:id', { schema: PATCH_DECK }, async (request, reply) => {
-    const user = await requireUser(request, reply);
-    if (!user) return;
+    const user = usuarioDe(request);
     const mazo = await decks.updateHeader(request.params.id, user.id, request.body);
     if (!mazo) return reply.code(404).send(NO_ENCONTRADO);
     return { data: mazo };
   });
 
-  app.put<{ Params: { id: number }; Body: { cards: DeckCardInput[] } }>(
+    scope.put<{ Params: { id: number }; Body: { cards: DeckCardInput[] } }>(
     '/api/decks/:id/cards',
     { schema: PUT_DECK_CARDS },
     async (request, reply) => {
-      const user = await requireUser(request, reply);
-      if (!user) return;
+      const user = usuarioDe(request);
 
       const actual = await decks.findById(request.params.id, user.id);
       if (!actual) return reply.code(404).send(NO_ENCONTRADO);
@@ -169,15 +170,15 @@ export async function registerDeckRoutes(
     },
   );
 
-  app.delete<{ Params: { id: number } }>(
+    scope.delete<{ Params: { id: number } }>(
     '/api/decks/:id',
     { schema: DELETE_DECK },
     async (request, reply) => {
-      const user = await requireUser(request, reply);
-      if (!user) return;
+      const user = usuarioDe(request);
       const borrado = await decks.remove(request.params.id, user.id);
       if (!borrado) return reply.code(404).send(NO_ENCONTRADO);
       return { data: { id: request.params.id } };
     },
   );
+  });
 }
