@@ -225,7 +225,7 @@ async function enrich(
       return {
         slotIndex: c.slotIndex,
         printId: c.printId,
-        cardId: detalle?.id ?? 0,
+        cardId: detalle?.cardId ?? 0,
         name: detalle?.name ?? '(desconocida)',
         rarity: c.rarityCode,
         finish: c.finish,

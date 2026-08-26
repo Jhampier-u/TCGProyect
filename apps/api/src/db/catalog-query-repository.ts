@@ -16,7 +16,13 @@ export const MAX_PAGE_SIZE = 100;
 export const DEFAULT_PAGE_SIZE = 40;
 
 export interface CardSummary {
-  id: number;
+  /**
+   * Id de la CARTA, no de la impresion. Se llama `cardId` y no `id` porque
+   * conviven los dos en la misma respuesta y `id` a secas es ambiguo — y sobre
+   * todo porque es el nombre que declara el esquema de la API: si no coinciden,
+   * Fastify descarta el campo sin decir nada (P-024).
+   */
+  cardId: number;
   game: GameCode;
   name: string;
   typeLine: string | null;
@@ -234,16 +240,25 @@ export class CatalogQueryRepository {
   }
 }
 
-interface CardRow {
+export interface CardRow {
   id: number; game_id: number; name: string; type_line: string | null;
   set_code: string; set_name: string; print_id: number;
   collector_number: string; image_local_path: string | null; rarity: string;
 }
 
-function toSummary(row: CardRow): CardSummary {
+/**
+ * Fila cruda -> resumen de carta.
+ *
+ * Se exporta para que un test pueda comparar los campos que produce con los que
+ * declara el esquema de la API. No es cosmetico: el esquema es un literal JSON
+ * y TypeScript no lo relaciona con `CardSummary`, asi que hasta P-024 nadie
+ * comprobaba que los dos lados dijeran lo mismo — y Fastify descarta en
+ * silencio lo que no cuadra.
+ */
+export function toSummary(row: CardRow): CardSummary {
   const game = gameCodeOf(Number(row.game_id));
   return {
-    id: Number(row.id),
+    cardId: Number(row.id),
     game,
     name: row.name,
     typeLine: row.type_line,

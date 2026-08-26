@@ -7,8 +7,11 @@ import {
   type CardDetail,
   type CardPage,
   type CardQuery,
+  toSummary,
+  type CardRow,
   type CatalogQueryRepository,
 } from '../db/catalog-query-repository.js';
+import { CARD_SUMMARY } from './schemas.js';
 
 /** Catalogo falso que registra la consulta recibida. */
 function fakeCatalog(over: Partial<CatalogQueryRepository> = {}): {
@@ -41,7 +44,7 @@ function fakeCatalog(over: Partial<CatalogQueryRepository> = {}): {
 }
 
 const CARTA: CardDetail = {
-  id: 7, printId: 42, game: 'YGO', name: 'Blue-Eyes White Dragon',
+  cardId: 7, printId: 42, game: 'YGO', name: 'Blue-Eyes White Dragon',
   typeLine: 'Normal Monster', setCode: 'LOB', setName: 'Legend of Blue Eyes',
   collectorNumber: '001', rarity: 'ultra_rare',
   imagePath: 'ygo/lob/lob-en001-ultra_rare.245.webp',
@@ -151,6 +154,34 @@ describe('rutas', () => {
     const res = await app.inject({ method: 'GET', url: '/api/inventado' });
     expect(res.statusCode).toBe(404);
     await app.close();
+  });
+
+  it('P-024: toSummary produce EXACTAMENTE los campos que declara el esquema', () => {
+    // El esquema declaraba `cardId` y el repositorio devolvia `id`: Fastify
+    // descartaba los dos en silencio y la API no expuso el id de la carta desde
+    // H3. TypeScript no lo detecta porque el esquema es un literal JSON, no un
+    // tipo, y los ficheros de test ni siquiera pasan por `tsc`.
+    //
+    // Por eso el test ejecuta la funcion de mapeo DE VERDAD y compara sus
+    // claves con las del esquema. Renombrar un campo en cualquiera de los dos
+    // lados lo rompe.
+    const fila: CardRow = {
+      id: 7,
+      game_id: 2,
+      name: 'Blue-Eyes White Dragon',
+      type_line: 'Normal Monster',
+      set_code: 'LOB',
+      set_name: 'Legend of Blue Eyes',
+      print_id: 42,
+      collector_number: '001',
+      image_local_path: 'ygo/lob/x.245.webp',
+      rarity: 'ultra_rare',
+    };
+    const producido = toSummary(fila);
+
+    expect(Object.keys(producido).sort()).toEqual(Object.keys(CARD_SUMMARY.properties).sort());
+    expect(producido.cardId).toBe(7);
+    expect(producido.printId).toBe(42);
   });
 
   it('NO expone endpoint de apertura de sobres (espera a H6)', async () => {
