@@ -19,6 +19,7 @@
     "test:watch": "vitest",
     "dev:web": "npm run dev --workspace @tcg/web",
     "dev:api": "node apps/api/dist/index.js",
+    "db:migrate": "node apps/api/dist/cli/migrate.js",
     "ingest": "node apps/api/dist/cli/ingest.js"
   },
   "devDependencies": {

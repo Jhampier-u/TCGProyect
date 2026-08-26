@@ -85,12 +85,11 @@ npm run build
 
 #### 1. Base de datos
 
-La base de datos debe existir antes de migrar (la migración `0001` la crea, pero el driver necesita
-conectarse a algo). Es el único paso manual pendiente de automatizar (T-022); **en Docker no hace
-falta**, lo hace la propia imagen de MySQL:
+Un solo comando: crea la base de datos si falta y aplica las migraciones pendientes. **En Docker no
+hace falta**, lo hace la propia imagen de MySQL.
 
 ```bash
-mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS proyecto_tcg CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci"
+npm run db:migrate
 ```
 
 #### 2. Entorno
@@ -187,6 +186,7 @@ sembrado lleva anotado si es `[OFICIAL]`, `[DERIVADO]` (con el cálculo) o `[EST
 | `npm run build` | Compila los tres paquetes (project references) |
 | `npm test` | 332 tests |
 | `npm run typecheck` | `tsc --build` |
+| `npm run db:migrate` | Crea la base de datos si falta y migra |
 | `npm run ingest` | Pobla el catálogo y cosecha imágenes |
 | `npm run dev:api` | Arranca la API (migra primero) |
 | `npm run dev:web` | Arranca el frontend |
