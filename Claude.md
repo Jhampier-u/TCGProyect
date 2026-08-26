@@ -50,7 +50,8 @@ C:\ProyectoTCG\
 │   ├── 01_Estrategia_APIs.md    <- capa anticorrupción de las 3 APIs
 │   ├── 02_Flujo_Datos.md
 │   ├── 03_Infraestructura.md
-│   └── 04_Spec_H7_Deckbuilder.md  <- spec aprobado, pendiente de plan
+│   ├── 04_Spec_H7_Deckbuilder.md  <- spec aprobado (H7, 1a pasada)
+│   └── 05_Plan_H7_Deckbuilder.md  <- plan de implementacion, 10 tareas
 ├── 005Registro\
 │   ├── 2026-08-25_S001_Inicializacion.md
 │   ├── 2026-08-25_S002_DDL_MySQL.md

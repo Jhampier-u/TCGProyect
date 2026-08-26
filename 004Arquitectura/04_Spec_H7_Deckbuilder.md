@@ -1,6 +1,6 @@
 # 04 — Spec H7 · Constructor de mazos (1.ª pasada: backend)
 
-**Fecha:** 2026-08-25 · **Sesión:** S020 · **Estado:** aprobado por el usuario, pendiente de plan
+**Fecha:** 2026-08-25 · **Sesión:** S020 · **Estado:** aprobado · plan en [`05_Plan_H7_Deckbuilder.md`](05_Plan_H7_Deckbuilder.md)
 
 Este documento especifica la **primera pasada** de H7. La interfaz de construcción y el
 import/export quedan fuera y se abordarán después, cada una con su propia pasada.
