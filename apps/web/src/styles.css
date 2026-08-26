@@ -325,3 +325,104 @@ button.primario:hover:not(:disabled) { filter: brightness(1.08); }
   .barra > div { transition: none; }
   .cara { transition: none; }
 }
+
+/* ---------------------------------------------------------------- mazos */
+
+.mazo-lista { display: flex; flex-direction: column; gap: 8px; }
+
+.mazo-fila {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+}
+
+.mazo-fila .nombre { font-weight: 600; }
+.mazo-fila .meta { font-size: 12px; color: var(--texto-tenue); }
+
+/* Dos columnas: buscador y mazo. En pantalla estrecha se apilan. */
+.editor { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 18px; }
+@media (max-width: 900px) { .editor { grid-template-columns: 1fr; } }
+
+.editor-columna { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+
+.buscador-fila {
+  display: grid;
+  grid-template-columns: 38px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  background: var(--superficie);
+}
+
+.buscador-fila img { width: 38px; height: 38px; object-fit: cover; border-radius: 4px; }
+.buscador-fila .sin-imagen {
+  width: 38px;
+  height: 38px;
+  border: 1px dashed var(--borde);
+  border-radius: 4px;
+}
+.buscador-fila .nombre { font-size: 13px; }
+
+/* Se usa en el buscador y en las lineas del mazo. */
+.tipo { font-size: 11px; color: var(--texto-tenue); }
+
+.zona { border: 1px solid var(--borde); border-radius: var(--radio); overflow: hidden; }
+
+.zona-cabecera {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 8px 12px;
+  background: var(--fondo-alt);
+  border-bottom: 1px solid var(--borde);
+  font-size: 13px;
+}
+
+.zona-cabecera .cifras {
+  margin-left: auto;
+  color: var(--texto-tenue);
+  font-variant-numeric: tabular-nums;
+}
+.zona-cabecera .cifras.mal { color: var(--peligro); }
+
+.linea-carta {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--fondo-alt);
+  font-size: 13px;
+}
+
+.linea-carta:last-child { border-bottom: none; }
+.linea-carta .cantidad { display: flex; align-items: center; gap: 4px; }
+.linea-carta .cantidad .valor {
+  min-width: 22px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.linea-carta button { padding: 2px 8px; font-size: 12px; }
+.linea-carta .no-poseida { color: var(--acento-tenue); }
+
+.problemas {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.problemas li { font-size: 12px; color: #ffb3b1; }
+
+.barra-guardar { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.barra-guardar .estado { font-size: 13px; }
+.barra-guardar .estado.valido { color: var(--exito); }
+.barra-guardar .estado.invalido { color: var(--texto-tenue); }
