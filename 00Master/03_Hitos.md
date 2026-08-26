@@ -9,7 +9,7 @@
 | **H4** | Motor de sobres | `POST /api/packs/open` determinista por seed + plantillas por set | ✅ **COMPLETADO** — el endpoint quedó expuesto y protegido en H6 |
 | **H5** | Frontend sobres | Animación de apertura + reveal + push a colección | ✅ **COMPLETADO** (revelado carta a carta, orden por escasez, foil, movimiento reducido) |
 | **H6** | Cuentas y colección | Auth, colección persistente, completitud por set | ✅ **COMPLETADO** (Argon2id + JWT, 9 endpoints, verificado con 103 sobres reales) |
-| **H7** | Deckbuilder | CRUD de mazos + validadores por juego + import/export | 🟡 EN CURSO — **backend (S020) e interfaz (S021) completos y verificados**. Solo falta el import/export (T-048) |
+| **H7** | Deckbuilder | CRUD de mazos + validadores por juego + import/export | ✅ **COMPLETADO** (S022) — motor de reglas, 6 endpoints, interfaz e import/export. **Ultima epica de producto del alcance v1.0** |
 | **H8** | Endurecimiento | Suite Cypress verde, auditoría de seguridad, rate limiting propio | ⚪ PENDIENTE |
 
 **Regla de progresión:** no se abre un hito sin que el anterior tenga su reporte cerrado en

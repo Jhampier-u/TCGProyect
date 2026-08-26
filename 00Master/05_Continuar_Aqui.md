@@ -1,9 +1,9 @@
 # 05 — Continuar aquí
 
-**Punto de guardado:** 2026-08-25, tras la sesión **S021**
-**Commit:** rama `main` · 290 tests en verde · `npm audit` limpio
+**Punto de guardado:** 2026-08-26, tras la sesión **S022**
+**Commit:** rama `main` · 332 tests en verde · `npm audit` limpio
 
-Este documento existe para retomar el proyecto en otra máquina o en otra sesión sin releer las 21
+Este documento existe para retomar el proyecto en otra máquina o en otra sesión sin releer las 22
 bitácoras. Si sólo vas a leer un fichero, que sea éste.
 
 ---
@@ -20,8 +20,8 @@ crecer con completitud por set.
 |---|---|
 | H0 Fundamentos | ✅ **cerrado en S019** — Docker Compose (T-004) |
 | H1 Esquema · H2 Ingesta · H3 API · H4 Sobres · H5 Frontend · H6 Cuentas | ✅ |
-| **H7 Constructor de mazos** | 🟡 **backend (S020) e interfaz (S021) hechos** — falta el import/export |
-| H8 Endurecimiento (Cypress, seguridad) | ⚪ |
+| **H7 Constructor de mazos** | ✅ **cerrado en S022** — motor, API, interfaz e import/export |
+| **H8 Endurecimiento** (Cypress, seguridad) | ⚪ **lo único que queda** |
 
 ---
 
@@ -73,7 +73,7 @@ condicionan el día a día:
 
 ---
 
-## 4. Cinco cosas que se rompen en silencio
+## 4. Seis cosas que se rompen en silencio
 
 Esto es lo que de verdad hay que interiorizar antes de tocar código.
 
@@ -98,7 +98,15 @@ y datos que desaparecen sin un solo error en los logs.
 
 **Antes de elegir una clave natural, cuéntala.**
 
-### 4.3 Un spec puede prometer algo que el código no hace
+### 4.3 La clave por la que agrupas no es la que crees
+RN-04 cuenta las copias **por nombre**. El motor agrupaba por `oracle_key`, que en Magic y Yu-Gi-Oh!
+equivale al nombre pero en Pokémon es **una clave por impresión**: 775 nombres en 1279 filas. El
+resultado, medido, era que 16 copias de la misma carta pasaban como mazo legal (P-027).
+
+No se vio durante dos sesiones porque las cartas de Pokémon se ingestaron **después** de escribir el
+validador, y los tests usaban claves inventadas, todas distintas.
+
+### 4.4 Un spec puede prometer algo que el código no hace
 En S021 el spec decía que el detalle de una carta se cachearía y sólo se pediría una vez. El código
 llamaba a la API directamente, sin pasar por la caché. Compilaba, pasaba los tests y se leía bien.
 **Lo único que lo destapó fue mirar el panel de red** (P-026).
@@ -107,7 +115,7 @@ Del mismo día: la imagen web de Docker llevaba **dos sesiones rota** sin que na
 hasta entonces el frontend sólo importaba *tipos* de `@tcg/shared` — que se borran al compilar— y el
 módulo nunca se cargaba (P-025).
 
-### 4.4 Un test sólo vale si lo has visto fallar
+### 4.5 Un test sólo vale si lo has visto fallar
 En S020 el test que debía blindar P-024 fue **vacuo dos veces seguidas**: la primera porque el doble
 sustituía justo a la función bajo prueba, y la segunda porque `tsc` **excluye los ficheros de test**
 y la anotación de tipo no la comprobaba nadie. Sólo el tercero, que ejecuta la función de verdad,
@@ -116,8 +124,8 @@ falló al reintroducir el bug.
 Es la misma familia que P-022, donde el test pasaba porque la fixture devolvía `null`. **Antes de
 dar un test por bueno, rómpelo a propósito y compruébalo.**
 
-### 4.5 Los bugs que sólo aparecen a escala
-Siete veces ha pasado (P-017, P-020, P-022, P-023, P-024, P-025, P-026): probar con una muestra elegida a mano **no
+### 4.6 Los bugs que sólo aparecen a escala
+Ocho veces ha pasado (P-017, P-020, P-022, P-023, P-024, P-025, P-026, P-027): probar con una muestra elegida a mano **no
 ejercita el mismo camino** que procesar el catálogo entero, arrancar el servidor de verdad o
 levantar los contenedores. Los dobles de prueba
 son útiles para la lógica, pero **la fidelidad de sus datos determina lo que el test puede detectar**.
@@ -127,11 +135,15 @@ son útiles para la lógica, pero **la fidelidad de sus datos determina lo que e
 ## 5. Lo que está pendiente, por orden de interés
 
 ### El siguiente paso natural
-- **T-048 — Import/export** en los formatos de texto de cada juego. Es lo único que queda para
-  cerrar H7 y, con él, **la última épica de producto**. Después sólo queda H8 (endurecimiento).
-- **T-053 — Revisión visual** de la interfaz de mazos. En S021 el panel del navegador no componía
-  imágenes, así que se verificó por DOM y por red: el comportamiento está comprobado, la apariencia
-  no la ha visto nadie.
+**H7 está cerrado y con él la última épica de producto del alcance v1.0.** Lo que queda es **H8,
+endurecimiento**: suite de Cypress, auditoría de seguridad y la deuda técnica acumulada.
+
+Dentro de H8, dos entradas que ya tienen dueño y motivo:
+- **T-053 — Revisión visual** de la interfaz de mazos. En S021 y S022 el panel del navegador no
+  componía imágenes, así que se verificó por DOM y por red: el comportamiento está comprobado, la
+  apariencia **no la ha visto nadie**.
+- **T-051 — Autenticación antes que validación de esquema.** Un `POST` anónimo con cuerpo inválido
+  responde 400 en vez de 401 en las rutas de H6 y H7.
 
 ### Deuda con impacto medido
 | Tarea | Qué pasa si no se hace |
@@ -160,7 +172,7 @@ son útiles para la lógica, pero **la fidelidad de sus datos determina lo que e
 | **P-016** | 🟠 | La API de Pokémon responde 200 sólo ~30 % de las veces. La ingesta **debe** poder reanudarse |
 | **P-021** | 🟡 | Sets de YGO pre-2020: completitud topada al 70,7 % |
 
-Los 25 problemas —20 cerrados, con su medición— están en `003Problemas/Registro_Problemas.md`.
+Los 26 problemas —21 cerrados, con su medición— están en `003Problemas/Registro_Problemas.md`.
 
 ---
 

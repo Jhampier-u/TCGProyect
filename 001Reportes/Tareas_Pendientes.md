@@ -1,6 +1,6 @@
 # Tareas Pendientes
 
-**Última actualización:** 2026-08-25 (S021) · **Total abiertas:** 10 — 9 del proyecto + T-005, que depende de ti
+**Última actualización:** 2026-08-26 (S022) · **Total abiertas:** 9 — 8 del proyecto + T-005, que depende de ti
 
 Leyenda de prioridad: 🔴 crítica · 🟠 alta · 🟡 media · ⚪ baja
 
@@ -24,15 +24,14 @@ hechos y verificados contra los orígenes reales.
 
 **El orquestador (`IngestService`) está construido y verificado** contra MySQL real (T-021, S011).
 
-## Hito H7 — Constructor de mazos 🟡 EN CURSO
+## Hito H7 — Constructor de mazos ✅ COMPLETADO (S022)
 
-El backend (S020) y la interfaz (S021) están hechos y verificados. **Sólo falta el import/export
-para cerrar H7 y, con él, la última épica de producto.**
+Motor de reglas (S020), interfaz (S021) e import/export (S022), los tres verificados.
+**Con H7 se cierra la última épica de producto del alcance v1.0.**
 
 | ID | Tarea | Agente | Prio |
 |---|---|---|---|
-| T-048 | Import/export de mazos en los formatos de texto de cada juego | Backend / Frontend | 🟠 |
-| T-053 | **Revisión visual de la interfaz de mazos.** En S021 el panel del navegador no componía imágenes: se verificó por DOM y por red, no por vista | Frontend / QA | 🟡 |
+| T-053 | **Revisión visual de la interfaz de mazos.** En S021 y S022 el panel del navegador no componía imágenes: se verificó por DOM y por red, no por vista | Frontend / QA | 🟡 |
 | T-050 | Confirmar contra datos reales el lado **positivo** de dos predicados: la Energía Básica de Pokémon y la tierra nevada de Magic. Ninguno aparece en los sets ingestados hasta hoy (ver S020). Depende en parte de **T-023** | QA | 🟡 |
 
 ## Hito H8 — Endurecimiento

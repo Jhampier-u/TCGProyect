@@ -1,6 +1,6 @@
 # Registro de Problemas
 
-**Última actualización:** 2026-08-25 (S021) · **Abiertos:** 5 · **Cerrados:** 20
+**Última actualización:** 2026-08-26 (S022) · **Abiertos:** 5 · **Cerrados:** 21
 
 Severidad: 🔴 crítica · 🟠 alta · 🟡 media · ⚪ baja
 
@@ -760,3 +760,44 @@ en el spec y **no implementada en el codigo**.
 tests, y parecer correcto al leerlo. Lo unico que lo distingue es medirlo. El criterio de aceptacion
 de T-047 —"cero peticiones al cambiar cantidades"— se cumplia; el que fallaba era el otro, y estaba
 escrito en el plan justo para esto.
+
+---
+
+## P-027 ✅ CERRADO · El validador de Pokemon no aplicaba RN-04
+**Estado:** CERRADO el 2026-08-26 (S022)
+**Origen:** investigar, antes de escribir T-048, con que identidad cuenta las copias cada juego.
+
+**Detalle.** RN-04 dice "maximo 4 copias **por nombre**". `aggregate()` agrupaba por `oracleKey`, y
+en Pokemon esa clave es `set-numero`: **una por impresion**. La misma carta en cuatro sets eran
+cuatro cartas distintas para el motor.
+
+**Medido**, no argumentado. En el catalogo ingestado: **775 nombres en 1279 filas** de `cards`;
+`Acerola's Mischief` tiene cuatro. Ejecutado contra el motor:
+
+```
+16 copias de "Acerola's Mischief" en 4 impresiones distintas
+  antes -> valido: true   problemas: []
+  ahora -> valido: false  problemas: ["too_many_copies"]
+```
+
+En Magic y Yu-Gi-Oh! no ocurria: sus claves son el `oracle_id` y el passcode, estables entre
+impresiones. Medido: 92/92 y 290/290 nombres unicos.
+
+**Por que no se vio en S020.** Las cartas de Pokemon se ingestaron **al final** de aquella sesion,
+despues de escribir el validador. Los tests usaban `oracle_key` inventados, todos distintos, asi que
+la agrupacion parecia correcta.
+
+**Solucion.** `aggregate()` agrupa por `entry.name`. `CardTally` gana un `oracleKey` representativo
+para que la interfaz pueda seguir referenciando la carta.
+
+**Lo que casi rompe la correccion.** Los tres validadores indexaban sus excepciones por `oracleKey` y
+las consultaban con la clave de `byCard`. Cambiar la agrupacion sin reindexarlos habria dejado sin
+efecto **la exencion de tierras basicas, la de Energias Basicas y la banlist entera**, en silencio.
+
+Por eso se hizo en dos pasos deliberados: cambiar, **ver los seis rojos**, y solo entonces
+reindexar. Sin ver el rojo no hay prueba de que esos tests cubrieran nada.
+
+**Y una fixture que no se parecia a la realidad.** El caso de Nidoran daba a las dos cartas el nombre
+`Nidoran` a secas, que no existe en ningun catalogo: P-013 registro que llevan los signos de macho y
+hembra. Corregida a los nombres reales. Tercera vez que aparece la misma leccion (P-020, P-022,
+esta): **la fidelidad de la fixture determina lo que el test puede detectar.**

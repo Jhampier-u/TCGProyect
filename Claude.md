@@ -2,7 +2,7 @@
 
 > **Rol:** Arquitecto Principal y Orquestador de Proyectos de Software.
 > **Producto:** Simulador de Apertura de Sobres + Constructor de Mazos unificado para MTG, Yu-Gi-Oh! y Pokémon TCG.
-> **Estado del Vault:** ACTIVO — última sesión S021 (2026-08-25)
+> **Estado del Vault:** ACTIVO — última sesión S022 (2026-08-26)
 
 ---
 
@@ -77,7 +77,8 @@ C:\ProyectoTCG\
 │   ├── 2026-08-25_S018_PuntoDeGuardado.md
 │   ├── 2026-08-25_S019_DockerCompose.md
 │   ├── 2026-08-25_S020_ConstructorDeMazos.md
-│   └── 2026-08-25_S021_InterfazDeMazos.md
+│   ├── 2026-08-25_S021_InterfazDeMazos.md
+│   └── 2026-08-26_S022_ImportExport.md
 │
 ├── db\                          <- esquema (fuera del Vault documental)
 │   ├── README.md
@@ -97,6 +98,8 @@ C:\ProyectoTCG\
 │       ├── adapter.ts       GameAdapter<G>, IngestWarning
 │       ├── deck-rules\      motor de validacion de mazos (RN-04, H7)
 │       │                   types · predicates · aggregate · mtg · ygo · ptcg
+│       ├── deck-formats\    codecs de import/export, uno por juego (T-048)
+│       │                   types · mtg (texto) · ygo (.ydk) · ptcg (PTCG Live)
 │       ├── normalize.ts     normalizeRarityCode, toJsonNumber, ...
 │       ├── normalize.test.ts
 │       └── index.ts
@@ -132,7 +135,8 @@ C:\ProyectoTCG\
 │   └── src│       ├── lib\   api.ts (cliente) · auth.tsx (sesion)
 │       ├── lib\   api · auth · deck-draft (borrador puro) · use-deck-editor
 │       ├── pages\ Catalogo · Acceso · Sobres · Coleccion · Mazos · MazoEditor
-│       └── components\ CardTile · PackReveal · DeckBuscador · DeckZona · DeckValidacion
+│       └── components\ CardTile · PackReveal · DeckBuscador · DeckZona ·
+│                     DeckValidacion · DeckTransferencia
 └── package.json                 <- npm workspaces
 ```
 

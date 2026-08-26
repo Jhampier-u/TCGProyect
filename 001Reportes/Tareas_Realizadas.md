@@ -1,6 +1,6 @@
 # Tareas Realizadas
 
-**Última actualización:** 2026-08-25 (S021)
+**Última actualización:** 2026-08-26 (S022)
 
 | ID | Tarea | Agente | Fecha | Sesión | Evidencia |
 |---|---|---|---|---|---|
@@ -71,3 +71,8 @@
 | T-047b | Cliente de API de mazos y `useDeckEditor` con la validación derivada | Frontend | 2026-08-25 | S021 | `apps/web/src/lib/` |
 | T-047c | **Interfaz del constructor**: lista, editor de dos columnas, buscador, zonas y panel de validación | Frontend | 2026-08-25 | S021 | `apps/web/src/pages/`, `components/` |
 | T-047v | Verificación en navegador: validación en cliente sin red, banlist aplicada, 0 URLs externas. Destapó P-025 y P-026 | QA | 2026-08-25 | S021 | Ver S021 en `005Registro` |
+| T-054 | **P-027 corregido**: las copias se cuentan por nombre. El validador de Pokémon dejaba pasar 16 copias de la misma carta | Backend / QA | 2026-08-26 | S022 | `packages/shared/src/deck-rules/` |
+| T-048a | Códecs de los tres formatos: texto de Magic, `.ydk` de Yu-Gi-Oh! y PTCG Live. Puros, 37 tests | Backend | 2026-08-26 | S022 | `packages/shared/src/deck-formats/` |
+| T-048b | `oracleKey` en `CARD_SUMMARY` y `POST /api/decks/resolve`, que resuelve sin mutar nada | Backend | 2026-08-26 | S022 | `apps/api/src/` |
+| T-048c | `DeckTransferencia`: exportar sin red e importar con informe de lo que falta | Frontend | 2026-08-26 | S022 | `apps/web/src/components/DeckTransferencia.tsx` |
+| T-048v | Verificación: ida y vuelta **idéntica byte a byte**, exportar con 0 peticiones, import parcial con su informe | QA | 2026-08-26 | S022 | Ver S022 en `005Registro` |
