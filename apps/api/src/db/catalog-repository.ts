@@ -5,6 +5,13 @@ import type { ImageRepository, PendingImage } from '../images/types.js';
 import { iconKeyFromUrl } from '../images/image-harvester.js';
 import { clasificarSet } from '../ingest/openable.js';
 
+/** Hoy en `YYYY-MM-DD`, en hora local, que es como el origen fecha los sets. */
+function hoyISO(): string {
+  const d = new Date();
+  const p = (n: number): string => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+
 /**
  * Tamano de lote para los upserts.
  *
@@ -51,7 +58,12 @@ export class CatalogRepository implements ImageRepository {
         // T-069: si el set es un producto de sobres. Se decide aqui, con el
         // nombre y el tamano que el origen declara, y no se toca `in_boosters`:
         // son dos cosas distintas y confundirlas es P-033.
-        clasificarSet({ game: s.game, name: s.name, cardCount: s.cardCount }).abrible ? 1 : 0,
+        clasificarSet(
+          { game: s.game, name: s.name, cardCount: s.cardCount, releasedAt: s.releasedAt },
+          hoyISO(),
+        ).abrible
+          ? 1
+          : 0,
         s.iconUrl,
       ]);
       await this.db.query(
@@ -124,20 +136,35 @@ export class CatalogRepository implements ImageRepository {
    * corre en cada ejecucion del CLI y no hace falta acordarse de nada.
    *
    * Devuelve cuantos han cambiado de valor, para que el CLI pueda decirlo.
+   *
+   * Y hay una razon mas para que corra siempre: la clasificacion depende de la
+   * FECHA (T-067). Un set que hoy no ha salido lo hara, y entonces tiene que
+   * volverse abrible solo, sin que nadie se acuerde de nada.
    */
   async reclasificarSets(): Promise<number> {
     const rows = await this.db.select<{
-      id: number; game_id: number; name: string; card_count: number; is_openable: number;
-    }>(`SELECT id, game_id, name, card_count, is_openable FROM sets`);
+      id: number; game_id: number; name: string; card_count: number;
+      released_at: string | Date | null; is_openable: number;
+    }>(`SELECT id, game_id, name, card_count, released_at, is_openable FROM sets`);
+
+    // Se calcula UNA vez para toda la pasada: si se tomara por fila, una
+    // ejecucion a medianoche clasificaria unos sets con un dia y otros con el
+    // siguiente.
+    const hoy = hoyISO();
 
     const cambian: number[] = [];
     const abren: number[] = [];
     for (const r of rows) {
-      const abrible = clasificarSet({
-        game: gameCodeOf(Number(r.game_id)),
-        name: r.name,
-        cardCount: Number(r.card_count),
-      }).abrible;
+      const abrible = clasificarSet(
+        {
+          game: gameCodeOf(Number(r.game_id)),
+          name: r.name,
+          cardCount: Number(r.card_count),
+          // `DATE` llega como `Date` con mysql2; se recorta a `YYYY-MM-DD`.
+          releasedAt: r.released_at ? String(r.released_at).slice(0, 10) : null,
+        },
+        hoy,
+      ).abrible;
       if (abrible === (Number(r.is_openable) === 1)) continue;
       (abrible ? abren : cambian).push(Number(r.id));
     }

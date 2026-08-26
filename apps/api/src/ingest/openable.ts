@@ -66,6 +66,8 @@ export interface SetAClasificar {
   name: string;
   /** Cartas que el origen declara. 0 o negativo = no lo declara. */
   cardCount: number;
+  /** `YYYY-MM-DD`, o nulo si el origen no la da. */
+  releasedAt: string | null;
 }
 
 export interface Clasificacion {
@@ -75,24 +77,38 @@ export interface Clasificacion {
 }
 
 /**
- * Decide si un set es un producto de sobres (T-069, corrige P-033).
+ * Decide si un set se puede abrir en sobres (T-069/T-067, corrige P-033).
  *
- * Dos reglas, y la primera no es una heuristica:
+ * Tres reglas, y solo la segunda es heuristica:
  *
  *  1. ARITMETICA. Un set que declara menos cartas de las que lleva un sobre de
  *     su juego no puede ser un producto de sobres. Sobre el catalogo entero son
  *     937 de 2254 sets: 520 de Yu-Gi-Oh! y 417 de Magic.
  *  2. NOMBRE. Los patrones de arriba. Aqui si hay juicio, y por eso lo que
  *     descartan se publica en el informe de cobertura.
+ *  3. FECHA DE SALIDA (T-067). Un set que aun no ha salido tiene la lista de
+ *     cartas a medias, y eso NO se ve mirando su composicion: parece un
+ *     producto raro. `Magnificent Maestros` sale dentro de 78 dias, el origen
+ *     declara 24 cartas y el catalogo tiene 66 impresiones -- 24 ultra, 24
+ *     starlight y 18 grand master, porque solo se han revelado los tratamientos
+ *     premium. Abrirlo entrega 8,98 ultra rare por sobre, medido. No hay
+ *     plantilla que arregle eso: faltan las cartas, no las probabilidades.
  *
  * ANTE LA DUDA, ABRIBLE. Un origen que no declara `cardCount` no descarta nada.
  * Equivocarse hacia "abrible" deja las cosas como estaban; equivocarse hacia
  * "no abrible" hace desaparecer contenido real sin que nadie se entere, y este
  * proyecto ya sabe lo que cuesta un fallo que no dice nada.
  */
-export function clasificarSet(set: SetAClasificar): Clasificacion {
+export function clasificarSet(set: SetAClasificar, hoy: string): Clasificacion {
   for (const { patron, que } of NO_ES_SOBRE) {
     if (patron.test(set.name)) return { abrible: false, motivo: `nombre de ${que}` };
+  }
+
+  // Comparacion de cadenas `YYYY-MM-DD`, que ordena igual que las fechas y no
+  // arrastra husos horarios: `new Date()` sobre una fecha suelta la interpreta
+  // en UTC y el resultado cambia segun donde corra el proceso.
+  if (set.releasedAt && set.releasedAt > hoy) {
+    return { abrible: false, motivo: `no sale hasta el ${set.releasedAt}` };
   }
 
   const minimo = CARTAS_POR_SOBRE[set.game];

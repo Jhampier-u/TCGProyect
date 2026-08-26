@@ -18,6 +18,9 @@ const SOBRES_DE_VERDAD = [
   'War of the Giants Reinforcements',
 ];
 
+/** Fecha fija: un test que depende del reloj falla solo algun dia. */
+const HOY = '2026-08-26';
+
 const NO_SON_SOBRES = [
   'Legendary Arc-V Decks',
   'Structure Deck: Shaddoll Showdown',
@@ -35,14 +38,14 @@ const NO_SON_SOBRES = [
 describe('clasificarSet (T-069)', () => {
   it('deja abribles los sets de sobres de verdad', () => {
     for (const name of SOBRES_DE_VERDAD) {
-      const r = clasificarSet({ game: 'YGO', name, cardCount: 100 });
+      const r = clasificarSet({ game: 'YGO', name, cardCount: 100, releasedAt: '2020-01-01' }, HOY);
       expect(r.abrible, `"${name}" deberia seguir siendo abrible: ${r.motivo ?? ''}`).toBe(true);
     }
   });
 
   it('descarta los productos que no son de sobres', () => {
     for (const name of NO_SON_SOBRES) {
-      const r = clasificarSet({ game: 'YGO', name, cardCount: 100 });
+      const r = clasificarSet({ game: 'YGO', name, cardCount: 100, releasedAt: '2020-01-01' }, HOY);
       expect(r.abrible, `"${name}" no es un producto de sobres`).toBe(false);
       expect(r.motivo).toBeTruthy();
     }
@@ -51,23 +54,55 @@ describe('clasificarSet (T-069)', () => {
   it('descarta lo que no da ni para un sobre, sin mirar el nombre', () => {
     // Aritmetica, no heuristica: un sobre de Yu-Gi-Oh! son 9 cartas. 520 sets
     // del catalogo declaran menos, y 417 en Magic sobre 14.
-    expect(clasificarSet({ game: 'YGO', name: 'Un Set Cualquiera', cardCount: 8 }).abrible).toBe(false);
-    expect(clasificarSet({ game: 'YGO', name: 'Un Set Cualquiera', cardCount: 9 }).abrible).toBe(true);
-    expect(clasificarSet({ game: 'MTG', name: 'Stardates', cardCount: 1 }).abrible).toBe(false);
-    expect(clasificarSet({ game: 'PTCG', name: 'Un Set Cualquiera', cardCount: 10 }).abrible).toBe(true);
+    expect(clasificarSet({ game: 'YGO', name: 'Un Set Cualquiera', cardCount: 8, releasedAt: '2020-01-01' }, HOY).abrible).toBe(false);
+    expect(clasificarSet({ game: 'YGO', name: 'Un Set Cualquiera', cardCount: 9, releasedAt: '2020-01-01' }, HOY).abrible).toBe(true);
+    expect(clasificarSet({ game: 'MTG', name: 'Stardates', cardCount: 1, releasedAt: '2020-01-01' }, HOY).abrible).toBe(false);
+    expect(clasificarSet({ game: 'PTCG', name: 'Un Set Cualquiera', cardCount: 10, releasedAt: '2020-01-01' }, HOY).abrible).toBe(true);
   });
 
   it('el motivo dice cual de las dos reglas ha sido', () => {
-    expect(clasificarSet({ game: 'YGO', name: 'Starter Deck: Kaiba', cardCount: 50 }).motivo)
+    expect(clasificarSet({ game: 'YGO', name: 'Starter Deck: Kaiba', cardCount: 50, releasedAt: '2020-01-01' }, HOY).motivo)
       .toContain('Starter Deck');
-    expect(clasificarSet({ game: 'YGO', name: 'Un Set Cualquiera', cardCount: 3 }).motivo)
+    expect(clasificarSet({ game: 'YGO', name: 'Un Set Cualquiera', cardCount: 3, releasedAt: '2020-01-01' }, HOY).motivo)
       .toContain('9');
+  });
+
+  it('descarta lo que todavia NO HA SALIDO (T-067)', () => {
+    // Medido: `Magnificent Maestros` sale dentro de 78 dias, el origen declara
+    // 24 cartas y el catalogo tiene 66 impresiones -- 24 ultra, 24 starlight y
+    // 18 grand master. No es un producto raro: es un set a medio revelar, del
+    // que solo se han anunciado los tratamientos premium. Sus comunes llegaran.
+    //
+    // Abrirlo hoy entrega 8,98 ultra rare por sobre, medido sobre 200 sobres.
+    expect(
+      clasificarSet({ game: 'YGO', name: 'Magnificent Maestros', cardCount: 24, releasedAt: '2026-11-12' }, HOY)
+        .abrible,
+    ).toBe(false);
+    expect(
+      clasificarSet({ game: 'YGO', name: 'Eternity Code', cardCount: 105, releasedAt: '2020-04-30' }, HOY)
+        .abrible,
+    ).toBe(true);
+  });
+
+  it('el dia de salida YA cuenta como salido', () => {
+    // Un `<` en vez de un `<=` esconderia el set justo el dia que sale.
+    expect(
+      clasificarSet({ game: 'YGO', name: 'Un Set', cardCount: 100, releasedAt: HOY }, HOY).abrible,
+    ).toBe(true);
+  });
+
+  it('un set sin fecha de salida NO se descarta', () => {
+    // Muchos promocionales antiguos no la traen. Ante la duda, abrible: los
+    // otros dos filtros siguen aplicandose.
+    expect(
+      clasificarSet({ game: 'YGO', name: 'Un Set', cardCount: 100, releasedAt: null }, HOY).abrible,
+    ).toBe(true);
   });
 
   it('un cardCount desconocido no descarta el set', () => {
     // La API puede no declararlo. Ante la duda, abrible: equivocarse hacia "no
     // abrible" hace desaparecer contenido real sin que nadie se entere.
-    expect(clasificarSet({ game: 'YGO', name: 'Un Set Cualquiera', cardCount: 0 }).abrible).toBe(true);
+    expect(clasificarSet({ game: 'YGO', name: 'Un Set Cualquiera', cardCount: 0, releasedAt: '2020-01-01' }, HOY).abrible).toBe(true);
   });
 });
 
