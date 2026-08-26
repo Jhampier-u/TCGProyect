@@ -8,3 +8,7 @@ export { CatalogQueryRepository, toBooleanQuery, encodeCursor, decodeCursor, MIN
 export type { CardSummary, CardDetail, CardQuery, CardPage, SetSummary } from './catalog-query-repository.js';
 export { CollectionRepository, encodeCollectionCursor, decodeCollectionCursor } from './collection-repository.js';
 export type { CollectionEntry, CollectionPage, SetCompletion } from './collection-repository.js';
+export { DeckRepository } from './deck-repository.js';
+export type {
+  DeckSummary, DeckDetail, DeckCardRow, DeckInput, DeckHeaderPatch, DeckCardInput, ResolvedPrint,
+} from './deck-repository.js';
