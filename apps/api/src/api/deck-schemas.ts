@@ -203,3 +203,78 @@ export const DELETE_DECK = {
     404: ERROR,
   },
 } as const;
+
+/** Mismo tope que el PUT: un pegado enorme se rechaza antes de tocar la BD. */
+export const RESOLVE_DECK = {
+  body: {
+    type: 'object',
+    required: ['game', 'lines'],
+    properties: {
+      game: { type: 'string', enum: ['MTG', 'YGO', 'PTCG'] },
+      lines: {
+        type: 'array',
+        maxItems: MAX_DECK_CARD_ROWS,
+        items: {
+          type: 'object',
+          required: ['quantity', 'zone'],
+          properties: {
+            quantity: { type: 'integer', minimum: 1, maximum: 99 },
+            zone: { type: 'string', enum: ['main', 'extra', 'side', 'commander'] },
+            name: { type: 'string', maxLength: 255 },
+            externalId: { type: 'string', maxLength: 64 },
+            setCode: { type: 'string', maxLength: 16 },
+            collectorNumber: { type: 'string', maxLength: 16 },
+          },
+          additionalProperties: false,
+        },
+      },
+    },
+    additionalProperties: false,
+  },
+  response: {
+    200: {
+      type: 'object',
+      properties: {
+        data: {
+          type: 'object',
+          properties: {
+            resolved: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  printId: { type: 'integer' },
+                  cardId: { type: 'integer' },
+                  oracleKey: { type: 'string' },
+                  name: { type: 'string' },
+                  typeLine: { type: ['string', 'null'] },
+                  gameData: { type: 'object', additionalProperties: true },
+                  setCode: { type: 'string' },
+                  collectorNumber: { type: 'string' },
+                  rarity: { type: 'string' },
+                  imagePath: { type: ['string', 'null'] },
+                  zone: { type: 'string' },
+                  quantity: { type: 'integer' },
+                },
+              },
+            },
+            unresolved: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  name: { type: ['string', 'null'] },
+                  externalId: { type: ['string', 'null'] },
+                  quantity: { type: 'integer' },
+                  zone: { type: 'string' },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    400: ERROR,
+    401: ERROR,
+  },
+} as const;

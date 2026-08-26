@@ -10,6 +10,7 @@ export type { CardSummary, CardDetail, CardQuery, CardPage, SetSummary, CardRow 
 export { CollectionRepository, encodeCollectionCursor, decodeCollectionCursor } from './collection-repository.js';
 export type { CollectionEntry, CollectionPage, SetCompletion } from './collection-repository.js';
 export { DeckRepository } from './deck-repository.js';
+export type { DeckLineInput, ResolvedLine, UnresolvedLine } from './deck-repository.js';
 export type {
   DeckSummary, DeckDetail, DeckCardRow, DeckInput, DeckHeaderPatch, DeckCardInput, ResolvedPrint,
 } from './deck-repository.js';

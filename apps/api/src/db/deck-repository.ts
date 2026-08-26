@@ -64,6 +64,38 @@ export interface ResolvedPrint {
   game: GameCode;
 }
 
+/** Una linea de una lista pegada, tal como la devuelve el codec del juego. */
+export interface DeckLineInput {
+  quantity: number;
+  zone: DeckZone;
+  name?: string;
+  externalId?: string;
+  setCode?: string;
+  collectorNumber?: string;
+}
+
+export interface ResolvedLine {
+  printId: number;
+  cardId: number;
+  oracleKey: string;
+  name: string;
+  typeLine: string | null;
+  gameData: GameData;
+  setCode: string;
+  collectorNumber: string;
+  rarity: string;
+  imagePath: string | null;
+  zone: DeckZone;
+  quantity: number;
+}
+
+export interface UnresolvedLine {
+  name: string | null;
+  externalId: string | null;
+  quantity: number;
+  zone: DeckZone;
+}
+
 interface DeckRow {
   id: number;
   game: string;
@@ -345,6 +377,113 @@ export class DeckRepository {
       printId: Number(fila.print_id),
       game: fila.game as GameCode,
     }));
+  }
+
+  /**
+   * Resuelve lineas de una lista pegada contra el catalogo, en UNA consulta.
+   *
+   * No muta nada: devuelve lo que ha encontrado y lo que no. Con pocos sets
+   * ingestados lo normal es que falte bastante, y decirlo es mas util que
+   * fallar entero.
+   */
+  async resolveLines(
+    game: GameCode,
+    lines: readonly DeckLineInput[],
+  ): Promise<{ resolved: ResolvedLine[]; unresolved: UnresolvedLine[] }> {
+    const aFuera = (l: DeckLineInput): UnresolvedLine => ({
+      name: l.name ?? null,
+      externalId: l.externalId ?? null,
+      quantity: l.quantity,
+      zone: l.zone,
+    });
+
+    if (lines.length === 0) return { resolved: [], unresolved: [] };
+
+    const claves = [...new Set(lines.map((l) => l.externalId).filter((v): v is string => !!v))];
+    const nombres = [...new Set(lines.map((l) => l.name).filter((v): v is string => !!v))];
+
+    const condiciones: string[] = [];
+    const params: unknown[] = [GAME_IDS[game]];
+    if (claves.length > 0) {
+      condiciones.push(`c.oracle_key IN (${claves.map(() => '?').join(', ')})`);
+      params.push(...claves);
+    }
+    if (nombres.length > 0) {
+      condiciones.push(`c.name IN (${nombres.map(() => '?').join(', ')})`);
+      params.push(...nombres);
+    }
+    if (condiciones.length === 0) return { resolved: [], unresolved: lines.map(aFuera) };
+
+    const filas = await this.db.select<{
+      print_id: number; card_id: number; oracle_key: string; name: string;
+      type_line: string | null; game_data: GameData; set_code: string;
+      collector_number: string; rarity: string; image_local_path: string | null;
+    }>(
+      `SELECT p.id AS print_id, c.id AS card_id, c.oracle_key, c.name, c.type_line,
+              c.game_data, s.code AS set_code, p.collector_number, r.code AS rarity,
+              p.image_local_path
+       FROM cards c
+       JOIN card_prints p ON p.card_id = c.id
+       JOIN sets s ON s.id = p.set_id
+       JOIN rarities r ON r.id = p.rarity_id
+       WHERE c.game_id = ? AND (${condiciones.join(' OR ')})
+       ORDER BY p.id ASC`,
+      params,
+    );
+
+    // `ORDER BY p.id ASC` + escribir solo si falta => se queda la impresion de
+    // menor id. Determinista y reproducible entre ejecuciones.
+    const porClave = new Map<string, (typeof filas)[number]>();
+    const porNombre = new Map<string, (typeof filas)[number]>();
+    const porImpresion = new Map<string, (typeof filas)[number]>();
+    for (const fila of filas) {
+      if (!porClave.has(fila.oracle_key)) porClave.set(fila.oracle_key, fila);
+      const nombre = fila.name.toLowerCase();
+      if (!porNombre.has(nombre)) porNombre.set(nombre, fila);
+      porImpresion.set(
+        `${fila.set_code.toLowerCase()}:${fila.collector_number.toLowerCase()}`,
+        fila,
+      );
+    }
+
+    const resolved: ResolvedLine[] = [];
+    const unresolved: UnresolvedLine[] = [];
+
+    for (const linea of lines) {
+      // Si la linea trae set y numero, se prefiere ESA impresion exacta.
+      const exacta =
+        linea.setCode && linea.collectorNumber
+          ? porImpresion.get(
+              `${linea.setCode.toLowerCase()}:${linea.collectorNumber.toLowerCase()}`,
+            )
+          : undefined;
+      const fila =
+        exacta ??
+        (linea.externalId ? porClave.get(linea.externalId) : undefined) ??
+        (linea.name ? porNombre.get(linea.name.toLowerCase()) : undefined);
+
+      if (!fila) {
+        unresolved.push(aFuera(linea));
+        continue;
+      }
+
+      resolved.push({
+        printId: Number(fila.print_id),
+        cardId: Number(fila.card_id),
+        oracleKey: fila.oracle_key,
+        name: fila.name,
+        typeLine: fila.type_line,
+        gameData: fila.game_data,
+        setCode: fila.set_code,
+        collectorNumber: fila.collector_number,
+        rarity: fila.rarity,
+        imagePath: fila.image_local_path,
+        zone: linea.zone,
+        quantity: linea.quantity,
+      });
+    }
+
+    return { resolved, unresolved };
   }
 }
 

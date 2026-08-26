@@ -1,7 +1,12 @@
 import type { FastifyInstance } from 'fastify';
 import type { DeckEntry, DeckValidation, GameCode } from '@tcg/shared';
 import { validateDeck } from '@tcg/shared';
-import type { DeckCardInput, DeckDetail, DeckRepository } from '../db/deck-repository.js';
+import type {
+  DeckCardInput,
+  DeckDetail,
+  DeckLineInput,
+  DeckRepository,
+} from '../db/deck-repository.js';
 import { requireUser } from './require-user.js';
 import {
   CREATE_DECK,
@@ -10,6 +15,7 @@ import {
   LIST_DECKS,
   PATCH_DECK,
   PUT_DECK_CARDS,
+  RESOLVE_DECK,
 } from './deck-schemas.js';
 
 export interface DeckRoutesOptions {
@@ -21,8 +27,9 @@ const NO_ENCONTRADO = { error: 'not_found', message: 'El mazo no existe' };
 /**
  * Traduce el mazo leido a la entrada del motor de reglas.
  *
- * El motor agrupa por `oracleKey`: dos impresiones distintas de la misma carta
- * llegan como dos entradas y cuentan como UNA (D3 del spec).
+ * El motor agrupa por NOMBRE desde P-027: dos impresiones distintas de la misma
+ * carta llegan como dos entradas y cuentan como UNA. `oracleKey` viaja para que
+ * los problemas puedan referenciar la carta, no como clave de agrupacion.
  */
 function toEntries(detalle: DeckDetail): DeckEntry[] {
   return detalle.cards.map((card) => ({
@@ -75,6 +82,20 @@ export async function registerDeckRoutes(
     const mazo = await decks.create(user.id, request.body);
     return reply.code(201).send({ data: mazo });
   });
+
+  // Se registra ANTES de `/api/decks/:id`: si no, Fastify intentaria leer
+  // "resolve" como un id de mazo.
+  app.post<{ Body: { game: GameCode; lines: DeckLineInput[] } }>(
+    '/api/decks/resolve',
+    { schema: RESOLVE_DECK },
+    async (request, reply) => {
+      const user = await requireUser(request, reply);
+      if (!user) return;
+      // No muta nada: resolver es una consulta. El cliente decide que hace con
+      // el resultado y guarda cuando quiere (D5 del spec de H7).
+      return { data: await decks.resolveLines(request.body.game, request.body.lines) };
+    },
+  );
 
   app.get<{ Params: { id: number } }>(
     '/api/decks/:id',

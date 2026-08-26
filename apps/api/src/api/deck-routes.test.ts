@@ -156,6 +156,29 @@ class FakeDecks {
     return true;
   }
 
+  async resolveLines(game: string, lines: Array<Record<string, unknown>>) {
+    const resolved: unknown[] = [];
+    const unresolved: unknown[] = [];
+    for (const l of lines) {
+      const id = Number(l.externalId);
+      if (this.catalogo.get(id) === game) {
+        resolved.push({
+          printId: id, cardId: id, oracleKey: String(id), name: `Carta ${id}`,
+          typeLine: 'Effect Monster', gameData: {}, setCode: 'TST',
+          collectorNumber: '1', rarity: 'common', imagePath: null,
+          zone: l.zone, quantity: l.quantity,
+        });
+      } else {
+        unresolved.push({
+          name: (l.name as string) ?? null,
+          externalId: (l.externalId as string) ?? null,
+          quantity: l.quantity, zone: l.zone,
+        });
+      }
+    }
+    return { resolved, unresolved };
+  }
+
   async resolvePrints(printIds: number[]) {
     return printIds
       .filter((id) => this.catalogo.has(id))
@@ -370,6 +393,36 @@ describe('rutas de mazos', () => {
     const carta = res.json().data.cards[0];
     expect(carta.oracleKey).toBe('carta-10');
     expect(carta.gameData).toEqual({});
+  });
+
+  it('resolve separa lo que esta en el catalogo de lo que no', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/decks/resolve',
+      headers: auth(tokenA),
+      payload: {
+        game: 'YGO',
+        lines: [
+          { quantity: 3, zone: 'main', externalId: '10' },
+          { quantity: 1, zone: 'main', externalId: '999999', name: 'Carta inventada' },
+        ],
+      },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(res.json().data.resolved).toHaveLength(1);
+    expect(res.json().data.resolved[0].printId).toBe(10);
+    expect(res.json().data.unresolved).toEqual([
+      { name: 'Carta inventada', externalId: '999999', quantity: 1, zone: 'main' },
+    ]);
+  });
+
+  it('resolve exige token', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/decks/resolve',
+      payload: { game: 'YGO', lines: [] },
+    });
+    expect(res.statusCode).toBe(401);
   });
 
   it('borra el mazo', async () => {
