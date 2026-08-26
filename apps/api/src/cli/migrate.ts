@@ -1,5 +1,3 @@
-import { readFile } from 'node:fs/promises';
-import { join } from 'node:path';
 import mysql from 'mysql2/promise';
 import { loadConfig } from '../config.js';
 import { Database, Migrator } from '../db/index.js';
@@ -48,22 +46,6 @@ async function main(): Promise<void> {
     await admin.end();
   }
 
-  // GUARDA (P-032). La migracion 0001 lleva dentro un `USE proyecto_tcg`, asi
-  // que el migrador se cambia de base sola sea cual sea la conexion. Apuntar a
-  // otra base y migrar crearia las tablas en `proyecto_tcg` mientras anota la
-  // migracion como aplicada en la otra: dos bases inconsistentes, en silencio.
-  //
-  // Las migraciones publicadas son inmutables, asi que esto no se puede
-  // arreglar editando la 0001. Lo que si se puede es negarse a arrancar.
-  const fijada = await baseQueFijaLaPrimeraMigracion(config.migrationsDir);
-  if (fijada && fijada !== nombre) {
-    throw new Error(
-      `DATABASE_URL apunta a "${nombre}" pero la migracion 0001 hace USE "${fijada}". ` +
-        'Migrar asi crearia las tablas en la base equivocada. Apunta DATABASE_URL a ' +
-        `"${fijada}" o escribe una migracion nueva que no fije el nombre (P-032).`,
-    );
-  }
-
   const db = new Database({ url: config.databaseUrl });
   try {
     const resultado = await new Migrator(db, config.migrationsDir).migrate();
@@ -72,20 +54,18 @@ async function main(): Promise<void> {
     } else {
       console.log(`Migraciones aplicadas: ${resultado.aplicadas.join(', ')}`);
     }
+
+    // Se dice, no se hace en silencio: quien lea esto tiene que saber que el
+    // fichero que hay en disco NO es exactamente lo que se ha ejecutado (T-065).
+    for (const { fichero, sentencias } of resultado.sentenciasDeBaseRetiradas) {
+      console.log(
+        `  ${fichero}: retirada(s) ${sentencias.length} sentencia(s) que elegian base ` +
+          `(${sentencias.map((x) => x.split(/\r?\n/)[0]).join(' · ')}). ` +
+          'La base la decide DATABASE_URL (P-032).',
+      );
+    }
   } finally {
     await db.close();
-  }
-}
-
-/** El nombre que fija el `USE` de la primera migracion, si lo hay. */
-async function baseQueFijaLaPrimeraMigracion(dir: string): Promise<string | null> {
-  try {
-    const sql = await readFile(join(dir, '0001_initial_schema.up.sql'), 'utf8');
-    return /^\s*USE\s+`?([A-Za-z0-9_$]+)`?\s*;/m.exec(sql)?.[1] ?? null;
-  } catch {
-    // Si no se puede leer, no se inventa una guarda: el migrador ya fallara
-    // ruidosamente si el fichero no esta.
-    return null;
   }
 }
 
