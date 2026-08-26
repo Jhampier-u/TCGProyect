@@ -1,4 +1,4 @@
-# S028 — Plantillas por época, y el techo que no estaba donde decía la ficha (T-034)
+# S028 — Plantillas por época en los dos juegos, y un rollback que no lo era (T-034, T-068)
 **Fecha:** 2026-08-26 · **Orquestador:** Claude.md
 
 ## Requerimiento del usuario
@@ -138,13 +138,87 @@ bitácora de S015 y en las listas de tareas, pero no en `Registro_Problemas.md`.
 completa —con lo que la medición de hoy le añade— y cerrada en el mismo acto. Un problema que se cita
 y no está escrito es un problema que nadie puede leer.
 
+---
+
+# Segunda parte: T-068, el techo de Pokémon
+
+El informe encontró el defecto en otro juego, así que se cerró en la misma sesión.
+
+## Medir volvió a cambiar la tarea
+
+T-068 estaba fichada como *"añadir las dos rarezas al slot del hit"*. Contando impresiones por rareza
+en todo el catálogo apareció lo que el informe no dice:
+
+```
+rare_holo          0 impresiones   <- peso 267 en la plantilla
+hyper_rare         0 impresiones   <- peso  18
+mega_hyper_rare    6 impresiones   <- peso   0
+black_white_rare   2 impresiones   <- peso   0
+```
+
+**El 28,5 % del slot del hit pedía rarezas que no existen en ningún set ingestado.** Medido sobre 300
+sobres de *Pitch Black*, antes y después:
+
+| rareza | antes | después | la plantilla pide |
+|---|---|---|---|
+| `rare` | **72,3 %** | 53,7 % | 54,6 % |
+| `double_rare` | 12,0 % | 22,0 % | 19,5 % |
+| `mega_hyper_rare` | **0 %** | 3,7 % | 2,5 % |
+
+Siete de cada diez "hits" eran una `rare` del montón. **Pokémon tenía el mismo problema de épocas que
+Yu-Gi-Oh!**, así que el mecanismo de T-034 valió tal cual — y de paso quedó demostrado que no era
+específico de un juego.
+
+Dos ventanas: `Booster Mega Evolution en adelante` (desde 2025-09-26) y `Booster Black Bolt / White
+Flare`, que es de **un solo día**, porque son dos sets gemelos publicados a la vez con una rareza que
+no existe en ningún otro producto.
+
+El peso de una rareza que ya no existe se reparte **proporcionalmente**, no se le da a la mayor. Lo
+segundo es lo que hace el respaldo del motor, y por eso `rare` llegaba al 72 %.
+
+## Y el fallo de la sesión: un rollback que dejaba la base a medias (P-035)
+
+Al probar el rollback de la 0012 **con aperturas ya hechas**:
+
+```
+ERROR 1451: Cannot delete or update a parent row (`pack_openings`,
+CONSTRAINT `fk_openings_template`)
+```
+
+El primer `DELETE` ya había pasado. Quedaron dos plantillas **vivas y sin slots**, el informe pasó a
+decir `techo 0.0%` en los nueve sets de Pokémon, y volver a aplicar la migración insertó un segundo
+par de plantillas con la misma ventana — con dos filas empatadas, la que elige `findTemplate` depende
+del orden de las filas.
+
+**El ciclo up → down → up de la 0010 lo había dado por bueno**, y era correcto: se ejecutó **antes**
+de abrir los 300 sobres de verificación, así que no había nada que restringiera el `DELETE`. La
+prueba estaba bien escrita y el caso que importaba no estaba dentro. Misma familia que P-022 y P-029.
+
+Ahora se borran las plantillas sin aperturas y las demás se **retiran**: quitarles la ventana hace
+que no encajen en ninguna rama de `findTemplate`. Verificado con las 300 aperturas delante.
+
+El `down` de la 0010 se corrigió antes de publicarse. La regla de migraciones inmutables protege el
+**`up`**, que fija el estado que otras instalaciones ya tienen aplicado; un `down` que no ha
+funcionado nunca en ninguna parte es un script roto, no un cambio de esquema.
+
+## Verificación de la segunda parte
+
+| Comprobación | Resultado |
+|---|---|
+| `npm test` | **358/358** en 28 ficheros |
+| Suite E2E | 6 passed |
+| `npm run packs:cobertura` | Pokémon **sin ningún set con rarezas inalcanzables** |
+| Ciclo de la 0010 y la 0012, **con aperturas** | correcto: 2 borradas, 3 retiradas, ninguna elegible |
+| Los tres guardianes de Pokémon | vistos en rojo, incluido el que rechaza una rareza de **otro juego** |
+| Los pesos de las plantillas de PTCG | suman 1000, verificado con `JSON_TABLE` |
+
 ## Lo que NO se ha hecho, y por qué
 
 | ID | Qué queda |
 |---|---|
-| **T-068** (P-034) | El techo de Pokémon. Mismo arreglo, otro juego, y necesita sus propias tasas |
 | **T-069** (P-033) | LAVD es una caja de Structure Decks con sus 153 impresiones marcadas `in_boosters = 1`. Es un criterio del adaptador, no una plantilla |
-| **T-067** | MAMO y MAMS **no tienen ni una carta común** y la plantilla pide ocho. Sus rarezas ya son alcanzables y el techo llega al 100 %, pero **alcanzable no es realista**: un sobre suyo sigue sin parecerse al producto |
+| **T-070** | El informe mide el techo **por set**, y por eso no vio que el 28,5 % del slot de Pokémon pedía rarezas que **ningún** set del juego tiene. Se midió a mano con SQL; debería salir del informe |
+| **T-067** | **MAMO y MAMS** no tienen ni una carta común y la plantilla pide ocho. **Black Bolt y White Flare** tienen el 40 % del set en Illustration Rare y su plantilla les da el 10,2 %. En los cuatro, la carta del chase ya es alcanzable; lo que falta es que el sobre se parezca al producto |
 
 Los tres salieron de medir. Ninguno se ha tapado subiendo un número.
 
@@ -156,5 +230,6 @@ que hace la aplicación, pero conviene saberlo antes de sacar conclusiones de es
 
 ## Estado
 - **H8 cerrado.** H8a (suite E2E), H8b (seguridad) y H8c (las ocho de deuda técnica).
-- Abiertas: T-065, T-066, T-067, T-068, T-069 y T-005, que depende del usuario.
-- Problemas: 7 abiertos · 27 cerrados.
+- **T-068 cerrada también**, fuera de H8c: salió del informe que se escribió para T-034.
+- Abiertas: T-065, T-066, T-067, T-069, T-070 y T-005, que depende del usuario.
+- Problemas: 7 abiertos · 28 cerrados.

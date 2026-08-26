@@ -1,6 +1,6 @@
 # Tareas Pendientes
 
-**Última actualización:** 2026-08-26 (S028) · **Total abiertas:** 6 — 5 del proyecto (T-065, T-066, T-067, T-068, T-069) + T-005, que depende de ti
+**Última actualización:** 2026-08-26 (S028) · **Total abiertas:** 6 — 5 del proyecto (T-065, T-066, T-067, T-069, T-070) + T-005, que depende de ti
 
 Leyenda de prioridad: 🔴 crítica · 🟠 alta · 🟡 media · ⚪ baja
 
@@ -53,11 +53,14 @@ sets anteriores a 2020; medido, los modernos estaban peor (MAMS al 36,4 %, por d
 
 ### Lo que salió de medir el techo de completitud (S028)
 
+**T-068 cerrada en la misma sesión** (ver P-034): el techo de Pokémon ya no existe. Lo que sigue
+abierto es lo de abajo.
+
 | ID | Tarea | Agente | Prio |
 |---|---|---|---|
-| T-068 | **P-034**: cerrar el techo de Pokémon. Siete de nueve sets tienen una `mega_hyper_rare` o `black_white_rare` que ninguna plantilla pide: una o dos cartas por set, pero son las *chase* | Base de Datos | 🟡 |
+| T-070 | El informe de cobertura mide el techo **por set**, y por eso no vio que el 28,5 % del slot del hit de Pokémon pedía rarezas que **ningún** set del juego tiene (`rare_holo`, `hyper_rare`). Ese desperdicio se midió a mano con SQL; debería salir en el informe | Backend | 🟡 |
 | T-069 | **P-033**: dejar de ofrecer apertura de los sets que no son sobres. LAVD es una caja de Structure Decks y sus 153 impresiones están marcadas `in_boosters = 1`. Es un criterio del adaptador, no una plantilla | Backend | 🟡 |
-| T-067 | Plantilla propia para los sets de composición atípica. MAMO y MAMS **no tienen ni una carta común** y la plantilla pide ocho: sus rarezas ya son alcanzables, pero un sobre suyo no se parece al producto. Es un `INSERT` con `set_id` | Base de Datos | ⚪ |
+| T-067 | Plantilla propia para los sets de composición atípica. **MAMO y MAMS** no tienen ni una carta común y la plantilla pide ocho. **Black Bolt y White Flare** tienen 69 Illustration Rare de 172 impresiones —el 40 % del set frente al 8 % de un booster normal— y su plantilla les da el 10,2 %. En los cuatro casos la carta del chase ya es alcanzable; lo que falta es que el sobre se parezca al producto | Base de Datos | ⚪ |
 
 ### Además, anotado al hacer T-035 y T-022
 

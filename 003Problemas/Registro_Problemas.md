@@ -1,6 +1,6 @@
 # Registro de Problemas
 
-**Última actualización:** 2026-08-26 (S028) · **Abiertos:** 7 · **Cerrados:** 27
+**Última actualización:** 2026-08-26 (S028) · **Abiertos:** 7 · **Cerrados:** 28
 
 Severidad: 🔴 crítica · 🟠 alta · 🟡 media · ⚪ baja
 
@@ -1051,8 +1051,8 @@ Registrado como **T-069**.
 
 ---
 
-## P-034 🟡 ABIERTO · Siete de nueve sets de Pokémon tienen una carta inalcanzable
-**Estado:** ABIERTO desde el 2026-08-26 (S028)
+## P-034 ✅ CERRADO · Siete de nueve sets de Pokémon tenían una carta inalcanzable
+**Estado:** CERRADO el 2026-08-26 (S028) — migración 0012
 **Severidad:** 🟡
 **Origen:** **la primera ejecución de `npm run packs:cobertura`**, escrito para cerrar el techo de
 Yu-Gi-Oh!.
@@ -1072,10 +1072,101 @@ son precisamente las cartas *chase* —la Mega Hyper Rare de cada set, la Black 
 coleccionista persigue, y son las únicas que no puede obtener jamás. Un techo del 99,4 % que deja
 fuera justo la carta que la gente quiere es peor que uno del 70 % repartido.
 
-**Por qué no se arregla en T-034.** El alcance acordado era Yu-Gi-Oh!. El arreglo tiene la misma
-forma —añadir las rarezas al slot del hit de `Booster Scarlet & Violet`— pero necesita sus propias
-tasas, y estimarlas de pasada dentro de otra tarea sería justo lo que la marca `[ESTIMADO]` intenta
-evitar. Registrado como **T-068**.
+**Por qué no se arregló dentro de T-034.** El alcance acordado era Yu-Gi-Oh!, y estimar de pasada las
+tasas de otro juego habría sido justo lo que la marca `[ESTIMADO]` intenta evitar. Se hizo aparte,
+como **T-068**, en la misma sesión.
 
-**Lo que esto dice de la comprobación.** Es el argumento a favor de escribirla: una plantilla que no
-nombra una rareza del pool no falla, no avisa y no se nota. Sólo se ve si algo lo mide.
+### Al medirlo, el techo era la mitad del problema
+
+Contando impresiones por rareza en todo el catálogo:
+
+```
+rare_holo          0 impresiones   <- peso 267 en la plantilla
+hyper_rare         0 impresiones   <- peso  18
+mega_hyper_rare    6 impresiones   <- peso   0
+black_white_rare   2 impresiones   <- peso   0
+```
+
+**El 28,5 % del slot del hit pedía rarezas que no existen en ningún set ingestado.** El respaldo del
+motor las entregaba todas como `rare`, porque es la alternativa de mayor peso del slot. Medido sobre
+300 sobres de *Pitch Black*, antes y después:
+
+| rareza | antes | después | la plantilla pide |
+|---|---|---|---|
+| `rare` | **72,3 %** | 53,7 % | 54,6 % |
+| `double_rare` | 12,0 % | 22,0 % | 19,5 % |
+| `illustration_rare` | 7,0 % | 10,3 % | 10,2 % |
+| `ultra_rare` | 5,0 % | 7,3 % | 9,1 % |
+| `mega_hyper_rare` | **0 %** | 3,7 % | 2,5 % |
+
+Siete de cada diez "hits" eran una `rare` del montón. La plantilla sembrada describe una estructura
+anterior de Scarlet & Violet: desde la era Mega Evolution no hay `rare_holo` ni `hyper_rare`.
+
+**Solución.** El mismo mecanismo de épocas que T-034, que resultó no ser específico de Yu-Gi-Oh!:
+`Booster Mega Evolution en adelante` (desde 2025-09-26) y `Booster Black Bolt / White Flare` (una
+ventana de **un día**, porque son dos sets gemelos publicados a la vez con una rareza que no existe
+en ningún otro producto).
+
+El peso de una rareza que ya no existe se reparte **proporcionalmente** entre las demás, no se le da
+a la mayor. Lo segundo es lo que hace el respaldo del motor, y por eso `rare` llegaba al 72 %:
+"dáselo a la alternativa más gorda" es una degradación para no dejar el hueco vacío, no un modelo de
+fidelidad.
+
+**Lo que esto dice de la comprobación.** Es el argumento entero a favor de escribirla: una plantilla
+que no nombra una rareza del pool no falla, no avisa y no se nota. Sólo se ve si algo lo mide — y en
+este caso la comprobación se escribió para un juego y encontró el defecto en otro.
+
+**Lo que sigue sin describirse (T-067).** *Black Bolt* y *White Flare* tienen 69 Illustration Rare de
+172 impresiones —el 40 % del set, frente al 8 % de un booster normal— y su plantilla les da el 10,2 %
+que corresponde a la era Mega. La carta del chase ya es alcanzable; la densidad real de ese set no
+está medida y no se ha inventado.
+
+---
+
+## P-035 ✅ CERRADO · El rollback de las plantillas de época dejaba la base a medias
+**Estado:** CERRADO el 2026-08-26 (S028), en la misma sesión que lo introdujo
+**Severidad:** 🟠
+**Origen:** **probar el rollback con aperturas ya hechas**, al cerrar T-068.
+
+**Detalle.** Los `down` de las migraciones 0010 y 0012 borraban primero `pack_slots` y después
+`pack_templates`. Pero `pack_openings.pack_template_id` tiene una clave foránea con **ON DELETE
+RESTRICT**: en cuanto alguien abre un sobre con una plantilla, la fila deja de poder borrarse.
+
+Lo que pasó al ejecutarlo:
+
+```
+ERROR 1451 (23000): Cannot delete or update a parent row: a foreign key
+constraint fails (`pack_openings`, CONSTRAINT `fk_openings_template`)
+```
+
+**El primer DELETE ya había pasado.** Quedaron dos plantillas **vivas y sin slots**, y el informe de
+cobertura pasó a decir esto en los nueve sets de Pokémon:
+
+```
+BLK  172 impresiones · techo 0.0% · inalcanzables: black_white_rare, common,
+     double_rare, illustration_rare, rare, special_illustration_rare, ...
+```
+
+Y al volver a aplicar la migración se insertó un **segundo par** de plantillas con la misma ventana.
+Con dos filas empatadas, la que elige `findTemplate` depende del orden en que MySQL las devuelva:
+exactamente la no-determinación que el test de solapes vigila, entrando por otra puerta.
+
+**Un rollback a medias es peor que no tener rollback:** deja un estado que nadie ha diseñado.
+
+**Por qué el ciclo up → down → up de la 0010 lo había dado por bueno.** Se probó **antes** de abrir
+los 300 sobres de verificación. Sin ninguna apertura apuntando a las plantillas nuevas, el DELETE no
+tenía nada que lo restringiera. La prueba era correcta y el caso que importaba no estaba en ella.
+
+**Solución.** Se borran las plantillas que no tienen aperturas; las que sí las tienen se **retiran**:
+se les quita la ventana. Una plantilla sin `set_id`, sin ventana y con `is_default = 0` no encaja en
+ninguna de las tres ramas de `findTemplate`, así que deja de elegirse sin romper la clave foránea ni
+tocar el historial (P-005, RN-01). Verificado con las 300 aperturas delante.
+
+**Sobre editar una migración ya escrita.** El `down` de la 0010 se corrigió en la misma sesión,
+antes de publicarse. La regla de migraciones inmutables protege el **`up`**, que fija el estado que
+otras instalaciones ya tienen aplicado; un `down` que no ha funcionado nunca en ninguna parte es un
+script roto, no un cambio de esquema.
+
+**Lección.** Una prueba de rollback sin datos que dependan de lo que se borra no prueba el rollback.
+Es la misma familia que P-022 —un test que pasaba porque la fixture devolvía `null`— y que P-029: la
+comprobación existía, se ejecutó, y el caso que la hacía valer no estaba dentro.

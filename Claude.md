@@ -107,7 +107,8 @@ C:\ProyectoTCG\
 │       ├── 0008_set_icons.{up,down}.sql
 │       ├── 0009_template_eras.{up,down}.sql
 │       ├── 0010_ygo_era_templates.{up,down}.sql
-│       └── 0011_ygo_modern_gaps.{up,down}.sql
+│       ├── 0011_ygo_modern_gaps.{up,down}.sql
+│       └── 0012_ptcg_era_templates.{up,down}.sql
 │
 ├── packages\shared\             <- @tcg/shared: contrato de dominio
 │   └── src\
