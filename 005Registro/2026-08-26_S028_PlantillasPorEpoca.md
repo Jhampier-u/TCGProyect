@@ -361,6 +361,42 @@ la auditoría de seguridad de H8b —que iba exactamente de esto—, sino intent
 | Suite E2E, **diez vueltas seguidas** | 6 passed cada una — antes fallaba a la tercera |
 | Aviso de almacén | reproducido con la raíz mala y visto callar con la buena |
 
+---
+
+# Quinta parte: T-065, y P-032 cerrado tres sesiones después
+
+La idea que lo mantuvo abierto era *"un juego de migraciones que no fije el nombre"*, y no se podía
+hacer: las migraciones publicadas son inmutables y la `0001` está aplicada en instalaciones que no
+controlamos. **Lo que sí se puede cambiar es el migrador**, que es código.
+
+Ahora retira antes de ejecutar las sentencias que deciden contra qué base se aplica, y lo dice:
+
+```
+0001_initial_schema.up.sql: retirada(s) 2 sentencia(s) que elegian base
+  (CREATE DATABASE IF NOT EXISTS proyecto_tcg · USE proyecto_tcg;).
+```
+
+Y después de cada fichero comprueba que la base activa no ha cambiado. **El límite de esa segunda
+comprobación está escrito en el código:** corre *después* de ejecutar, así que no deshace lo que ese
+fichero ya hizo —MySQL confirma cada DDL al vuelo—. Lo que evita es que la ejecución siga y que la
+migración quede anotada como aplicada en una base donde no ha creado nada, que es justo lo que hacía
+a P-032 silencioso. Comprobado metiendo un `USE` con un comentario detrás, que la regla de línea no
+reconoce: aborta nombrando el fichero y las dos bases.
+
+**La guarda de S025 se retira.** Evitaba el daño negándose a migrar, pero dejaba el problema entero y
+ahora además estorbaría.
+
+**Verificado de punta a punta, que es lo que nunca se había podido hacer:**
+
+| | |
+|---|---|
+| `tcg_prueba_t065` tras migrar | 14 tablas · 13 migraciones · 3 juegos · 67 rarezas · 8 plantillas |
+| `proyecto_tcg` | intacta, 3635 impresiones |
+| `npm test` | **381/381** en 31 ficheros |
+| Suite E2E | 6 passed |
+
+Con esto **P-032 queda cerrado** y por fin se puede tener una base de pruebas.
+
 ## Lo que NO se ha hecho, y por qué
 
 | ID | Qué queda |
@@ -381,5 +417,5 @@ que hace la aplicación, pero conviene saberlo antes de sacar conclusiones de es
 - **H8 cerrado.** H8a (suite E2E), H8b (seguridad) y H8c (las ocho de deuda técnica).
 - **T-068, T-069 y T-070 cerradas también**, fuera de H8c: las tres salieron del informe que se
   escribió para T-034.
-- Abiertas: T-065, T-066, T-067 y T-005, que depende del usuario.
-- Problemas: 6 abiertos · 32 cerrados.
+- Abiertas: T-066, T-067 y T-005, que depende del usuario. Ninguna bloquea nada.
+- Problemas: 5 abiertos · 33 cerrados.

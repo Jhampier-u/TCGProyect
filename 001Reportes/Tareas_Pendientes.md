@@ -1,6 +1,6 @@
 # Tareas Pendientes
 
-**Última actualización:** 2026-08-26 (S028) · **Total abiertas:** 4 — 3 del proyecto (T-065, T-066, T-067) + T-005, que depende de ti
+**Última actualización:** 2026-08-26 (S028) · **Total abiertas:** 3 — 2 del proyecto (T-066, T-067) + T-005, que depende de ti
 
 Leyenda de prioridad: 🔴 crítica · 🟠 alta · 🟡 media · ⚪ baja
 
@@ -66,12 +66,11 @@ hacerlas.
 |---|---|---|---|
 | T-067 | Plantilla propia para los sets de composición atípica. **MAMO y MAMS** no tienen ni una carta común y la plantilla pide ocho. **Black Bolt y White Flare** tienen 69 Illustration Rare de 172 impresiones —el 40 % del set frente al 8 % de un booster normal— y su plantilla les da el 10,2 %. En los cuatro casos la carta del chase ya es alcanzable; lo que falta es que el sobre se parezca al producto | Base de Datos | ⚪ |
 
-### Además, anotado al hacer T-035 y T-022
+### Además, anotado al hacer T-035
 
 | ID | Tarea | Agente | Prio |
 |---|---|---|---|
 | T-066 | **Mostrar los iconos de set en la interfaz.** Ya están cosechados y la API los sirve en `iconPath`, pero el selector es un `<select>` nativo y un `<option>` **no puede** contener una imagen. Enseñarlos exige cambiar el control, que es una decisión de diseño, no un retoque: se deja fuera de T-035 en vez de hacerla a escondidas | Frontend | ⚪ |
-| T-065 | **P-032**: la migración `0001` fija el nombre de la base con un `USE proyecto_tcg`, así que el migrador ignora la conexión. Hoy hay una guarda en `db:migrate` que se niega a arrancar contra otra base; el arreglo de verdad es un juego de migraciones que no fije el nombre | Base de Datos | 🟡 |
 
 ## Deuda técnica detectada en S004
 

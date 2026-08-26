@@ -138,7 +138,8 @@ C:\ProyectoTCG\
 │       │                       types · policies · errors · client
 │       │                       quota (memoria) · redis-quota (T-017)
 │       ├── db\                 mysql2 + SQL plano (ADR-006, T-020)
-│       │                       connection · migrator · catalog-repository
+│       │                       connection · migrator · migration-sql (T-065)
+│       │                       catalog-repository
 │       │                       catalog-query-repository (H3) · pack-repository (H4)
 │       │                       collection-repository (H6)
 │       │                       deck-repository (H7)

@@ -1,7 +1,7 @@
 # 05 — Continuar aquí
 
 **Punto de guardado:** 2026-08-26, tras la sesión **S028**
-**Commit:** rama `main` · 373 tests de Vitest + 6 recorridos E2E en verde · `npm audit` limpio
+**Commit:** rama `main` · 381 tests de Vitest + 6 recorridos E2E en verde · `npm audit` limpio
 
 Este documento existe para retomar el proyecto en otra máquina o en otra sesión sin releer las 26
 bitácoras. Si sólo vas a leer un fichero, que sea éste.
@@ -155,15 +155,16 @@ son útiles para la lógica, pero **la fidelidad de sus datos determina lo que e
 ## 5. Lo que está pendiente, por orden de interés
 
 ### El siguiente paso natural
-**H8a y H8b están hechos.** Queda terminar **H8c**, que va por seis de ocho. Las dos que faltan:
+**Los ocho hitos están cerrados** y no queda nada bloqueante. Lo abierto son dos tareas de producto,
+las dos con una decisión detrás que conviene tomar antes de teclear:
 
-- **T-035** — cosechar los iconos de set, para que la API pueda exponerlos sin incumplir P-022.
-- **T-034** — plantillas por época para los sets de Yu-Gi-Oh! anteriores a 2020, que hoy topan la
-  completitud en ~70,7 %. La mayor de las dos.
-
-Y una que salió al hacer T-022: **T-065 (P-032)**, la migración `0001` fija el nombre de la base con
-un `USE`. Hoy hay una guarda que se niega a migrar contra otra base; el arreglo de verdad es un juego
-de migraciones que no fije el nombre.
+- **T-066** — enseñar los iconos de set. Están cosechados y la API los sirve en `iconPath`, pero el
+  selector es un `<select>` nativo y un `<option>` **no puede** contener una imagen. Hay que cambiar
+  el control, y eso es diseño.
+- **T-067** — plantilla propia para los sets de composición atípica. MAMO y MAMS no tienen ni una
+  carta común y la plantilla pide ocho; *Black Bolt* y *White Flare* tienen el 40 % del set en
+  Illustration Rare. Las cartas del chase ya son alcanzables: lo que falta es que el sobre se parezca
+  al producto, y para eso hacen falta tasas que nadie ha medido.
 
 **Cómo se ejecuta la suite:**
 
@@ -182,7 +183,6 @@ Las ocho tareas de H8c están cerradas. Lo que queda abierto salió de hacerlas,
 | Tarea | Qué pasa si no se hace |
 |---|---|
 | **T-066** | Los iconos de set están cosechados y servidos, pero no se ven: el selector es un `<select>` |
-| **T-065** | La migración `0001` fija el nombre de la base; hay guarda, no arreglo (P-032) |
 | **T-067** | MAMO y MAMS no tienen comunes y la plantilla pide ocho: alcanzable pero no realista |
 
 ### Bloqueada por ti
@@ -198,9 +198,8 @@ Las ocho tareas de H8c están cerradas. Lo que queda abierto salió de hacerlas,
 | **P-003** | 🟠 | Residuo: 3 limitaciones de las plantillas de sobre (ver P-008) |
 | **P-008** | 🟡 | "The List" de MTG no se modela; el slot de tierra no filtra por tipo |
 | **P-016** | 🟠 | La API de Pokémon responde 200 sólo ~30 % de las veces. La ingesta **debe** poder reanudarse |
-| **P-032** | 🟡 | La migración `0001` hace `USE proyecto_tcg` e ignora la conexión. Mitigado con una guarda |
 
-Los 38 problemas —32 cerrados, con su medición— están en `003Problemas/Registro_Problemas.md`.
+Los 38 problemas —33 cerrados, con su medición— están en `003Problemas/Registro_Problemas.md`.
 
 **P-021 se cerró en S028, y su entrada es la que más conviene leer**: llevaba trece sesiones citada
 en cinco documentos sin estar escrita, y al medirla resultó ser lo contrario de lo que decía la

@@ -1,6 +1,6 @@
 # Registro de Problemas
 
-**Última actualización:** 2026-08-26 (S028) · **Abiertos:** 6 · **Cerrados:** 32
+**Última actualización:** 2026-08-26 (S028) · **Abiertos:** 5 · **Cerrados:** 33
 
 Severidad: 🔴 crítica · 🟠 alta · 🟡 media · ⚪ baja
 
@@ -989,8 +989,8 @@ el bueno puede tapar al malo.
 
 ---
 
-## P-032 🟡 ABIERTO · La migracion 0001 fija el nombre de la base de datos
-**Estado:** MITIGADO el 2026-08-26 (S025). Abierto: la causa sigue ahi.
+## P-032 ✅ CERRADO · La migracion 0001 fija el nombre de la base de datos
+**Estado:** CERRADO el 2026-08-26 (S028) — T-065. Mitigado antes en S025.
 **Severidad:** 🟡
 **Origen:** probar `npm run db:migrate` (T-022) contra una base recien creada y vacia.
 
@@ -1019,11 +1019,45 @@ migrar una base distinta tocaria la de siempre.
 `db:migrate` lee el nombre que la 0001 fija y **se niega a arrancar** contra otro, nombrando el
 problema en el mensaje.
 
-**Lo que falta para cerrarlo (T-065).** Un juego de migraciones que no fije el nombre. No se hace
-ahora porque afecta al arranque de todas las instalaciones existentes y merece su propio diseno.
+### Solución (S028, T-065): arreglar el migrador, no la migración
 
-**Leccion.** Una migracion que hace `USE` deja de ser relativa a la conexion y pasa a mandar sobre
-ella. Un fichero de esquema no deberia decidir en que base se aplica.
+La idea que mantuvo esto abierto era *"un juego de migraciones que no fije el nombre"*, y no se podía
+hacer: las migraciones publicadas son inmutables y la `0001` está aplicada en instalaciones que no
+controlamos. Lo que sí se puede cambiar es **el migrador**, que es código.
+
+Ahora, antes de ejecutar cada fichero, retira las sentencias que deciden **contra qué base** se
+aplica —`USE` y `CREATE DATABASE`— y lo **dice**:
+
+```
+0001_initial_schema.up.sql: retirada(s) 2 sentencia(s) que elegian base
+  (CREATE DATABASE IF NOT EXISTS proyecto_tcg · USE proyecto_tcg;).
+  La base la decide DATABASE_URL (P-032).
+```
+
+Y después de cada fichero comprueba que la base activa sigue siendo la misma. Es cinturón y tirantes:
+lo primero cubre la forma conocida, lo segundo las que no se han previsto —un `USE` con un comentario
+detrás, por ejemplo—.
+
+**El límite de la segunda comprobación está escrito en el código, no dado por supuesto:** corre
+*después* de ejecutar el fichero, así que no deshace lo que ese fichero ya hizo —MySQL confirma cada
+DDL al vuelo—. Lo que evita es que la ejecución siga y que la migración quede **anotada como aplicada
+en una base donde no ha creado nada**. Esa discrepancia entre tablas y registro es lo que hacía a
+P-032 silencioso.
+
+**La guarda de S025 se retira.** Se negaba a migrar contra otra base: evitaba el daño pero dejaba el
+problema entero, y ahora además estorbaría.
+
+**Verificado de punta a punta**, que es lo que nunca se había podido hacer:
+
+| | |
+|---|---|
+| `tcg_prueba_t065` tras migrar | 14 tablas · 13 migraciones · 3 juegos · 67 rarezas · 8 plantillas |
+| `proyecto_tcg` | intacta, 3635 impresiones |
+| Un `USE` que la regla de línea no reconoce | aborta nombrando el fichero y las dos bases |
+
+**Lección.** Una migración que hace `USE` deja de ser relativa a la conexión y pasa a mandar sobre
+ella. Un fichero de esquema no debería decidir en qué base se aplica — y cuando el fichero no se
+puede tocar, la regla la hace cumplir la herramienta.
 
 ---
 
