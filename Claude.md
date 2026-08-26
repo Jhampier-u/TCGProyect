@@ -53,7 +53,8 @@ C:\ProyectoTCG\
 │   ├── 04_Spec_H7_Deckbuilder.md  <- spec aprobado (H7, 1a pasada)
 │   ├── 05_Plan_H7_Deckbuilder.md  <- plan de implementacion, 10 tareas
 │   ├── 06_Spec_T047_Interfaz_Mazos.md <- spec de la interfaz (H7, 2a pasada)
-│   └── 07_Plan_T047_Interfaz_Mazos.md <- plan de implementacion, 8 tareas
+│   ├── 07_Plan_T047_Interfaz_Mazos.md <- plan de implementacion, 8 tareas
+│   └── 08_Spec_T048_ImportExport.md  <- spec de import/export (H7, 3a pasada)
 ├── 005Registro\
 │   ├── 2026-08-25_S001_Inicializacion.md
 │   ├── 2026-08-25_S002_DDL_MySQL.md
