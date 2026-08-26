@@ -1,6 +1,7 @@
 import { loadConfig } from '../config.js';
 import { Database, PackRepositoryMysql } from '../db/index.js';
-import { rarezasInalcanzables } from '../packs/index.js';
+import { rarezasInalcanzables, pesoSinDestino } from '../packs/index.js';
+import type { TemplateConfig } from '../packs/index.js';
 import { GAME_IDS, type GameCode } from '@tcg/shared';
 
 /**
@@ -42,10 +43,27 @@ async function main(): Promise<void> {
 
       console.log(`\n[${game}] ${sets.length} sets con pool`);
 
+      // Toda rareza del juego con al menos una impresion abrible. Es lo que
+      // hace falta para T-070: una plantilla que pide algo que NO ESTA AQUI no
+      // falla, no avisa, y el respaldo reparte su peso sobre la alternativa de
+      // mayor peso del slot.
+      const existentes = new Set(
+        (
+          await db.select<{ code: string }>(
+            `SELECT DISTINCT r.code
+               FROM rarities r
+               JOIN card_prints p ON p.rarity_id = r.id AND p.in_boosters = 1
+              WHERE r.game_id = ?`,
+            [GAME_IDS[game]],
+          )
+        ).map((r) => r.code),
+      );
+
       // Cuantos sets resuelve cada plantilla. No es adorno: es la unica forma
       // de comprobar la precedencia de `findTemplate` a traves del codigo real
       // en vez de reescribiendo su consulta a mano, que probaria la copia.
       const reparto = new Map<string, number>();
+      const plantillas = new Map<string, TemplateConfig>();
 
       for (const set of sets) {
         const plantilla = await repo.findTemplate(Number(set.id));
@@ -55,6 +73,7 @@ async function main(): Promise<void> {
           continue;
         }
         reparto.set(plantilla.name, (reparto.get(plantilla.name) ?? 0) + 1);
+        plantillas.set(plantilla.name, plantilla);
 
         const pool = await repo.loadPool(Number(set.id));
         const total = [...pool.values()].reduce((n, e) => n + e.length, 0);
@@ -74,6 +93,20 @@ async function main(): Promise<void> {
       console.log('  reparto por plantilla:');
       for (const [nombre, n] of [...reparto].sort((a, b) => b[1] - a[1])) {
         console.log(`    ${String(n).padStart(5)}  ${nombre}`);
+      }
+
+      // T-070. Se informa y NO se sale con codigo 1: una plantilla generica
+      // puede describir legitimamente sets que todavia no se han ingestado. Lo
+      // que no puede es pasar desapercibida, que es lo que le ocurrio al 28,5%
+      // del slot del hit de Pokemon hasta que alguien lo conto a mano (P-034).
+      for (const [nombre, plantilla] of plantillas) {
+        for (const d of pesoSinDestino(plantilla.slots, existentes)) {
+          console.log(
+            `  AVISO  "${nombre}" slot ${d.slotIndex}: el ${(100 * d.fraccion).toFixed(1)}% del ` +
+              `peso pide rarezas que ningun set de ${game} tiene (${d.rarezas.join(', ')}). ` +
+              'El respaldo lo entrega como la alternativa de mayor peso del slot.',
+          );
+        }
       }
     }
   } finally {
