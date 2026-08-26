@@ -1,6 +1,6 @@
 # Tareas Realizadas
 
-**Última actualización:** 2026-08-25 (S019)
+**Última actualización:** 2026-08-25 (S020)
 
 | ID | Tarea | Agente | Fecha | Sesión | Evidencia |
 |---|---|---|---|---|---|
@@ -61,3 +61,8 @@
 | T-004 | **Docker Compose** (cierra H0): `mysql`, `redis`, `api`, `web` + perfil `ingest`, sin ningún paso manual previo | Arquitectura | 2026-08-25 | S019 | `docker-compose.yml`, `docker/Dockerfile` |
 | T-043 | La API crea `STORAGE_PATH` al arrancar. Sin él, `/images` devolvía 404 en un clon nuevo hasta la primera ingesta | Backend | 2026-08-25 | S019 | `apps/api/src/index.ts` |
 | T-004v | Verificación contra los contenedores reales: 6 migraciones solas, ingesta de 66 impresiones y catálogo en el navegador vía proxy | QA | 2026-08-25 | S019 | Ver S019 en `005Registro` |
+| T-044 | **Motor de validación de mazos** en `@tcg/shared`: contrato + 3 estrategias por juego (RN-04), puro y sin base de datos | Backend / Arquitectura | 2026-08-25 | S020 | `packages/shared/src/deck-rules/` |
+| T-045 | `DeckRepository`: CRUD y reemplazo transaccional del contenido, con `user_id` en todo WHERE | Base de Datos | 2026-08-25 | S020 | `apps/api/src/db/deck-repository.ts` |
+| T-046 | **Seis rutas de mazos** autenticadas, con esquema de entrada y salida; `requireUser` extraído y compartido | Backend | 2026-08-25 | S020 | `apps/api/src/api/deck-routes.ts` |
+| T-049 | **P-024 corregido**: la API no exponía el id de la carta desde H3. El esquema declaraba `cardId` y el repositorio devolvía `id` | Backend | 2026-08-25 | S020 | `apps/api/src/db/catalog-query-repository.ts` |
+| T-046v | Verificación: 68 tests nuevos + repositorio contra MySQL real + recorrido completo contra la API en Docker con 489 impresiones | QA / Seguridad | 2026-08-25 | S020 | Ver S020 en `005Registro` |

@@ -2,7 +2,7 @@
 
 > **Rol:** Arquitecto Principal y Orquestador de Proyectos de Software.
 > **Producto:** Simulador de Apertura de Sobres + Constructor de Mazos unificado para MTG, Yu-Gi-Oh! y Pokémon TCG.
-> **Estado del Vault:** ACTIVO — última sesión S019 (2026-08-25)
+> **Estado del Vault:** ACTIVO — última sesión S020 (2026-08-25)
 
 ---
 
@@ -71,7 +71,8 @@ C:\ProyectoTCG\
 │   ├── 2026-08-25_S016_FrontendSobrio.md
 │   ├── 2026-08-25_S017_AnimacionDeApertura.md
 │   ├── 2026-08-25_S018_PuntoDeGuardado.md
-│   └── 2026-08-25_S019_DockerCompose.md
+│   ├── 2026-08-25_S019_DockerCompose.md
+│   └── 2026-08-25_S020_ConstructorDeMazos.md
 │
 ├── db\                          <- esquema (fuera del Vault documental)
 │   ├── README.md
@@ -89,6 +90,8 @@ C:\ProyectoTCG\
 │       ├── game-data.ts     perfiles JSON por juego (snake_case, contrato con el DDL)
 │       ├── domain.ts        DomainSet, DomainCard<G>, DomainPrint<G>
 │       ├── adapter.ts       GameAdapter<G>, IngestWarning
+│       ├── deck-rules\      motor de validacion de mazos (RN-04, H7)
+│       │                   types · predicates · aggregate · mtg · ygo · ptcg
 │       ├── normalize.ts     normalizeRarityCode, toJsonNumber, ...
 │       ├── normalize.test.ts
 │       └── index.ts
@@ -98,6 +101,8 @@ C:\ProyectoTCG\
 │       ├── api\                API HTTP de ENTRADA: Fastify (ADR-007, H3)
 │       │                       server · schemas (hacen cumplir P-001)
 │       │                       auth-routes · auth-schemas (H6)
+│       │                       deck-routes · deck-schemas (H7)
+│       │                       require-user (compartido por ambas)
 │       ├── auth\               Argon2id + hash señuelo (ADR-008, H6)
 │       │                       password · user-repository
 │       ├── http\               cliente SALIENTE hacia las 3 APIs externas
@@ -107,6 +112,7 @@ C:\ProyectoTCG\
 │       │                       connection · migrator · catalog-repository
 │       │                       catalog-query-repository (H3) · pack-repository (H4)
 │       │                       collection-repository (H6)
+│       │                       deck-repository (H7)
 │       ├── cli\                ingest.ts: CLI para poblar el catalogo
 │       ├── ingest\             IngestService: el orquestador (T-021)
 │       ├── images\             image-harvest: descarga unica + WebP (T-014)

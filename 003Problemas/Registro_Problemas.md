@@ -1,6 +1,6 @@
 # Registro de Problemas
 
-**Última actualización:** 2026-08-25 (S019) · **Abiertos:** 5 · **Cerrados:** 17
+**Última actualización:** 2026-08-25 (S020) · **Abiertos:** 5 · **Cerrados:** 18
 
 Severidad: 🔴 crítica · 🟠 alta · 🟡 media · ⚪ baja
 
@@ -655,3 +655,49 @@ P-022 arrancando el servidor, y éste levantando los contenedores).
 **Regla que deja:** todo estado incremental —`*.tsbuildinfo`, cachés de compilador, `dist/`— se
 excluye del contexto de build de forma **recursiva**. Una compilación dentro de una imagen debe
 partir siempre de cero.
+
+---
+
+## P-024 ✅ CERRADO · La API no ha expuesto el id de la carta desde H3
+**Estado:** CERRADO el 2026-08-25 (S020)
+**Origen:** montar la verificación extremo a extremo de H7, que necesita el id de la carta para
+agrupar impresiones de la misma carta.
+
+**Detalle.** `GET /api/cards` devolvía esto:
+
+```json
+{"printId": 67, "game": "YGO", "name": "A Bao A Qu, the Lightless Shadow", ...}
+```
+
+Sin `cardId`. El esquema de respuesta lo declaraba **desde S013**; el repositorio devolvía `id`.
+Fastify elimina lo que el esquema no declara —y por eso `id` no salía— y omite lo que el objeto no
+lleva —y por eso `cardId` tampoco—. **Los dos campos desaparecían.**
+
+**Por qué no lo detectó nadie durante cuatro sesiones.** Ninguna pantalla lo usaba todavía. Pero el
+`CardSummary` del frontend declara `cardId` desde S016: llevaba dos sesiones leyendo `undefined` sin
+que nada fallara.
+
+**Por qué TypeScript no ayuda aquí.** El esquema es un **literal JSON**, no un tipo. `tsc` verifica
+que el repositorio y sus consumidores concuerden —de hecho encontró `auth-routes.ts` al renombrar—
+pero no relaciona `CardSummary` con `CARD_SUMMARY`. Ese contrato no lo comprobaba nadie.
+
+**Solución.** El repositorio emite `cardId`, que es además el nombre correcto: `printId` viaja al
+lado en la misma respuesta y un `id` a secas es ambiguo.
+
+**Relación con P-022.** Son la misma grieta por las dos caras. En P-022 el esquema declaró de más y
+filtró 1032 URLs externas; aquí declaró el nombre equivocado y calló un campo durante cuatro
+sesiones. La serialización por esquema garantiza que **no sale lo que no declaras**, no que **salga
+lo que sí**.
+
+**El test costó tres intentos, y los dos primeros eran vacuos:**
+
+1. Comprobar la respuesta HTTP con un catálogo falso. **Pasaba con el bug puesto**: el doble
+   devuelve la fixture ya construida y `toSummary` no se ejecuta.
+2. Un objeto anotado como `CardSummary` comparado con las claves del esquema. **También pasaba**:
+   Vitest borra los tipos y `tsc` **excluye los ficheros de test**, así que la anotación no la
+   comprobaba nadie.
+3. El bueno: exportar `toSummary`, ejecutarla de verdad y comparar las claves que produce con las
+   que declara el esquema. **Verificado reintroduciendo el bug: falla.**
+
+**Regla que deja:** un test sólo cuenta cuando se le ha visto fallar. Y cuando el doble sustituye
+justo a la función que se quiere probar, el test no prueba nada.

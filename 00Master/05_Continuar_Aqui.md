@@ -1,9 +1,9 @@
 # 05 — Continuar aquí
 
-**Punto de guardado:** 2026-08-25, tras la sesión **S019**
-**Commit:** rama `main` · 202 tests en verde · `npm audit` limpio
+**Punto de guardado:** 2026-08-25, tras la sesión **S020**
+**Commit:** rama `main` · 270 tests en verde · `npm audit` limpio
 
-Este documento existe para retomar el proyecto en otra máquina o en otra sesión sin releer las 19
+Este documento existe para retomar el proyecto en otra máquina o en otra sesión sin releer las 20
 bitácoras. Si sólo vas a leer un fichero, que sea éste.
 
 ---
@@ -20,7 +20,7 @@ crecer con completitud por set.
 |---|---|
 | H0 Fundamentos | ✅ **cerrado en S019** — Docker Compose (T-004) |
 | H1 Esquema · H2 Ingesta · H3 API · H4 Sobres · H5 Frontend · H6 Cuentas | ✅ |
-| **H7 Constructor de mazos** | ⚪ **la última épica de producto** |
+| **H7 Constructor de mazos** | 🟡 **backend hecho y verificado (S020)** — falta la interfaz |
 | H8 Endurecimiento (Cypress, seguridad) | ⚪ |
 
 ---
@@ -73,7 +73,7 @@ condicionan el día a día:
 
 ---
 
-## 4. Tres invariantes que se rompen en silencio
+## 4. Cuatro cosas que se rompen en silencio
 
 Esto es lo que de verdad hay que interiorizar antes de tocar código.
 
@@ -98,8 +98,17 @@ y datos que desaparecen sin un solo error en los logs.
 
 **Antes de elegir una clave natural, cuéntala.**
 
-### 4.3 Los bugs que sólo aparecen a escala
-Cuatro veces ha pasado (P-017, P-020, P-022, P-023): probar con una muestra elegida a mano **no
+### 4.3 Un test sólo vale si lo has visto fallar
+En S020 el test que debía blindar P-024 fue **vacuo dos veces seguidas**: la primera porque el doble
+sustituía justo a la función bajo prueba, y la segunda porque `tsc` **excluye los ficheros de test**
+y la anotación de tipo no la comprobaba nadie. Sólo el tercero, que ejecuta la función de verdad,
+falló al reintroducir el bug.
+
+Es la misma familia que P-022, donde el test pasaba porque la fixture devolvía `null`. **Antes de
+dar un test por bueno, rómpelo a propósito y compruébalo.**
+
+### 4.4 Los bugs que sólo aparecen a escala
+Cinco veces ha pasado (P-017, P-020, P-022, P-023, P-024): probar con una muestra elegida a mano **no
 ejercita el mismo camino** que procesar el catálogo entero, arrancar el servidor de verdad o
 levantar los contenedores. Los dobles de prueba
 son útiles para la lógica, pero **la fidelidad de sus datos determina lo que el test puede detectar**.
@@ -109,10 +118,11 @@ son útiles para la lógica, pero **la fidelidad de sus datos determina lo que e
 ## 5. Lo que está pendiente, por orden de interés
 
 ### El siguiente paso natural
-- **H7 — Constructor de mazos** (la última épica de producto). CRUD + validadores por juego
-  (RN-04 en `01_Producto.md`) + import/export. Es la primera vez que las reglas de cada juego
-  divergen de verdad en el código. Con T-004 cerrada, el entorno se levanta solo mientras se
-  desarrolla.
+- **T-047 — Interfaz del constructor de mazos.** El backend de H7 está hecho: seis endpoints y el
+  motor de reglas. Lo que falta es la pantalla. Y hay una ventaja ya cobrada: `validateDeck` sale de
+  `@tcg/shared`, así que el constructor **revalida en el cliente sin ir al servidor** en cada carta
+  que añades, y el backend sigue validando por su cuenta al guardar.
+- **T-048 — Import/export** en los formatos de texto de cada juego. Cierra H7.
 
 ### Deuda con impacto medido
 | Tarea | Qué pasa si no se hace |
@@ -141,7 +151,7 @@ son útiles para la lógica, pero **la fidelidad de sus datos determina lo que e
 | **P-016** | 🟠 | La API de Pokémon responde 200 sólo ~30 % de las veces. La ingesta **debe** poder reanudarse |
 | **P-021** | 🟡 | Sets de YGO pre-2020: completitud topada al 70,7 % |
 
-Los 22 problemas —17 cerrados, con su medición— están en `003Problemas/Registro_Problemas.md`.
+Los 23 problemas —18 cerrados, con su medición— están en `003Problemas/Registro_Problemas.md`.
 
 ---
 

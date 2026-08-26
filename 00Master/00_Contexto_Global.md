@@ -2,7 +2,7 @@
 
 **Proyecto:** ProyectoTCG (nombre en clave: *TriplePack*)
 **Fecha de inicio:** 2026-08-25
-**Estado global:** `FASE 4 — INTERFAZ` · **H0–H6 completados** · queda H7 (mazos) y H8 (endurecimiento)
+**Estado global:** `FASE 4 — INTERFAZ` · **H0–H6 completados · H7 con el backend hecho** · quedan la interfaz de mazos y H8
 **Repositorio:** `C:\ProyectoTCG` — Git inicializado en `main`, commit inicial `bc7eb7c` (2026-08-25)
 
 ## Estado por área

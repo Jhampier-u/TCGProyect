@@ -1,6 +1,6 @@
 # Tareas Pendientes
 
-**Última actualización:** 2026-08-25 (S019) · **Total abiertas:** 8 — 7 del proyecto + T-005, que depende de ti
+**Última actualización:** 2026-08-25 (S020) · **Total abiertas:** 11 — 10 del proyecto + T-005, que depende de ti
 
 Leyenda de prioridad: 🔴 crítica · 🟠 alta · 🟡 media · ⚪ baja
 
@@ -23,6 +23,22 @@ Sin tareas abiertas. Los 3 adaptadores, el cliente con límite de tasa y el job 
 hechos y verificados contra los orígenes reales.
 
 **El orquestador (`IngestService`) está construido y verificado** contra MySQL real (T-021, S011).
+
+## Hito H7 — Constructor de mazos 🟡 EN CURSO
+
+El backend está hecho y verificado (T-044, T-045, T-046 en S020). Faltan las dos pasadas siguientes.
+
+| ID | Tarea | Agente | Prio |
+|---|---|---|---|
+| T-047 | **Interfaz del constructor de mazos.** Revalida en el cliente con el mismo motor de `@tcg/shared`, sin ir al servidor en cada carta | Frontend | 🟠 |
+| T-048 | Import/export de mazos en los formatos de texto de cada juego | Backend / Frontend | 🟡 |
+| T-050 | Confirmar contra datos reales el lado **positivo** de dos predicados: la Energía Básica de Pokémon y la tierra nevada de Magic. Ninguno aparece en los sets ingestados hasta hoy (ver S020). Depende en parte de **T-023** | QA | 🟡 |
+
+## Hito H8 — Endurecimiento
+
+| ID | Tarea | Agente | Prio |
+|---|---|---|---|
+| T-051 | La validación del esquema del cuerpo corre **antes** que la del token: un `POST` anónimo con cuerpo inválido responde 400 en vez de 401. Afecta a las rutas de H6 y H7. Se arregla moviendo `requireUser` a un hook `preValidation` | Seguridad | ⚪ |
 
 ## Deuda técnica detectada en S004
 
