@@ -244,3 +244,45 @@ ahora porque sería infraestructura sin caso de uso.
    probar millones.
 4. **El hash nunca sale en una respuesta.** Lo garantiza el mismo mecanismo que P-001: los esquemas
    de respuesta de Fastify eliminan lo no declarado (ADR-007).
+
+---
+
+## ADR-009 — Playwright en lugar de Cypress para la suite E2E
+
+**Fecha:** 2026-08-26 · **Sesión:** S023 · **Estado:** aceptada
+
+### Contexto
+
+El criterio de aceptación de H8 dice "suite Cypress verde" y se escribió en **S001**, cuando el
+proyecto no tenía monorepo, ni contenedores, ni frontend. En S019 (T-004) todo pasó a correr en
+Docker, y la suite E2E tiene que correr ahí para ser reproducible.
+
+### Opciones
+
+| | Playwright | Cypress |
+|---|---|---|
+| Headless | Por defecto | Necesita su Electron o un display |
+| Docker | Imagen oficial mantenida | `cypress/included`, ~1,5 GB |
+| Navegadores | `playwright install` los fija de forma determinista | Ligados a la versión del paquete |
+| Modelo de ejecución | Controla el navegador **desde fuera** | Corre **dentro** de la página |
+| TypeScript | Nativo | Con configuración añadida |
+
+### Decisión
+
+**Playwright.**
+
+Lo que más pesa no es la comodidad, es el modelo de ejecución: controlar el navegador desde fuera
+permite esperar a que una animación **termine** y leer el estilo calculado del elemento. Eso es
+exactamente lo que necesita **T-040**, que lleva bloqueada desde S017 porque `requestAnimationFrame`
+no avanzaba y no había forma de distinguir "se pidió el volteo" de "el volteo ocurrió".
+
+### Consecuencias
+
+- Se abandona el ecosistema de Cypress y su modo interactivo, que es mejor que el de Playwright.
+- Se cambia un criterio de aceptación escrito 22 sesiones antes. Queda aquí y no como un cambio
+  silencioso: quien lea H8 y espere Cypress encontrará el motivo.
+- `e2e/` queda **fuera** de los workspaces de npm para que Playwright no viaje a las imágenes de
+  `api` y `web`. La contrapartida es que `npm audit` de la raíz no lo cubre, y por eso la suite
+  lleva su propia auditoría.
+- La versión del paquete y la etiqueta de la imagen oficial **deben coincidir**. Si divergen,
+  Playwright busca navegadores que la imagen no trae y falla con un mensaje poco obvio.
