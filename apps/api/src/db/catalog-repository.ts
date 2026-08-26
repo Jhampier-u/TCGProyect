@@ -2,6 +2,7 @@ import type { DomainPrint, DomainSet, GameCode } from '@tcg/shared';
 import { GAME_IDS } from '@tcg/shared';
 import type { Database } from './connection.js';
 import type { ImageRepository, PendingImage } from '../images/types.js';
+import { iconKeyFromUrl } from '../images/image-harvester.js';
 
 /**
  * Tamano de lote para los upserts.
@@ -265,7 +266,7 @@ export class CatalogRepository implements ImageRepository {
       [CatalogRepository.MAX_IMAGE_ATTEMPTS, limit],
     );
     return rows.map((r) => ({
-      printId: Number(r.id),
+      rowId: Number(r.id),
       game: gameCodeOf(Number(r.game_id)),
       setCode: r.code,
       externalId: r.external_id,
@@ -273,15 +274,81 @@ export class CatalogRepository implements ImageRepository {
     }));
   }
 
-  async markStored(printId: number, localPath: string): Promise<void> {
+  async markStored(rowId: number, localPath: string): Promise<void> {
     // Se limpia el contador: si acabo de bajarse, lo que fallara antes ya no
     // importa y una racha vieja no debe contar contra un reintento futuro.
     await this.db.query(
       `UPDATE card_prints
           SET image_local_path = ?, image_fail_count = 0, image_failed_at = NULL
         WHERE id = ?`,
-      [localPath, printId],
+      [localPath, rowId],
     );
+  }
+
+  // ------------------------------------------------ iconos de set (T-035)
+
+  /**
+   * Vista de `sets` con la MISMA forma que el job de imagenes espera.
+   *
+   * Devolver `PendingImage` no es un apano: un icono de set es una imagen que
+   * pertenece a una fila de un juego y un set, que es exactamente lo que el job
+   * necesita saber. Reutilizarlo evita repetir sus tres salvaguardas contra
+   * pedir dos veces la misma imagen, que es donde de verdad esta el valor.
+   *
+   * La ruta queda `mtg/iconos/sets-trk.64.webp`: agrupada aparte de las cartas
+   * y nombrada por la URL, no por el set, para que dos sets que comparten icono
+   * compartan fichero. Ver `iconKeyFromUrl`.
+   */
+  async findPendingIcons(limit: number): Promise<PendingImage[]> {
+    const rows = await this.db.select<{
+      id: number; game_id: number; code: string; icon_url: string;
+    }>(
+      `SELECT id, game_id, code, icon_url FROM sets
+        WHERE icon_local_path IS NULL AND icon_url IS NOT NULL
+          AND icon_fail_count < ?
+        ORDER BY id
+        LIMIT ?`,
+      [CatalogRepository.MAX_IMAGE_ATTEMPTS, limit],
+    );
+    return rows.map((r) => ({
+      rowId: Number(r.id),
+      game: gameCodeOf(Number(r.game_id)),
+      setCode: 'iconos',
+      externalId: iconKeyFromUrl(r.icon_url, Number(r.id)),
+      imageSourceUrl: r.icon_url,
+    }));
+  }
+
+  async markIconStored(setId: number, localPath: string): Promise<void> {
+    await this.db.query(
+      `UPDATE sets
+          SET icon_local_path = ?, icon_fail_count = 0, icon_failed_at = NULL
+        WHERE id = ?`,
+      [localPath, setId],
+    );
+  }
+
+  async markIconFailed(setId: number): Promise<void> {
+    await this.db.query(
+      `UPDATE sets
+          SET icon_fail_count = icon_fail_count + 1, icon_failed_at = CURRENT_TIMESTAMP
+        WHERE id = ?`,
+      [setId],
+    );
+  }
+
+  /**
+   * El repositorio de iconos con la forma que pide `ImageHarvester`.
+   *
+   * Se expone como objeto y no como otra clase para que quede evidente que es la
+   * MISMA maquina cosechando otra cosa, no un segundo cosechador.
+   */
+  get iconos(): ImageRepository {
+    return {
+      findPending: (limit) => this.findPendingIcons(limit),
+      markStored: (rowId, localPath) => this.markIconStored(rowId, localPath),
+      markImageFailed: (rowId) => this.markIconFailed(rowId),
+    };
   }
 
   /**
@@ -291,12 +358,12 @@ export class CatalogRepository implements ImageRepository {
    * permanentemente rota se reintentaba en CADA ejecucion, gastando peticiones
    * contra el origen y llenando el informe de las mismas fallidas de siempre.
    */
-  async markImageFailed(printId: number): Promise<void> {
+  async markImageFailed(rowId: number): Promise<void> {
     await this.db.query(
       `UPDATE card_prints
           SET image_fail_count = image_fail_count + 1, image_failed_at = CURRENT_TIMESTAMP
         WHERE id = ?`,
-      [printId],
+      [rowId],
     );
   }
 

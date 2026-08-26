@@ -7,11 +7,16 @@ import type { GameCode } from '@tcg/shared';
  * `image_source_url IS NOT NULL`.
  */
 export interface PendingImage {
-  printId: number;
+  /**
+   * Id de la fila a la que pertenece la imagen. Es `card_prints.id` para las
+   * cartas y `sets.id` para los iconos de set (T-035): el job es el mismo y no
+   * necesita saber cual de las dos cosas esta cosechando.
+   */
+  rowId: number;
   game: GameCode;
   /** Codigo del set. Solo se usa para construir la ruta de destino. */
   setCode: string;
-  /** `card_prints.external_id`. Da nombre al fichero. */
+  /** Da nombre al fichero: `card_prints.external_id`, o `icon` para un set. */
   externalId: string;
   imageSourceUrl: string;
 }
@@ -26,12 +31,12 @@ export interface ImageRepository {
   /** Impresiones sin imagen local, hasta `limit`. */
   findPending(limit: number): Promise<PendingImage[]>;
   /** Fija `image_local_path`. Solo se llama cuando el fichero ya esta en disco. */
-  markStored(printId: number, localPath: string): Promise<void>;
+  markStored(rowId: number, localPath: string): Promise<void>;
   /**
    * Suma un intento fallido (T-019). Al agotarlos, `findPending` deja de
    * devolver esa impresion: una URL rota se reintentaba en cada ejecucion.
    */
-  markImageFailed(printId: number): Promise<void>;
+  markImageFailed(rowId: number): Promise<void>;
 }
 
 /**
@@ -67,5 +72,5 @@ export interface HarvestReport {
   fallidas: number;
   bytesOrigen: number;
   bytesGuardados: number;
-  errores: Array<{ printId: number; url: string; motivo: string }>;
+  errores: Array<{ rowId: number; url: string; motivo: string }>;
 }

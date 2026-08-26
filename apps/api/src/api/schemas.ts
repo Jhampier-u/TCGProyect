@@ -79,12 +79,18 @@ export const LIST_SETS = {
               name: { type: 'string' },
               releasedAt: { type: ['string', 'null'] },
               cardCount: { type: 'integer' },
-              // `iconUrl` NO se expone. `sets.icon_url` guarda la URL del
-              // ORIGEN (images.ygoprodeck.com), y servirla al navegador es
+              // `iconUrl` NO se expone, y no se expondra nunca:
+              // `sets.icon_url` guarda la URL del ORIGEN
+              // (images.ygoprodeck.com), y servirla al navegador es
               // exactamente el hotlinking que castiga con lista negra de IP
-              // (P-001). El job image-harvest cubre las cartas pero no los
-              // iconos de set; hasta que lo haga, este campo se queda dentro.
-              // Ver P-022 y T-035.
+              // (P-001).
+              //
+              // Lo que si sale es `iconPath`, la ruta LOCAL del icono ya
+              // cosechado y convertido a WebP por el mismo job que las cartas
+              // (T-035). Es `null` mientras no se haya cosechado, que es la
+              // otra mitad de P-022: hasta ahora no habia forma de ensenar un
+              // icono sin incumplir P-001.
+              iconPath: { type: ['string', 'null'] },
               poolSize: { type: 'integer' },
             },
           },

@@ -29,6 +29,7 @@ function fakeCatalog(over: Partial<CatalogQueryRepository> = {}): {
         // externa" pasaba sin comprobar nada, y por eso no detecto la fuga
         // real de P-022. La fixture ahora reproduce lo que la base devuelve.
         iconUrl: 'https://images.ygoprodeck.com/images/sets/BLB.jpg',
+        iconPath: 'mtg/blb/icon.64.webp',
         poolSize: 281,
       },
     ],
@@ -76,6 +77,22 @@ describe('P-001: la respuesta no puede filtrar una URL externa', () => {
     expect(cuerpo).not.toContain('secreto');
     // Y lo que si debe salir, sale.
     expect(res.json().data.imagePath).toBe('ygo/lob/lob-en001-ultra_rare.245.webp');
+    await app.close();
+  });
+
+  it('el icono de set sale por su ruta LOCAL, nunca por la del origen', async () => {
+    // Las dos mitades de P-022 en una sola comprobacion: la url del origen se
+    // queda dentro y la ruta cosechada sale (T-035). Si alguien quita
+    // `iconPath` del esquema, Fastify lo eliminaria en silencio -- que es
+    // exactamente como se perdio `cardId` durante tres hitos (P-024).
+    const { catalog } = fakeCatalog();
+    const app = buildServer({ catalog });
+
+    const res = await app.inject({ method: 'GET', url: '/api/games/MTG/sets' });
+    expect(res.statusCode).toBe(200);
+    const set = res.json().data[0];
+    expect(set.iconPath).toBe('mtg/blb/icon.64.webp');
+    expect(set).not.toHaveProperty('iconUrl');
     await app.close();
   });
 

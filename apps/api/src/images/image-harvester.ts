@@ -12,6 +12,15 @@ import type {
 export const SMALL_WIDTH = 245;
 
 /**
+ * Ancho de los iconos de set (T-035).
+ *
+ * 64 px porque un icono se pinta junto al nombre de un set en una lista, no a
+ * tamano de carta. Guardarlo a 245 seria multiplicar por ~15 el peso de algo
+ * que siempre se ve pequeno.
+ */
+export const ICON_WIDTH = 64;
+
+/**
  * Tope duro de descargas por ejecucion.
  *
  * No es una optimizacion: es un freno de mano. Un fallo que hiciera que
@@ -92,7 +101,7 @@ export class ImageHarvester {
       // SALVAGUARDA 1: si ya esta en disco, la base de datos solo iba retrasada.
       // Se corrige el registro sin volver a molestar al origen.
       if (await this.#store.exists(relativePath)) {
-        await this.#repo.markStored(pending.printId, relativePath);
+        await this.#repo.markStored(pending.rowId, relativePath);
         report.omitidas += 1;
         continue;
       }
@@ -104,7 +113,7 @@ export class ImageHarvester {
         // SALVAGUARDA 2: disco primero, base de datos despues. Al reves, un fallo
         // de escritura dejaria una fila apuntando a un fichero inexistente.
         await this.#store.save(relativePath, webp);
-        await this.#repo.markStored(pending.printId, relativePath);
+        await this.#repo.markStored(pending.rowId, relativePath);
 
         report.descargadas += 1;
         report.bytesOrigen += original.byteLength;
@@ -118,13 +127,13 @@ export class ImageHarvester {
         // vuelve a la cola en cada ejecucion: gasta peticiones contra el origen
         // y llena el informe de las mismas fallidas de siempre, hasta que nadie
         // lo lee.
-        await this.#repo.markImageFailed(pending.printId);
+        await this.#repo.markImageFailed(pending.rowId);
 
         report.fallidas += 1;
-        report.errores.push({ printId: pending.printId, url: pending.imageSourceUrl, motivo });
+        report.errores.push({ rowId: pending.rowId, url: pending.imageSourceUrl, motivo });
         this.#warn({
           game: pending.game,
-          subject: String(pending.printId),
+          subject: String(pending.rowId),
           code: 'missing_image',
           message: `No se pudo cosechar ${pending.imageSourceUrl}: ${motivo}`,
         });
@@ -162,7 +171,7 @@ export class ImageHarvester {
 export function buildImagePath(pending: PendingImage, width: number): string {
   const game = pending.game.toLowerCase();
   const set = sanitizeSegment(pending.setCode) || 'sin-set';
-  const file = sanitizeSegment(pending.externalId) || String(pending.printId);
+  const file = sanitizeSegment(pending.externalId) || String(pending.rowId);
   return `${game}/${set}/${file}.${width}.webp`;
 }
 
@@ -188,6 +197,41 @@ export function sanitizeSegment(raw: string): string {
     .replace(/-{2,}/g, '-')
     .replace(/^[-.]+|[-.]+$/g, '')
     .slice(0, 120);
+}
+
+/**
+ * Clave de fichero de un icono de set, deducida de su URL (T-035).
+ *
+ * NO se usa el codigo del set, y la razon es medible: 2.129 sets tienen icono
+ * pero solo 1.101 URLs distintas. En Magic, 1.048 sets comparten 365 iconos
+ * -- `trk` y `ttrk` apuntan al mismo SVG -- y en Yu-Gi-Oh! hay 127 URLs
+ * repetidas. Nombrar el fichero por el set pediria al origen la MISMA imagen
+ * casi el doble de veces, que es justo lo que este job existe para no hacer
+ * (P-001).
+ *
+ * Con la clave sacada de la URL, el segundo set que comparte icono encuentra el
+ * fichero ya en disco y se marca sin una sola peticion: es la salvaguarda 1 del
+ * cosechador haciendo su trabajo, sin codigo nuevo que la duplique.
+ *
+ * Se toman los DOS ultimos segmentos, no el ultimo: en Pokemon la ruta es
+ * `/base1/symbol.png` y quedarse con `symbol` juntaria los 174 iconos en uno.
+ *
+ *   https://svgs.scryfall.io/sets/trk.svg?1787544000  -> sets-trk
+ *   https://images.ygoprodeck.com/images/sets/SDZW.jpg -> sets-sdzw
+ *   https://images.pokemontcg.io/base1/symbol.png      -> base1-symbol
+ */
+export function iconKeyFromUrl(url: string, fallback: number): string {
+  let ruta: string;
+  try {
+    ruta = new URL(url).pathname;
+  } catch {
+    // Una URL que no se puede interpretar no se deduplica, pero tampoco
+    // colisiona: el id de la fila es unico.
+    return String(fallback);
+  }
+  const segmentos = ruta.split('/').filter((s) => s !== '');
+  const ultimos = segmentos.slice(-2).map((s) => s.replace(/\.[a-z0-9]{1,5}$/i, ''));
+  return sanitizeSegment(ultimos.join('-')) || String(fallback);
 }
 
 /**

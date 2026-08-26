@@ -5,7 +5,7 @@ import { IngestService, type IngestReport } from '../ingest/index.js';
 import { ScryfallAdapter } from '../adapters/scryfall/index.js';
 import { YgoprodeckAdapter } from '../adapters/ygoprodeck/index.js';
 import { PokemonTcgAdapter } from '../adapters/pokemontcg/index.js';
-import { ImageHarvester, SharpImageEncoder, FileImageStore } from '../images/index.js';
+import { ImageHarvester, SharpImageEncoder, FileImageStore, ICON_WIDTH } from '../images/index.js';
 import type { GameAdapter, GameCode, IngestWarning } from '@tcg/shared';
 
 /**
@@ -156,6 +156,24 @@ async function main(): Promise<void> {
     console.log(
       `  descargadas ${informe.descargadas} · ya en disco ${informe.omitidas} · ` +
         `fallidas ${informe.fallidas} · reduccion ${reduccion}%`,
+    );
+
+    // Los iconos de set (T-035). Es el MISMO job con otra fuente: `sets.icon_url`
+    // apunta al origen y sin cosecharlo la API no puede exponerlo (P-022).
+    console.log(`
+[iconos] cosechando iconos de set...`);
+    const iconos = await new ImageHarvester({
+      repository: repo.iconos,
+      downloader: client,
+      encoder: new SharpImageEncoder(),
+      store: new FileImageStore(config.storagePath),
+      maxPerRun: opciones.maxImages,
+      width: ICON_WIDTH,
+      onWarning: (w) => avisos.push(w),
+    }).run();
+    console.log(
+      `  descargados ${iconos.descargadas} · ya en disco ${iconos.omitidas} · ` +
+        `fallidos ${iconos.fallidas}`,
     );
   }
 

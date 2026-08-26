@@ -78,7 +78,13 @@ export interface SetSummary {
   name: string;
   releasedAt: string | null;
   cardCount: number;
+  /**
+   * URL del ORIGEN. NO sale de aqui: exponerla es hotlinking y en S016 se
+   * filtraron 1032 (P-022). Se conserva en el tipo porque la ingesta la usa.
+   */
   iconUrl: string | null;
+  /** Ruta LOCAL del icono ya cosechado (T-035). Es la unica que se sirve. */
+  iconPath: string | null;
   /** Impresiones que pueden salir en sobre. 0 significa que no se puede abrir. */
   poolSize: number;
 }
@@ -99,9 +105,11 @@ export class CatalogQueryRepository {
   async listSets(game: GameCode): Promise<SetSummary[]> {
     const rows = await this.db.select<{
       id: number; external_id: string; code: string; name: string; released_at: string | null;
-      card_count: number; icon_url: string | null; pool_size: number;
+      card_count: number; icon_url: string | null; icon_local_path: string | null;
+      pool_size: number;
     }>(
       `SELECT s.id, s.external_id, s.code, s.name, s.released_at, s.card_count, s.icon_url,
+              s.icon_local_path,
               COUNT(p.id) AS pool_size
        FROM sets s
        LEFT JOIN card_prints p ON p.set_id = s.id AND p.in_boosters = 1
@@ -118,6 +126,7 @@ export class CatalogQueryRepository {
       releasedAt: r.released_at,
       cardCount: Number(r.card_count),
       iconUrl: r.icon_url,
+      iconPath: r.icon_local_path,
       poolSize: Number(r.pool_size),
     }));
   }

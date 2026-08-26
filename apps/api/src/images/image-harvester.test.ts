@@ -8,6 +8,8 @@ import {
   buildImagePath,
   isSafeLocalPath,
   sanitizeSegment,
+  iconKeyFromUrl,
+  ICON_WIDTH,
 } from './image-harvester.js';
 import { FileImageStore } from './file-store.js';
 import type { ImageDownloader, ImageEncoder, ImageRepository, PendingImage } from './types.js';
@@ -19,14 +21,14 @@ class FakeRepo implements ImageRepository {
   async findPending(limit: number): Promise<PendingImage[]> {
     return this.pending.slice(0, limit);
   }
-  async markStored(printId: number, localPath: string): Promise<void> {
-    this.stored.set(printId, localPath);
-    this.fallos.delete(printId);
+  async markStored(rowId: number, localPath: string): Promise<void> {
+    this.stored.set(rowId, localPath);
+    this.fallos.delete(rowId);
   }
   /** Intentos fallidos por impresion, con la misma semantica que el real (T-019). */
   readonly fallos = new Map<number, number>();
-  async markImageFailed(printId: number): Promise<void> {
-    this.fallos.set(printId, (this.fallos.get(printId) ?? 0) + 1);
+  async markImageFailed(rowId: number): Promise<void> {
+    this.fallos.set(rowId, (this.fallos.get(rowId) ?? 0) + 1);
   }
 }
 
@@ -56,7 +58,7 @@ const fakeEncoder: ImageEncoder = {
 
 function pending(over: Partial<PendingImage> = {}): PendingImage {
   return {
-    printId: 1,
+    rowId: 1,
     game: 'MTG',
     setCode: 'blb',
     externalId: '0000419b-0bba-4488',
@@ -134,7 +136,7 @@ describe('P-001: no pedir dos veces la misma imagen', () => {
   it('respeta el tope de descargas por ejecucion', async () => {
     await withTempStore(async (store) => {
       const muchas = Array.from({ length: 50 }, (_, i) =>
-        pending({ printId: i, externalId: `carta-${i}` }),
+        pending({ rowId: i, externalId: `carta-${i}` }),
       );
       const downloader = new CountingDownloader();
       const report = await new ImageHarvester({
@@ -151,8 +153,8 @@ describe('resiliencia', () => {
   it('T-019: una imagen que falla se anota, para dejar de reintentarla algun dia', async () => {
     await withTempStore(async (store) => {
       const items = [
-        pending({ printId: 1, externalId: 'a' }),
-        pending({ printId: 2, externalId: 'b', imageSourceUrl: 'https://rota/x.jpg' }),
+        pending({ rowId: 1, externalId: 'a' }),
+        pending({ rowId: 2, externalId: 'b', imageSourceUrl: 'https://rota/x.jpg' }),
       ];
       const repo = new FakeRepo(items);
       const downloader = new CountingDownloader(undefined, (url) => url.includes('rota'));
@@ -171,7 +173,7 @@ describe('resiliencia', () => {
 
   it('T-019: al bajarse bien, el contador de fallos se limpia', async () => {
     await withTempStore(async (store) => {
-      const repo = new FakeRepo([pending({ printId: 7, externalId: 'g' })]);
+      const repo = new FakeRepo([pending({ rowId: 7, externalId: 'g' })]);
       // Como si hubiera fallado dos veces en ejecuciones anteriores.
       await repo.markImageFailed(7);
       await repo.markImageFailed(7);
@@ -190,9 +192,9 @@ describe('resiliencia', () => {
     await withTempStore(async (store) => {
       const avisos: IngestWarning[] = [];
       const items = [
-        pending({ printId: 1, externalId: 'a' }),
-        pending({ printId: 2, externalId: 'b', imageSourceUrl: 'https://rota/x.jpg' }),
-        pending({ printId: 3, externalId: 'c' }),
+        pending({ rowId: 1, externalId: 'a' }),
+        pending({ rowId: 2, externalId: 'b', imageSourceUrl: 'https://rota/x.jpg' }),
+        pending({ rowId: 3, externalId: 'c' }),
       ];
       const repo = new FakeRepo(items);
       const downloader = new CountingDownloader(undefined, (url) => url.includes('rota'));
@@ -207,7 +209,7 @@ describe('resiliencia', () => {
       expect(repo.stored.has(2)).toBe(false); // la fallida NO se marca
       expect(repo.stored.has(3)).toBe(true); // y la siguiente si se procesa
       expect(avisos[0]!.code).toBe('missing_image');
-      expect(report.errores[0]!.printId).toBe(2);
+      expect(report.errores[0]!.rowId).toBe(2);
     });
   });
 
@@ -298,5 +300,42 @@ describe('FileImageStore', () => {
       await store.save('ygo/suda/x.245.webp', new Uint8Array([7]));
       expect(await readFile(join(root, 'ygo/suda/x.245.webp'))).toEqual(Buffer.from([7]));
     });
+  });
+});
+
+describe('iconKeyFromUrl (T-035): un icono compartido, un solo fichero', () => {
+  it('deduce la clave de las tres URLs reales de origen', () => {
+    // Tomadas de la base tras la ingesta, no inventadas.
+    expect(iconKeyFromUrl('https://svgs.scryfall.io/sets/trk.svg?1787544000', 1)).toBe('sets-trk');
+    expect(iconKeyFromUrl('https://images.ygoprodeck.com/images/sets/SDZW.jpg', 2)).toBe('sets-sdzw');
+    expect(iconKeyFromUrl('https://images.pokemontcg.io/base1/symbol.png', 3)).toBe('base1-symbol');
+  });
+
+  it('dos sets con el MISMO icono comparten fichero', () => {
+    // `trk` y `ttrk` son sets distintos que apuntan al mismo SVG. Nombrar el
+    // fichero por el set pediria la imagen dos veces; nombrarlo por la URL hace
+    // que el segundo lo encuentre ya en disco.
+    const url = 'https://svgs.scryfall.io/sets/trk.svg?1787544000';
+    const trk: PendingImage = {
+      rowId: 10, game: 'MTG', setCode: 'iconos',
+      externalId: iconKeyFromUrl(url, 10), imageSourceUrl: url,
+    };
+    const ttrk: PendingImage = { ...trk, rowId: 11, externalId: iconKeyFromUrl(url, 11) };
+
+    expect(buildImagePath(trk, ICON_WIDTH)).toBe('mtg/iconos/sets-trk.64.webp');
+    expect(buildImagePath(ttrk, ICON_WIDTH)).toBe(buildImagePath(trk, ICON_WIDTH));
+  });
+
+  it('dos sets con iconos DISTINTOS no colisionan aunque el fichero se llame igual', () => {
+    // En Pokemon todas las rutas acaban en `symbol.png`: quedarse con el ultimo
+    // segmento juntaria los 174 iconos en uno solo.
+    const a = iconKeyFromUrl('https://images.pokemontcg.io/base1/symbol.png', 1);
+    const b = iconKeyFromUrl('https://images.pokemontcg.io/base2/symbol.png', 2);
+    expect(a).not.toBe(b);
+  });
+
+  it('una URL ilegible cae en el id de la fila, que es unico', () => {
+    expect(iconKeyFromUrl('no-es-una-url', 42)).toBe('42');
+    expect(iconKeyFromUrl('https://origen.example/', 43)).toBe('43');
   });
 });

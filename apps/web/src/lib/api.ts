@@ -128,6 +128,12 @@ export interface SetSummary {
   name: string;
   releasedAt: string | null;
   cardCount: number;
+  /**
+   * Ruta LOCAL del icono, relativa al almacen de imagenes (T-035). Nunca una
+   * URL externa: enlazar en caliente el origen es P-001. `null` mientras el
+   * icono no se haya cosechado.
+   */
+  iconPath: string | null;
   poolSize: number;
 }
 
