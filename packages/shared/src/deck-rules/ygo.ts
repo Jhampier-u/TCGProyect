@@ -89,15 +89,17 @@ export const ygoValidator: DeckValidator<'YGO'> = {
     // El limite de una carta es el mas restrictivo que se haya visto para ella:
     // dos impresiones de la misma carta traen el mismo estado de banlist, pero
     // depender de que la primera fila lo traiga seria fragil.
+    // Indexado por NOMBRE, igual que `byCard` (P-027). Si esto se queda en
+    // `oracleKey`, la banlist entera deja de aplicarse sin un solo error.
     const limites = new Map<string, number>();
     for (const entry of entries) {
       const limite = ygoCopyLimit(entry.gameData);
-      const previo = limites.get(entry.oracleKey);
-      limites.set(entry.oracleKey, previo === undefined ? limite : Math.min(previo, limite));
+      const previo = limites.get(entry.name);
+      limites.set(entry.name, previo === undefined ? limite : Math.min(previo, limite));
     }
 
-    for (const [oracleKey, tally] of byCard) {
-      const limite = limites.get(oracleKey) ?? YGO_DEFAULT_COPY_LIMIT;
+    for (const [nombre, tally] of byCard) {
+      const limite = limites.get(nombre) ?? YGO_DEFAULT_COPY_LIMIT;
       const total = sumZones(tally.perZone, COUNTED_ZONES);
       if (total <= limite) continue;
 
@@ -108,7 +110,7 @@ export const ygoValidator: DeckValidator<'YGO'> = {
           limite === 0
             ? `"${tally.name}" esta prohibida por la banlist vigente`
             : `"${tally.name}" aparece ${total} veces y el maximo son ${limite}`,
-        oracleKey,
+        oracleKey: tally.oracleKey,
         cardName: tally.name,
         actual: total,
         allowed: limite,

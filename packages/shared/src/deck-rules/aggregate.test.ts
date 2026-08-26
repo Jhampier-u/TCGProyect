@@ -32,15 +32,34 @@ describe('aggregate', () => {
       entry({ oracleKey: 'blue-eyes', name: 'Blue-Eyes', quantity: 2 }),
     ]);
     expect(byCard.size).toBe(1);
-    expect(byCard.get('blue-eyes')?.perZone.main).toBe(4);
+    expect(byCard.get('Blue-Eyes')?.perZone.main).toBe(4);
   });
 
-  it('no colapsa dos cartas con oracle_key distinto (Nidoran, P-013)', () => {
+  it('no colapsa Nidoran macho y hembra, que NO se llaman igual (P-013)', () => {
+    // La fixture anterior daba a las dos cartas el nombre "Nidoran" a secas, que
+    // no existe en ningun catalogo. P-013 registro que se llaman Nidoran seguido
+    // del signo de macho y del de hembra, y colapsarlas fue justo el bug. El
+    // fuente se mantiene en ASCII puro, asi que los signos se construyen.
+    const MACHO = `Nidoran${String.fromCharCode(0x2642)}`;
+    const HEMBRA = `Nidoran${String.fromCharCode(0x2640)}`;
     const { byCard } = aggregate([
-      entry({ oracleKey: 'nidoran-m', name: 'Nidoran' }),
-      entry({ oracleKey: 'nidoran-f', name: 'Nidoran' }),
+      entry({ oracleKey: 'nidoran-m', name: MACHO }),
+      entry({ oracleKey: 'nidoran-f', name: HEMBRA }),
     ]);
     expect(byCard.size).toBe(2);
+  });
+
+  it('P-027: la MISMA carta con oracle_key distinto cuenta como una sola', () => {
+    // En Pokemon `oracle_key` es `set-numero`, o sea uno por IMPRESION: la misma
+    // carta en cuatro sets son cuatro claves. Agrupar por ahi dejaba pasar 16
+    // copias. RN-04 cuenta por NOMBRE.
+    const { byCard } = aggregate([
+      entry({ oracleKey: 'me2pt5-180', name: "Acerola's Mischief", quantity: 4 }),
+      entry({ oracleKey: 'me1-113', name: "Acerola's Mischief", quantity: 4 }),
+      entry({ oracleKey: 'me1-165', name: "Acerola's Mischief", quantity: 4 }),
+    ]);
+    expect(byCard.size).toBe(1);
+    expect(byCard.get("Acerola's Mischief")?.perZone.main).toBe(12);
   });
 
   it('ignora cantidades no positivas en vez de restar', () => {

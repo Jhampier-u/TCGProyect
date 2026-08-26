@@ -4,12 +4,17 @@ export const DECK_ZONES: readonly DeckZone[] = ['main', 'extra', 'side', 'comman
 
 export interface CardTally {
   name: string;
+  /**
+   * Primer `oracleKey` visto para esta carta. NO es la clave de agrupacion:
+   * solo sirve para que la interfaz pueda referenciar la carta implicada.
+   */
+  oracleKey: string;
   perZone: Record<DeckZone, number>;
 }
 
 export interface DeckAggregate {
   counts: Record<DeckZone, number>;
-  /** oracleKey -> reparto por zona. La clave es la CARTA, no la impresion. */
+  /** nombre -> reparto por zona. La clave es la CARTA, no la impresion. */
   byCard: Map<string, CardTally>;
 }
 
@@ -20,9 +25,14 @@ export function emptyCounts(): Record<DeckZone, number> {
 /**
  * Conteo por zona y por carta.
  *
- * Agrupa por `oracleKey` a proposito: `deck_cards` referencia IMPRESIONES, y
- * cuatro impresiones distintas de la misma carta son cuatro filas y una sola
- * carta a efectos del limite de copias (RN-04, D3 del spec).
+ * Agrupa por NOMBRE porque es lo que dice RN-04 para los tres juegos. Antes
+ * agrupaba por `oracleKey`, y en Pokemon esa clave es `set-numero` —una por
+ * IMPRESION—, asi que 16 copias de la misma carta repartidas en cuatro sets
+ * pasaban como mazo legal (P-027).
+ *
+ * En Magic y Yu-Gi-Oh! el cambio es inocuo: sus claves son el `oracle_id` y el
+ * passcode, estables entre impresiones. Medido sobre el catalogo ingestado:
+ * 92/92 y 290/290 nombres unicos.
  */
 export function aggregate(entries: readonly DeckEntry[]): DeckAggregate {
   const counts = emptyCounts();
@@ -36,10 +46,10 @@ export function aggregate(entries: readonly DeckEntry[]): DeckAggregate {
 
     counts[entry.zone] += cantidad;
 
-    let tally = byCard.get(entry.oracleKey);
+    let tally = byCard.get(entry.name);
     if (!tally) {
-      tally = { name: entry.name, perZone: emptyCounts() };
-      byCard.set(entry.oracleKey, tally);
+      tally = { name: entry.name, oracleKey: entry.oracleKey, perZone: emptyCounts() };
+      byCard.set(entry.name, tally);
     }
     tally.perZone[entry.zone] += cantidad;
   }

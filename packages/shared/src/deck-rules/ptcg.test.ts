@@ -73,6 +73,17 @@ describe('ptcgValidator', () => {
     expect(codigos([...relleno(60), card({ zone: 'extra' })])).toContain('unsupported_zone');
   });
 
+  it('P-027: 16 copias en cuatro impresiones distintas son ilegales', () => {
+    const impresiones = ['me2pt5-180', 'me1-113', 'me1-165', 'me1-183'];
+    const entries = [
+      ...impresiones.map((k) => card({ oracleKey: k, name: "Acerola's Mischief", quantity: 4 })),
+      ...relleno(44),
+    ];
+    const issue = ptcgValidator.validate(entries).issues.find((i) => i.code === 'too_many_copies');
+    expect(issue?.cardName).toBe("Acerola's Mischief");
+    expect(issue?.actual).toBe(16);
+  });
+
   it('el mazo vacio es invalido pero no lanza', () => {
     expect(ptcgValidator.validate([]).valid).toBe(false);
   });

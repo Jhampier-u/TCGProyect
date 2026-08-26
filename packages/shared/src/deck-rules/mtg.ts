@@ -52,19 +52,21 @@ export const mtgValidator: DeckValidator<'MTG'> = {
       });
     }
 
+    // Indexado por NOMBRE, igual que `byCard` (P-027). Si esto se queda en
+    // `oracleKey`, la exencion deja de aplicarse sin un solo error.
     const sinLimite = new Set<string>();
     for (const entry of entries) {
-      if (isMtgBasicLand(entry.typeLine)) sinLimite.add(entry.oracleKey);
+      if (isMtgBasicLand(entry.typeLine)) sinLimite.add(entry.name);
     }
 
-    for (const [oracleKey, tally] of byCard) {
-      if (sinLimite.has(oracleKey)) continue;
+    for (const [nombre, tally] of byCard) {
+      if (sinLimite.has(nombre)) continue;
       const total = sumZones(tally.perZone, COUNTED_ZONES);
       if (total > MTG_MAX_COPIES) {
         issues.push({
           code: 'too_many_copies',
           message: `"${tally.name}" aparece ${total} veces y el maximo son ${MTG_MAX_COPIES}`,
-          oracleKey,
+          oracleKey: tally.oracleKey,
           cardName: tally.name,
           actual: total,
           allowed: MTG_MAX_COPIES,

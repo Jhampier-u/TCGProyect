@@ -45,19 +45,20 @@ export const ptcgValidator: DeckValidator<'PTCG'> = {
       });
     }
 
+    // Indexado por NOMBRE, igual que `byCard` (P-027).
     const sinLimite = new Set<string>();
     for (const entry of entries) {
-      if (isPtcgBasicEnergy(entry.gameData)) sinLimite.add(entry.oracleKey);
+      if (isPtcgBasicEnergy(entry.gameData)) sinLimite.add(entry.name);
     }
 
-    for (const [oracleKey, tally] of byCard) {
-      if (sinLimite.has(oracleKey)) continue;
+    for (const [nombre, tally] of byCard) {
+      if (sinLimite.has(nombre)) continue;
       const total = sumZones(tally.perZone, COUNTED_ZONES);
       if (total > PTCG_MAX_COPIES) {
         issues.push({
           code: 'too_many_copies',
           message: `"${tally.name}" aparece ${total} veces y el maximo son ${PTCG_MAX_COPIES}`,
-          oracleKey,
+          oracleKey: tally.oracleKey,
           cardName: tally.name,
           actual: total,
           allowed: PTCG_MAX_COPIES,
