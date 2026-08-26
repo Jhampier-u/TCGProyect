@@ -1,9 +1,9 @@
 # 05 — Continuar aquí
 
-**Punto de guardado:** 2026-08-26, tras la sesión **S025**
-**Commit:** rama `main` · 339 tests de Vitest + 6 recorridos E2E en verde · `npm audit` limpio
+**Punto de guardado:** 2026-08-26, tras la sesión **S026**
+**Commit:** rama `main` · 341 tests de Vitest + 6 recorridos E2E en verde · `npm audit` limpio
 
-Este documento existe para retomar el proyecto en otra máquina o en otra sesión sin releer las 25
+Este documento existe para retomar el proyecto en otra máquina o en otra sesión sin releer las 26
 bitácoras. Si sólo vas a leer un fichero, que sea éste.
 
 ---
@@ -21,7 +21,7 @@ crecer con completitud por set.
 | H0 Fundamentos | ✅ **cerrado en S019** — Docker Compose (T-004) |
 | H1 Esquema · H2 Ingesta · H3 API · H4 Sobres · H5 Frontend · H6 Cuentas | ✅ |
 | **H7 Constructor de mazos** | ✅ **cerrado en S022** — motor, API, interfaz e import/export |
-| **H8 Endurecimiento** | 🟡 **H8a y H8b hechos** · H8c a cinco de ocho |
+| **H8 Endurecimiento** | 🟡 **H8a y H8b hechos** · H8c a seis de ocho |
 
 ---
 
@@ -151,14 +151,11 @@ son útiles para la lógica, pero **la fidelidad de sus datos determina lo que e
 ## 5. Lo que está pendiente, por orden de interés
 
 ### El siguiente paso natural
-**H8a y H8b están hechos.** Queda terminar **H8c**, que va por cinco de ocho. Las tres que faltan son
-trabajo real, no retoques:
+**H8a y H8b están hechos.** Queda terminar **H8c**, que va por seis de ocho. Las dos que faltan:
 
-- **T-019** — `card_prints.image_failed_at`. Hoy una URL de imagen permanentemente rota se reintenta
-  en cada ejecución del job, para siempre. Necesita migración nueva y tocar el cosechador.
 - **T-035** — cosechar los iconos de set, para que la API pueda exponerlos sin incumplir P-022.
 - **T-034** — plantillas por época para los sets de Yu-Gi-Oh! anteriores a 2020, que hoy topan la
-  completitud en ~70,7 %. La mayor de las tres.
+  completitud en ~70,7 %. La mayor de las dos.
 
 Y una que salió al hacer T-022: **T-065 (P-032)**, la migración `0001` fija el nombre de la base con
 un `USE`. Hoy hay una guarda que se niega a migrar contra otra base; el arreglo de verdad es un juego

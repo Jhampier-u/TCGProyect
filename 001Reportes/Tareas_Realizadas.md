@@ -1,6 +1,6 @@
 # Tareas Realizadas
 
-**Última actualización:** 2026-08-26 (S025)
+**Última actualización:** 2026-08-26 (S026)
 
 | ID | Tarea | Agente | Fecha | Sesión | Evidencia |
 |---|---|---|---|---|---|
@@ -91,3 +91,4 @@
 | T-016 | Test de deriva entre `GAME_IDS` y el seed SQL. Verificado moviendo YGO al 7 | QA | 2026-08-26 | S025 | `apps/api/src/db/seed-drift.test.ts` |
 | T-061 | La rareza en las filas del buscador: tres impresiones ya no se ven idénticas | Frontend | 2026-08-26 | S025 | `apps/web/src/components/DeckBuscador.tsx` |
 | T-022 | `npm run db:migrate`. Destapó **P-032**: la 0001 fija el nombre de la base con un `USE` | Backend | 2026-08-26 | S025 | `apps/api/src/cli/migrate.ts` |
+| T-019 | **Una URL de imagen rota deja de reintentarse**: contador de intentos en la migración 0007, con `--retry-failed` para reactivar | Base de Datos / Backend | 2026-08-26 | S026 | `db/migrations/0007_*`, `apps/api/src/images/` |

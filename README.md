@@ -14,16 +14,16 @@ distribuciones de rareza reales** y ver su colección crecer hacia el 100 % de c
 | Hito | Estado |
 |---|---|
 | H0 · Fundamentos | ✅ Docker Compose |
-| H1 · Esquema de datos | ✅ 6 migraciones |
+| H1 · Esquema de datos | ✅ 7 migraciones |
 | H2 · Ingesta | ✅ 3 conectores + cosecha de imágenes |
 | H3 · API de catálogo | ✅ Fastify, búsqueda y paginación keyset |
 | H4 · Motor de sobres | ✅ Determinista y auditable |
 | H5 · Frontend | ✅ Catálogo, sobres animados y colección |
 | H6 · Cuentas y colección | ✅ Argon2id + JWT |
 | H7 · Constructor de mazos | ✅ Motor de reglas, 6 endpoints, interfaz e import/export |
-| H8 · Endurecimiento | 🟡 Suite E2E, seguridad y 5 de 8 de deuda técnica |
+| H8 · Endurecimiento | 🟡 Suite E2E, seguridad y 6 de 8 de deuda técnica |
 
-**339 tests + 6 recorridos E2E · `tsc --build` limpio · `npm audit` limpio.**
+**341 tests + 6 recorridos E2E · `tsc --build` limpio · `npm audit` limpio.**
 
 ---
 
@@ -157,7 +157,7 @@ El frontend redirige `/api` y `/images` al backend en desarrollo.
 002Agents/       Roster de agentes y sus mandatos
 003Problemas/    31 problemas registrados, con su diagnóstico y su medición
 004Arquitectura/ 9 ADR, estrategia de las 3 APIs, flujos de datos, infraestructura, specs y planes
-005Registro/     Bitácora de las 25 sesiones de trabajo
+005Registro/     Bitácora de las 26 sesiones de trabajo
 Claude.md        Orquestador: contrato de operación y convenciones
 
 db/migrations/   SQL plano versionado, con migrador propio
@@ -194,7 +194,7 @@ sembrado lleva anotado si es `[OFICIAL]`, `[DERIVADO]` (con el cálculo) o `[EST
 | Comando | Qué hace |
 |---|---|
 | `npm run build` | Compila los tres paquetes (project references) |
-| `npm test` | 339 tests |
+| `npm test` | 341 tests |
 | `npm run typecheck` | `tsc --build` |
 | `npm run db:migrate` | Crea la base de datos si falta y migra |
 | `npm run ingest` | Pobla el catálogo y cosecha imágenes |

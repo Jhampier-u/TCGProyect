@@ -1,6 +1,6 @@
 # Tareas Pendientes
 
-**Última actualización:** 2026-08-26 (S025) · **Total abiertas:** 4 — 3 del proyecto + T-005, que depende de ti
+**Última actualización:** 2026-08-26 (S026) · **Total abiertas:** 4 — 3 del proyecto + T-005, que depende de ti
 
 Leyenda de prioridad: 🔴 crítica · 🟠 alta · 🟡 media · ⚪ baja
 
@@ -43,14 +43,12 @@ T-051 (401 antes que 400) y T-062 (límites por ruta), verificados. Anotado para
 de una réplica del API: los contadores están **en memoria**, así que el límite efectivo pasaría a ser
 N veces el configurado y habría que conectarlos a un almacén compartido.
 
-### H8c — Deuda técnica 🟡 cinco de ocho hechas (S025)
+### H8c — Deuda técnica 🟡 seis de ocho hechas (S026)
 
-Cerradas: T-016, T-022, T-023, T-050 y T-061. **Quedan tres**, y las tres son trabajo real, no
-retoques:
+Cerradas: T-016, T-019, T-022, T-023, T-050 y T-061. **Quedan dos**:
 
 | ID | Tarea | Agente | Prio |
 |---|---|---|---|
-| T-019 | `card_prints.image_failed_at`: hoy una URL de imagen permanentemente rota se reintenta en cada ejecución del job, para siempre. Necesita migración nueva y tocar el cosechador | Base de Datos / Backend | 🟡 |
 | T-035 | Cosechar los **iconos de set**. Hoy `sets.icon_url` apunta al origen y por eso la API no lo expone (P-022); sin iconos propios el selector no puede mostrarlos | Backend | 🟡 |
 | T-034 | Plantillas por época para los sets de Yu-Gi-Oh! anteriores a 2020. Hoy topan la completitud en ~70,7 % (P-021). La mayor de las ocho | Base de Datos / Backend | ⚪ |
 
