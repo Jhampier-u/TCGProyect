@@ -1,6 +1,6 @@
 # Tareas Pendientes
 
-**Última actualización:** 2026-08-26 (S024) · **Total abiertas:** 7 — 6 del proyecto + T-005, que depende de ti
+**Última actualización:** 2026-08-26 (S025) · **Total abiertas:** 4 — 3 del proyecto + T-005, que depende de ti
 
 Leyenda de prioridad: 🔴 crítica · 🟠 alta · 🟡 media · ⚪ baja
 
@@ -31,8 +31,6 @@ Motor de reglas (S020), interfaz (S021) e import/export (S022), los tres verific
 
 | ID | Tarea | Agente | Prio |
 |---|---|---|---|
-| T-050 | Confirmar contra datos reales el lado **positivo** de dos predicados: la Energía Básica de Pokémon y la tierra nevada de Magic. Ninguno aparece en los sets ingestados hasta hoy (ver S020). Depende en parte de **T-023** | QA | 🟡 |
-| T-061 | En el buscador del editor, tres impresiones distintas de la misma carta se ven **idénticas**: la fila muestra tipo, set y número pero no la rareza. Visto en las capturas de S023 | Frontend | 🟡 |
 
 ## Hito H8 — Endurecimiento 🟡 EN CURSO
 
@@ -45,9 +43,22 @@ T-051 (401 antes que 400) y T-062 (límites por ruta), verificados. Anotado para
 de una réplica del API: los contadores están **en memoria**, así que el límite efectivo pasaría a ser
 N veces el configurado y habría que conectarlos a un almacén compartido.
 
-### H8c — Deuda técnica
+### H8c — Deuda técnica 🟡 cinco de ocho hechas (S025)
 
-Los siete de abajo, ninguno bloqueante y ninguno necesita diseño.
+Cerradas: T-016, T-022, T-023, T-050 y T-061. **Quedan tres**, y las tres son trabajo real, no
+retoques:
+
+| ID | Tarea | Agente | Prio |
+|---|---|---|---|
+| T-019 | `card_prints.image_failed_at`: hoy una URL de imagen permanentemente rota se reintenta en cada ejecución del job, para siempre. Necesita migración nueva y tocar el cosechador | Base de Datos / Backend | 🟡 |
+| T-035 | Cosechar los **iconos de set**. Hoy `sets.icon_url` apunta al origen y por eso la API no lo expone (P-022); sin iconos propios el selector no puede mostrarlos | Backend | 🟡 |
+| T-034 | Plantillas por época para los sets de Yu-Gi-Oh! anteriores a 2020. Hoy topan la completitud en ~70,7 % (P-021). La mayor de las ocho | Base de Datos / Backend | ⚪ |
+
+### Además, anotado al probar T-022
+
+| ID | Tarea | Agente | Prio |
+|---|---|---|---|
+| T-065 | **P-032**: la migración `0001` fija el nombre de la base con un `USE proyecto_tcg`, así que el migrador ignora la conexión. Hoy hay una guarda en `db:migrate` que se niega a arrancar contra otra base; el arreglo de verdad es un juego de migraciones que no fije el nombre | Base de Datos | 🟡 |
 
 ## Deuda técnica detectada en S004
 
@@ -56,10 +67,7 @@ Los siete de abajo, ninguno bloqueante y ninguno necesita diseño.
 | T-040 | Verificar el **volteo** de las cartas con el panel del navegador visible o en Cypress (H8). En S017 no se pudo: `requestAnimationFrame` estaba parado (0 fotogramas en 500 ms), así que ninguna animación podía avanzar. La lógica sí quedó verificada | QA | 🟡 |
 | T-035 | Cosechar también los **iconos de set**. Hoy `sets.icon_url` apunta al origen y por eso la API no lo expone (ver **P-022**); sin iconos propios, el selector de sets no puede mostrarlos | Backend | 🟡 |
 | T-034 | Plantillas por época para los sets de Yu-Gi-Oh! **anteriores a 2020**. Hoy topan la completitud en ~70,7 % (ver **P-021**). La tabla histórica de Yugipedia ya está capturada en P-019; el blóqueo real es que hace falta un paso de asignación de plantilla posterior a la ingesta | Base de Datos / Backend | ⚪ |
-| T-022 | Guion `db:migrate` que cree la base de datos si falta y ejecute el migrador. **Sólo afecta ya al arranque local**: en Docker la crea la imagen de MySQL (S019) | Backend | ⚪ |
-| T-023 | Revisar el orden de `findPendingSets`: `released_at DESC` hace que una ejecución acotada procese primero sets **futuros** y promocionales en vez de los jugables (ver S011) | Backend | ⚪ |
 | T-019 | `card_prints.image_failed_at` o similar. Hoy una URL de imagen permanentemente rota se reintenta en cada ejecución del job, para siempre (ver S010) | Base de Datos | 🟡 |
-| T-016 | Test que detecte *drift* entre `GAME_IDS` de `@tcg/shared` y el seed SQL de `games`. Hoy la correspondencia 1=MTG/2=YGO/3=PTCG vive en dos sitios sin nada que la verifique | QA | 🟡 |
 
 ## Contrato adicional derivado de T-018
 

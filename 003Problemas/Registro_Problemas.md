@@ -1,6 +1,6 @@
 # Registro de Problemas
 
-**Última actualización:** 2026-08-26 (S024) · **Abiertos:** 5 · **Cerrados:** 25
+**Última actualización:** 2026-08-26 (S025) · **Abiertos:** 6 · **Cerrados:** 25
 
 Severidad: 🔴 crítica · 🟠 alta · 🟡 media · ⚪ baja
 
@@ -920,3 +920,41 @@ deben mezclarse.
 **Leccion.** Truncar la salida de un comando puede esconder justo la senal que importa. Un resumen de
 tests tiene que incluir cuantos FICHEROS fallaron, no solo cuantos tests pasaron: son dos numeros y
 el bueno puede tapar al malo.
+
+---
+
+## P-032 🟡 ABIERTO · La migracion 0001 fija el nombre de la base de datos
+**Estado:** MITIGADO el 2026-08-26 (S025). Abierto: la causa sigue ahi.
+**Severidad:** 🟡
+**Origen:** probar `npm run db:migrate` (T-022) contra una base recien creada y vacia.
+
+**Detalle.** La migracion `0001_initial_schema.up.sql` lleva dentro, en la linea 20:
+
+```sql
+USE proyecto_tcg;
+```
+
+El migrador se cambia de base **sola**, diga lo que diga la conexion. Apuntando a otra base:
+
+```
+Base de datos "tcg_prueba_t022" lista.
+Table 'games' already exists          <- estaba creando en proyecto_tcg
+```
+
+**Por que importa.** Si `proyecto_tcg` hubiera estado vacia, el migrador habria creado **todas las
+tablas ahi** mientras anotaba las migraciones como aplicadas en `tcg_prueba_t022`. Dos bases
+inconsistentes y ningun error. Aqui no se rompio nada solo porque las tablas ya existian y la
+migracion aborto en la primera.
+
+**Consecuencias que ya se notan:** no se puede tener una base de pruebas, y cualquier intento de
+migrar una base distinta tocaria la de siempre.
+
+**Mitigacion (S025).** Las migraciones publicadas son inmutables, asi que `0001` no se toca.
+`db:migrate` lee el nombre que la 0001 fija y **se niega a arrancar** contra otro, nombrando el
+problema en el mensaje.
+
+**Lo que falta para cerrarlo (T-065).** Un juego de migraciones que no fije el nombre. No se hace
+ahora porque afecta al arranque de todas las instalaciones existentes y merece su propio diseno.
+
+**Leccion.** Una migracion que hace `USE` deja de ser relativa a la conexion y pasa a mandar sobre
+ella. Un fichero de esquema no deberia decidir en que base se aplica.

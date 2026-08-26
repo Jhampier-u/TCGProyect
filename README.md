@@ -21,9 +21,9 @@ distribuciones de rareza reales** y ver su colección crecer hacia el 100 % de c
 | H5 · Frontend | ✅ Catálogo, sobres animados y colección |
 | H6 · Cuentas y colección | ✅ Argon2id + JWT |
 | H7 · Constructor de mazos | ✅ Motor de reglas, 6 endpoints, interfaz e import/export |
-| H8 · Endurecimiento | 🟡 Suite E2E con Playwright (6 recorridos) |
+| H8 · Endurecimiento | 🟡 Suite E2E, seguridad y 5 de 8 de deuda técnica |
 
-**332 tests · `tsc --build` limpio · `npm audit` limpio.**
+**339 tests + 6 recorridos E2E · `tsc --build` limpio · `npm audit` limpio.**
 
 ---
 
@@ -145,9 +145,9 @@ El frontend redirige `/api` y `/images` al backend en desarrollo.
 00Master/        Contexto del proyecto: producto, stack, hitos, diccionario de datos
 001Reportes/     Tareas realizadas, pendientes y bloqueadas
 002Agents/       Roster de agentes y sus mandatos
-003Problemas/    29 problemas registrados, con su diagnóstico y su medición
+003Problemas/    31 problemas registrados, con su diagnóstico y su medición
 004Arquitectura/ 9 ADR, estrategia de las 3 APIs, flujos de datos, infraestructura, specs y planes
-005Registro/     Bitácora de las 23 sesiones de trabajo
+005Registro/     Bitácora de las 25 sesiones de trabajo
 Claude.md        Orquestador: contrato de operación y convenciones
 
 db/migrations/   SQL plano versionado, con migrador propio
@@ -184,7 +184,7 @@ sembrado lleva anotado si es `[OFICIAL]`, `[DERIVADO]` (con el cálculo) o `[EST
 | Comando | Qué hace |
 |---|---|
 | `npm run build` | Compila los tres paquetes (project references) |
-| `npm test` | 332 tests |
+| `npm test` | 339 tests |
 | `npm run typecheck` | `tsc --build` |
 | `npm run db:migrate` | Crea la base de datos si falta y migra |
 | `npm run ingest` | Pobla el catálogo y cosecha imágenes |

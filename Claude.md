@@ -2,7 +2,7 @@
 
 > **Rol:** Arquitecto Principal y Orquestador de Proyectos de Software.
 > **Producto:** Simulador de Apertura de Sobres + Constructor de Mazos unificado para MTG, Yu-Gi-Oh! y Pokémon TCG.
-> **Estado del Vault:** ACTIVO — última sesión S023 (2026-08-26)
+> **Estado del Vault:** ACTIVO — última sesión S025 (2026-08-26)
 
 ---
 
@@ -85,7 +85,9 @@ C:\ProyectoTCG\
 │   ├── 2026-08-25_S020_ConstructorDeMazos.md
 │   ├── 2026-08-25_S021_InterfazDeMazos.md
 │   ├── 2026-08-26_S022_ImportExport.md
-│   └── 2026-08-26_S023_SuiteE2E.md
+│   ├── 2026-08-26_S023_SuiteE2E.md
+│   ├── 2026-08-26_S024_Seguridad.md
+│   └── 2026-08-26_S025_DeudaTecnica.md
 │
 ├── db\                          <- esquema (fuera del Vault documental)
 │   ├── README.md

@@ -1,6 +1,6 @@
 # Tareas Realizadas
 
-**Última actualización:** 2026-08-26 (S024)
+**Última actualización:** 2026-08-26 (S025)
 
 | ID | Tarea | Agente | Fecha | Sesión | Evidencia |
 |---|---|---|---|---|---|
@@ -85,3 +85,9 @@
 | T-051 | **401 antes que 400**: `requireUser` pasa a hook de `preValidation`, con las rutas de mazos encapsuladas | Seguridad | 2026-08-26 | S024 | `apps/api/src/api/require-user.ts` |
 | T-062 | **Límites de tasa por ruta**. El hueco grande era el registro: 18.000 Argon2id por hora | Seguridad | 2026-08-26 | S024 | `auth-routes.ts`, `deck-routes.ts`, `server.ts` |
 | T-063 | **P-031 corregido**: Vitest intentaba ejecutar los specs de Playwright y 3 ficheros fallaban en silencio | QA | 2026-08-26 | S024 | `vitest.config.ts` |
+| T-023 | **La ingesta acotada ya no se lleva sets sin publicar.** En Magic los dos primeros eran un Commander y un set de UNA carta | Backend | 2026-08-26 | S025 | `apps/api/src/db/catalog-repository.ts` |
+| T-064 | `--set` en el CLI de ingesta: pedir sets concretos. Es lo que desbloqueó T-050 | Backend | 2026-08-26 | S025 | `apps/api/src/cli/ingest.ts` |
+| T-050 | **Los dos predicados medidos con datos reales**: 16 Energías Básicas y las nevadas básicas frente a 32 líneas con Snow limitadas a 4 | QA | 2026-08-26 | S025 | Ver S025 en `005Registro` |
+| T-016 | Test de deriva entre `GAME_IDS` y el seed SQL. Verificado moviendo YGO al 7 | QA | 2026-08-26 | S025 | `apps/api/src/db/seed-drift.test.ts` |
+| T-061 | La rareza en las filas del buscador: tres impresiones ya no se ven idénticas | Frontend | 2026-08-26 | S025 | `apps/web/src/components/DeckBuscador.tsx` |
+| T-022 | `npm run db:migrate`. Destapó **P-032**: la 0001 fija el nombre de la base con un `USE` | Backend | 2026-08-26 | S025 | `apps/api/src/cli/migrate.ts` |
