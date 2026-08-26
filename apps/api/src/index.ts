@@ -1,3 +1,5 @@
+import { mkdir } from 'node:fs/promises';
+
 import { loadConfig } from './config.js';
 import { Database, Migrator, CatalogQueryRepository, CollectionRepository, PackRepositoryMysql } from './db/index.js';
 import { UserRepository, warmUp } from './auth/index.js';
@@ -21,6 +23,12 @@ async function main(): Promise<void> {
   if (resultado.aplicadas.length > 0) {
     console.log(`Migraciones aplicadas: ${resultado.aplicadas.join(', ')}`);
   }
+
+  // @fastify/static exige que su raiz exista al registrarse, y en una maquina
+  // recien clonada storage/ no existe todavia: la crea la primera ingesta. Sin
+  // esto el servidor arranca igual, pero /images devuelve 404 hasta que alguien
+  // ejecuta el CLI, y el aviso pasa desapercibido entre los logs de arranque.
+  await mkdir(config.storagePath, { recursive: true });
 
   // Precalcula el hash señuelo para que el primer login no pague su coste y
   // delate, por lentitud, que es el primero (ADR-008).

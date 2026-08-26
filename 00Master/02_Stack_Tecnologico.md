@@ -21,7 +21,7 @@
 | Proceso de imágenes | `sharp` (libvips 8.18.3) → WebP | ✅ IMPLEMENTADO (T-014) |
 | Testing unitario | Vitest (front y back) | PROPUESTO |
 | Testing E2E | **Cypress** | CONFIRMADO (requisito del usuario) |
-| Contenedores | Docker Compose (mysql, redis, api, web) | PROPUESTO |
+| Contenedores | Docker Compose (mysql, redis, api, web + perfil `ingest`) | ✅ IMPLEMENTADO (S019, T-004) |
 
 ## Requisitos de versión mínimos
 

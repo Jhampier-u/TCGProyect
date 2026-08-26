@@ -2,7 +2,7 @@
 
 > **Rol:** Arquitecto Principal y Orquestador de Proyectos de Software.
 > **Producto:** Simulador de Apertura de Sobres + Constructor de Mazos unificado para MTG, Yu-Gi-Oh! y Pokémon TCG.
-> **Estado del Vault:** ACTIVO — última sesión S017 (2026-08-25)
+> **Estado del Vault:** ACTIVO — última sesión S019 (2026-08-25)
 
 ---
 
@@ -27,6 +27,8 @@ Toda interacción sigue este ciclo, sin excepciones:
 ```
 C:\ProyectoTCG\
 ├── README.md                    <- puesta en marcha (lo primero al clonar)
+├── docker-compose.yml           <- entorno completo: mysql, redis, api, web (T-004)
+├── docker\Dockerfile            <- imagenes propias de api y web (4 etapas)
 ├── Claude.md                    <- este archivo (Orquestador)
 ├── 00Master\                    <- contexto absoluto, verdad única
 │   ├── 00_Contexto_Global.md
@@ -65,7 +67,9 @@ C:\ProyectoTCG\
 │   ├── 2026-08-25_S014_CuentasYColeccion.md
 │   ├── 2026-08-25_S015_PlantillaYgoModerna.md
 │   ├── 2026-08-25_S016_FrontendSobrio.md
-│   └── 2026-08-25_S017_AnimacionDeApertura.md
+│   ├── 2026-08-25_S017_AnimacionDeApertura.md
+│   ├── 2026-08-25_S018_PuntoDeGuardado.md
+│   └── 2026-08-25_S019_DockerCompose.md
 │
 ├── db\                          <- esquema (fuera del Vault documental)
 │   ├── README.md

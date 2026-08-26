@@ -2,15 +2,43 @@
 
 ## Topología de desarrollo (Docker Compose)
 
-| Servicio | Imagen | Puerto | Notas |
-|---|---|---|---|
-| `web` | node:20-alpine (Vite dev) | 5173 | Proxy `/api` → `api` |
-| `api` | node:20-alpine | 3000 | Backend (pendiente ADR-001) |
-| `worker` | node:20-alpine | — | Jobs de ingesta e imágenes |
-| `mysql` | mysql:8.0 | 3306 | Volumen `db_data` |
-| `redis` | redis:7-alpine | 6379 | Caché de pools + cuotas + BullMQ |
+**Implementada y verificada en S019 (T-004).** `docker-compose.yml` en la raíz; las imágenes propias
+salen de `docker/Dockerfile`, un solo fichero con etapas para que la instalación de dependencias se
+haga una vez y la compartan backend y frontend.
 
-Volumen compartido `./storage/cards` montado en `api` y `worker` para las imágenes locales.
+| Servicio | Imagen | Puerto host | Notas |
+|---|---|---|---|
+| `web` | propia, `node:22-bookworm-slim` (Vite dev) | 5173 | Proxy `/api` y `/images` → `api` |
+| `api` | propia, `node:22-bookworm-slim` | 3000 | Migra al arrancar; sirve `/images` |
+| `ingest` | la misma imagen que `api` | — | **Perfil**, no servicio: se ejecuta y termina |
+| `mysql` | `mysql:8.0.42` | **3307** | Volumen `db_data`; crea la base y el usuario |
+| `redis` | `redis:7-alpine` | 6379 | Volumen `redis_data`, `appendonly` |
+
+```bash
+docker compose up --build
+docker compose --profile ingest run --rm ingest --game YGO --sets 3
+```
+
+`./storage` se monta en `api` y en `ingest`: las imágenes re-hospedadas viven fuera de la imagen y
+fuera de git.
+
+### Cuatro decisiones que conviene no revertir
+
+- **Debian y no Alpine.** `sharp` y `@node-rs/argon2` son módulos nativos; sus binarios para musl son
+  un camino conocido de fallos en tiempo de arranque. El tamaño de imagen no compensa el riesgo.
+- **MySQL se publica en 3307.** La máquina de desarrollo ya tiene un MySQL propio en 3306. Todos los
+  puertos son variables: `MYSQL_PORT`, `REDIS_PORT`, `API_PORT`, `WEB_PORT`.
+- **El healthcheck de MySQL exige TCP** (`--protocol=tcp`). Durante la inicialización el servidor
+  arranca con `--skip-networking`: un ping por socket daría "sano" antes de tiempo y la API se
+  lanzaría contra una puerta cerrada.
+- **`JWT_SECRET` no tiene valor por defecto.** Compose se niega a arrancar si falta, igual que el
+  servidor (ADR-008).
+
+### No hay servicio `worker`
+
+La versión anterior de este documento preveía un `worker` permanente para la ingesta y las imágenes.
+No existe: la ingesta es un **CLI que termina** (T-041). Se modela como perfil de compose, que es lo
+que de verdad es. Si algún día hay jobs en cola (BullMQ), volverá a ser un servicio.
 
 ## Estructura de carpetas propuesta (monorepo)
 
@@ -18,7 +46,7 @@ Volumen compartido `./storage/cards` montado en `api` y `worker` para las imáge
 ProyectoTCG/
 ├── apps/
 │   ├── web/            React + Vite
-│   └── api/            Backend + worker
+│   └── api/            Backend + CLI de ingesta
 ├── packages/
 │   └── shared/         Tipos de dominio compartidos (GameCode, DomainPrint, …)
 ├── storage/cards/      Imágenes re-hospedadas (NO en git)
@@ -33,7 +61,7 @@ DATABASE_URL=mysql://tcg:***@mysql:3306/proyecto_tcg
 REDIS_URL=redis://redis:6379
 POKEMONTCG_API_KEY=***            # obtener en dev.pokemontcg.io
 EXTERNAL_USER_AGENT=ProyectoTCG/0.1 (+mailto:...)
-STORAGE_PATH=/storage/cards
+STORAGE_PATH=/app/storage/cards
 JWT_SECRET=***
 ```
 

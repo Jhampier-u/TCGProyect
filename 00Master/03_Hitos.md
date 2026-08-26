@@ -2,7 +2,7 @@
 
 | Hito | Nombre | Criterio de aceptación | Estado |
 |---|---|---|---|
-| **H0** | Fundamentos | Vault inicializado, ADR-001 resuelto, repo Git, Docker Compose levanta | 🟡 EN CURSO (ADR-001 ✅ · monorepo ✅ · Git ✅ · **arranque del servidor ✅** · falta Docker, T-004) |
+| **H0** | Fundamentos | Vault inicializado, ADR-001 resuelto, repo Git, Docker Compose levanta | ✅ **COMPLETADO** (S019) — `docker compose up --build` levanta mysql, redis, api y web sin ningún paso manual previo |
 | **H1** | Esquema de datos | DDL MySQL aplicado + migraciones + seeds de `games` y `rarities` | ✅ **COMPLETADO** (3 migraciones verificadas en MySQL 8.0.42) |
 | **H2** | Ingesta | Los 3 conectores pueblan `sets`/`cards`/`card_prints`; catálogo consultable | ✅ **COMPLETADO** (3 adaptadores + cliente + job de imágenes, todos verificados contra los orígenes reales) |
 | **H3** | API de catálogo | `GET /api/cards` con búsqueda, filtros y paginación keyset | ✅ **COMPLETADO** (6 endpoints, Fastify, verificados sobre el catálogo real) |

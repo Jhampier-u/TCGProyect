@@ -1,0 +1,25 @@
+# Sin esto el contexto de build arrastraria node_modules y, sobre todo,
+# storage/ — varios GB de imagenes re-hospedadas que ninguna imagen necesita.
+node_modules
+**/node_modules
+storage
+dist
+**/dist
+**/dist-types
+# El patron tiene que ser recursivo: sin **/ solo taparia la raiz, y un
+# tsconfig.tsbuildinfo colado desde el host convence a tsc de que ya esta todo
+# compilado — deja la imagen SIN dist/ y sin un solo error.
+*.tsbuildinfo
+**/*.tsbuildinfo
+.git
+.env
+.env.local
+.claude
+
+# Documentacion del Vault: no entra en ninguna imagen.
+00Master
+001Reportes
+002Agents
+003Problemas
+004Arquitectura
+005Registro

@@ -1,6 +1,6 @@
 # Tareas Realizadas
 
-**Última actualización:** 2026-08-25 (S018)
+**Última actualización:** 2026-08-25 (S019)
 
 | ID | Tarea | Agente | Fecha | Sesión | Evidencia |
 |---|---|---|---|---|---|
@@ -58,3 +58,6 @@
 | T-039v | Verificación: 6 tests del orden de revelado + comprobación en navegador de estado, orden y foil | QA | 2026-08-25 | S017 | Ver S017 en `005Registro` |
 | T-041 | CLI de ingesta (`npm run ingest`). Sin él, un clon nuevo no tenía forma de poblar la base | Backend | 2026-08-25 | S018 | `apps/api/src/cli/ingest.ts` |
 | T-042 | `README.md` y `00Master/05_Continuar_Aqui.md`: punto de entrada y de retorno del proyecto | Documentador | 2026-08-25 | S018 | raíz y `00Master/` |
+| T-004 | **Docker Compose** (cierra H0): `mysql`, `redis`, `api`, `web` + perfil `ingest`, sin ningún paso manual previo | Arquitectura | 2026-08-25 | S019 | `docker-compose.yml`, `docker/Dockerfile` |
+| T-043 | La API crea `STORAGE_PATH` al arrancar. Sin él, `/images` devolvía 404 en un clon nuevo hasta la primera ingesta | Backend | 2026-08-25 | S019 | `apps/api/src/index.ts` |
+| T-004v | Verificación contra los contenedores reales: 6 migraciones solas, ingesta de 66 impresiones y catálogo en el navegador vía proxy | QA | 2026-08-25 | S019 | Ver S019 en `005Registro` |

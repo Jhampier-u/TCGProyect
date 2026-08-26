@@ -13,7 +13,7 @@ distribuciones de rareza reales** y ver su colección crecer hacia el 100 % de c
 
 | Hito | Estado |
 |---|---|
-| H0 · Fundamentos | 🟡 Falta Docker (T-004) |
+| H0 · Fundamentos | ✅ Docker Compose |
 | H1 · Esquema de datos | ✅ 6 migraciones |
 | H2 · Ingesta | ✅ 3 conectores + cosecha de imágenes |
 | H3 · API de catálogo | ✅ Fastify, búsqueda y paginación keyset |
@@ -29,29 +29,71 @@ distribuciones de rareza reales** y ver su colección crecer hacia el 100 % de c
 
 ## Requisitos
 
+Con **Docker** (Desktop o Engine + Compose v2) no hace falta nada más. Para el camino local:
+
 - **Node.js ≥ 20** (probado con 24)
 - **MySQL ≥ 8.0.17** — no es una preferencia: el esquema usa índices multivaluados sobre JSON
   (8.0.17+), `CHECK` constraints (8.0.16+) y `DEFAULT` con expresión (8.0.13+)
+- **Redis** para la cuota diaria persistida de la ingesta
 
 ---
 
 ## Puesta en marcha
+
+Hay dos caminos. **Si sólo quieres verlo funcionar, usa Docker**: es un comando y no requiere tener
+MySQL ni Redis instalados.
+
+### Camino A — Docker Compose (recomendado)
+
+```bash
+cp .env.example .env      # y pon un JWT_SECRET; ver el aviso más abajo
+docker compose up --build
+```
+
+Levanta `mysql`, `redis`, `api` y `web`. **No hay ningún paso previo**: la base de datos la crea la
+imagen de MySQL y las migraciones se aplican solas al arrancar la API.
+
+- Frontend → http://localhost:5173
+- API → http://localhost:3000
+
+Para poblar el catálogo, la ingesta se lanza como una ejecución puntual:
+
+```bash
+docker compose --profile ingest run --rm ingest --game YGO --sets 3
+```
+
+Detalles que evitan sorpresas:
+
+- **MySQL se publica en el 3307**, no en el 3306: es habitual tener ya un MySQL propio ocupándolo.
+  Todos los puertos son variables (`MYSQL_PORT`, `REDIS_PORT`, `API_PORT`, `WEB_PORT`).
+- Cambiar `MYSQL_USER`/`MYSQL_PASSWORD` **después** del primer arranque no tiene efecto: el volumen
+  `db_data` ya está inicializado. Habría que borrarlo con `docker compose down -v`.
+- `./storage` se monta en los contenedores, así que las imágenes cosechadas se quedan en tu disco y
+  no se vuelven a pedir al origen.
+
+```bash
+docker compose down       # parar
+docker compose down -v    # parar y borrar los datos
+```
+
+### Camino B — local
 
 ```bash
 npm install
 npm run build
 ```
 
-### 1. Base de datos
+#### 1. Base de datos
 
 La base de datos debe existir antes de migrar (la migración `0001` la crea, pero el driver necesita
-conectarse a algo). Es el único paso manual pendiente de automatizar (T-022):
+conectarse a algo). Es el único paso manual pendiente de automatizar (T-022); **en Docker no hace
+falta**, lo hace la propia imagen de MySQL:
 
 ```bash
 mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS proyecto_tcg CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci"
 ```
 
-### 2. Entorno
+#### 2. Entorno
 
 Copia `.env.example` a `.env` y rellénalo. Dos avisos que no son burocracia:
 
@@ -66,7 +108,7 @@ Copia `.env.example` a `.env` y rellénalo. Dos avisos que no son burocracia:
 Las variables se leen del entorno del proceso; en Windows, `set VAR=valor` o el mecanismo que uses
 habitualmente.
 
-### 3. Poblar el catálogo
+#### 3. Poblar el catálogo
 
 Las migraciones se aplican solas al arrancar la API o el CLI.
 
@@ -87,7 +129,7 @@ disco y **no vuelve a pedirlas al origen** — YGOPRODeck castiga el hotlinking 
 > La ingesta completa de Magic son ~116.750 impresiones y se procesa en ~12 s desde el volcado
 > comprimido de Scryfall. Lo que tarda son las **imágenes**, no los datos.
 
-### 4. Arrancar
+#### 4. Arrancar
 
 ```bash
 npm run dev:api    # API en http://127.0.0.1:3000
@@ -104,9 +146,9 @@ El frontend redirige `/api` y `/images` al backend en desarrollo.
 00Master/        Contexto del proyecto: producto, stack, hitos, diccionario de datos
 001Reportes/     Tareas realizadas, pendientes y bloqueadas
 002Agents/       Roster de agentes y sus mandatos
-003Problemas/    21 problemas registrados, con su diagnóstico y su medición
+003Problemas/    22 problemas registrados, con su diagnóstico y su medición
 004Arquitectura/ 8 ADR, estrategia de las 3 APIs, flujos de datos, infraestructura
-005Registro/     Bitácora de las 17 sesiones de trabajo
+005Registro/     Bitácora de las 19 sesiones de trabajo
 Claude.md        Orquestador: contrato de operación y convenciones
 
 db/migrations/   SQL plano versionado, con migrador propio
@@ -147,6 +189,8 @@ sembrado lleva anotado si es `[OFICIAL]`, `[DERIVADO]` (con el cálculo) o `[EST
 | `npm run ingest` | Pobla el catálogo y cosecha imágenes |
 | `npm run dev:api` | Arranca la API (migra primero) |
 | `npm run dev:web` | Arranca el frontend |
+| `docker compose up --build` | Levanta el entorno completo: mysql, redis, api y web |
+| `docker compose --profile ingest run --rm ingest` | Ingesta dentro de Docker |
 
 ---
 

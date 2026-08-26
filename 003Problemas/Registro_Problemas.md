@@ -1,6 +1,6 @@
 # Registro de Problemas
 
-**Última actualización:** 2026-08-25 (S016) · **Abiertos:** 5 · **Cerrados:** 16
+**Última actualización:** 2026-08-25 (S019) · **Abiertos:** 5 · **Cerrados:** 17
 
 Severidad: 🔴 crítica · 🟠 alta · 🟡 media · ⚪ baja
 
@@ -622,3 +622,36 @@ de set; hasta que lo haga, el campo se queda dentro de la API. Registrado como *
 **Lección:** es la tercera vez que un problema sólo aparece al ejecutar de verdad (P-017 a escala,
 P-020 recorriendo el catálogo entero, y éste al arrancar el servidor). Los dobles de prueba son útiles
 para la lógica, pero **la fidelidad de sus datos determina lo que el test puede detectar**.
+
+---
+
+## P-023 ✅ CERRADO · La imagen de Docker se construía sin `dist/` y sin un solo error
+**Estado:** CERRADO el 2026-08-25 (S019)
+**Origen:** **levantar los contenedores de verdad** (T-004).
+
+**Detalle.** El primer `docker compose up` dejó la API en bucle de reinicio:
+
+```
+Error: Cannot find module '/app/apps/api/dist/index.js'
+```
+
+El `docker compose build` había terminado en verde. Dentro de la imagen estaban `src/`,
+`package.json` y `tsconfig.tsbuildinfo` — pero **no** `dist/`.
+
+**Causa.** Los patrones de `.dockerignore` **no son recursivos si no llevan `**/`**. `**/dist` sí
+excluía `apps/api/dist`, pero `*.tsbuildinfo` sólo excluía la raíz. El `tsconfig.tsbuildinfo` que el
+host tenía de un `npm run build` anterior viajó en el contexto de build; `tsc --build` lo leyó,
+concluyó que **la salida ya estaba al día** y no emitió nada. Salida cero, imagen sin código.
+
+**Solución.** Añadir `**/*.tsbuildinfo` a `.dockerignore`.
+
+**Por qué es un problema y no una errata.** Es la familia del *paso silencioso*, la misma de P-009,
+P-010, P-013, P-015 y P-017: algo decide no hacer trabajo y no lo dice. `tsc` no avisa de que ha
+optado por no compilar, así que un build incremental con un estado heredado que no le corresponde es
+**indistinguible de un build correcto** salvo por lo que falta al final. Y es la cuarta vez que un
+fallo sólo aparece al ejecutar de verdad (P-017 a escala, P-020 recorriendo el catálogo entero,
+P-022 arrancando el servidor, y éste levantando los contenedores).
+
+**Regla que deja:** todo estado incremental —`*.tsbuildinfo`, cachés de compilador, `dist/`— se
+excluye del contexto de build de forma **recursiva**. Una compilación dentro de una imagen debe
+partir siempre de cero.

@@ -1,9 +1,9 @@
 # 05 — Continuar aquí
 
-**Punto de guardado:** 2026-08-25, tras la sesión **S017**
-**Commit:** rama `main` · árbol limpio · 202 tests en verde
+**Punto de guardado:** 2026-08-25, tras la sesión **S019**
+**Commit:** rama `main` · 202 tests en verde · `npm audit` limpio
 
-Este documento existe para retomar el proyecto en otra máquina o en otra sesión sin releer las 17
+Este documento existe para retomar el proyecto en otra máquina o en otra sesión sin releer las 19
 bitácoras. Si sólo vas a leer un fichero, que sea éste.
 
 ---
@@ -18,7 +18,7 @@ crecer con completitud por set.
 
 | Hito | Estado |
 |---|---|
-| H0 Fundamentos | 🟡 sólo falta Docker (**T-004**) |
+| H0 Fundamentos | ✅ **cerrado en S019** — Docker Compose (T-004) |
 | H1 Esquema · H2 Ingesta · H3 API · H4 Sobres · H5 Frontend · H6 Cuentas | ✅ |
 | **H7 Constructor de mazos** | ⚪ **la última épica de producto** |
 | H8 Endurecimiento (Cypress, seguridad) | ⚪ |
@@ -27,15 +27,29 @@ crecer con completitud por set.
 
 ## 2. Lo primero al llegar a una máquina nueva
 
+Desde S019 hay un camino de un comando. Es el recomendado:
+
+```bash
+cp .env.example .env      # rellenar JWT_SECRET; ver README
+docker compose up --build
+docker compose --profile ingest run --rm ingest --game YGO --sets 2
+```
+
+Frontend en http://localhost:5173, API en http://localhost:3000. **MySQL se publica en el 3307**
+para no chocar con el MySQL que suele haber instalado en el 3306.
+
+El camino local sigue existiendo y es el que conviene para desarrollar con el depurador:
+
 ```bash
 npm install && npm run build
 mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS proyecto_tcg CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci"
-cp .env.example .env      # y rellenar; ver README
+cp .env.example .env
 npm run ingest -- --game YGO --sets 2
 npm run dev:api           # y en otra terminal: npm run dev:web
 ```
 
-**No hay que hacer nada con las migraciones**: se aplican solas al arrancar la API o el CLI.
+**No hay que hacer nada con las migraciones**: se aplican solas al arrancar la API o el CLI. Y en
+Docker tampoco hay que crear la base de datos: la crea la imagen de MySQL.
 
 `storage/` **no viaja en el repositorio** (son GB de imágenes). En una máquina nueva estará vacío y
 el CLI las descargará. Si vienes de una máquina donde ya estaban, cópialas: el job detecta las que ya
@@ -85,8 +99,9 @@ y datos que desaparecen sin un solo error en los logs.
 **Antes de elegir una clave natural, cuéntala.**
 
 ### 4.3 Los bugs que sólo aparecen a escala
-Tres veces ha pasado (P-017, P-020, P-022): probar con una muestra elegida a mano **no ejercita el
-mismo camino** que procesar el catálogo entero o arrancar el servidor de verdad. Los dobles de prueba
+Cuatro veces ha pasado (P-017, P-020, P-022, P-023): probar con una muestra elegida a mano **no
+ejercita el mismo camino** que procesar el catálogo entero, arrancar el servidor de verdad o
+levantar los contenedores. Los dobles de prueba
 son útiles para la lógica, pero **la fidelidad de sus datos determina lo que el test puede detectar**.
 
 ---
@@ -94,11 +109,10 @@ son útiles para la lógica, pero **la fidelidad de sus datos determina lo que e
 ## 5. Lo que está pendiente, por orden de interés
 
 ### El siguiente paso natural
-- **T-004 — Docker Compose** (🟠, corto). Cierra H0. Hoy levantar el entorno es un procedimiento
-  manual de varios pasos. Recomendado antes de H7, que se desarrollará más cómodo.
 - **H7 — Constructor de mazos** (la última épica de producto). CRUD + validadores por juego
   (RN-04 en `01_Producto.md`) + import/export. Es la primera vez que las reglas de cada juego
-  divergen de verdad en el código.
+  divergen de verdad en el código. Con T-004 cerrada, el entorno se levanta solo mientras se
+  desarrolla.
 
 ### Deuda con impacto medido
 | Tarea | Qué pasa si no se hace |
@@ -109,7 +123,7 @@ son útiles para la lógica, pero **la fidelidad de sus datos determina lo que e
 | **T-034** | Los sets de YGO anteriores a 2020 topan la completitud en ~70,7 % (P-021) |
 | **T-040** | El volteo de las cartas **nunca se ha visto funcionar**: en S017 `requestAnimationFrame` estaba parado |
 | **T-016** | Nada verifica que `GAME_IDS` de TypeScript y el seed SQL digan lo mismo |
-| **T-022** | Crear la base de datos sigue siendo manual |
+| **T-022** | Crear la base de datos sigue siendo manual **en el camino local**; en Docker ya no |
 | **T-023** | La ingesta acotada procesa primero sets futuros y promocionales |
 
 ### Bloqueada por ti
@@ -127,7 +141,7 @@ son útiles para la lógica, pero **la fidelidad de sus datos determina lo que e
 | **P-016** | 🟠 | La API de Pokémon responde 200 sólo ~30 % de las veces. La ingesta **debe** poder reanudarse |
 | **P-021** | 🟡 | Sets de YGO pre-2020: completitud topada al 70,7 % |
 
-Los 21 problemas —16 cerrados, con su medición— están en `003Problemas/Registro_Problemas.md`.
+Los 22 problemas —17 cerrados, con su medición— están en `003Problemas/Registro_Problemas.md`.
 
 ---
 
@@ -148,11 +162,17 @@ El contrato está en `Claude.md`. Lo esencial:
 - El código fuente se mantiene en **ASCII puro**; los caracteres no-ASCII se construyen con
   `String.fromCharCode` o propiedades Unicode.
 - **`npm audit` limpio** es criterio de aceptación de toda tarea que toque dependencias.
+- Todo **estado incremental** (`*.tsbuildinfo`, `dist/`) se excluye del contexto de build de Docker
+  de forma **recursiva** (`**/`). En S019 un `tsconfig.tsbuildinfo` colado desde el host convenció a
+  `tsc` de que ya estaba todo compilado: la imagen salió sin `dist/` y el build terminó en verde
+  (P-023).
 
 ---
 
 ## 8. Notas de entorno (Windows)
 
+- **Docker Desktop** está instalado (Docker 29.5.3 · Compose v5.1.4) pero no arranca solo: si
+  `docker info` falla, `docker desktop start`.
 - MySQL 8.0.42 en `C:\Program Files\MySQL\MySQL Server 8.0`. Para verificar sin tocar la instancia
   del usuario, las sesiones han levantado instancias temporales con `mysqld --initialize-insecure`
   en un datadir aparte y puerto 3399.

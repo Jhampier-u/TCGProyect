@@ -1,14 +1,16 @@
 # Tareas Pendientes
 
-**Última actualización:** 2026-08-25 (S012) · **Total abiertas:** 6
+**Última actualización:** 2026-08-25 (S019) · **Total abiertas:** 8 — 7 del proyecto + T-005, que depende de ti
 
 Leyenda de prioridad: 🔴 crítica · 🟠 alta · 🟡 media · ⚪ baja
 
-## Hito H0 — Fundamentos
+## Hito H0 — Fundamentos ✅ COMPLETADO (S019)
+
+T-004 cerrada: `docker compose up --build` levanta mysql, redis, api y web sin ningún paso manual
+previo. Sólo queda una tarea, y depende de ti, no del proyecto.
 
 | ID | Tarea | Agente | Prio | Depende de |
 |---|---|---|---|---|
-| T-004 | `docker-compose.yml` con mysql, redis, api, web | Arquitectura | 🟠 | ✅ T-003 hecha |
 | T-005 | Obtener API key de Pokémon TCG en dev.pokemontcg.io | Usuario | 🟠 | — |
 
 ## Hito H1 — Esquema de datos ✅ COMPLETADO
@@ -29,7 +31,7 @@ hechos y verificados contra los orígenes reales.
 | T-040 | Verificar el **volteo** de las cartas con el panel del navegador visible o en Cypress (H8). En S017 no se pudo: `requestAnimationFrame` estaba parado (0 fotogramas en 500 ms), así que ninguna animación podía avanzar. La lógica sí quedó verificada | QA | 🟡 |
 | T-035 | Cosechar también los **iconos de set**. Hoy `sets.icon_url` apunta al origen y por eso la API no lo expone (ver **P-022**); sin iconos propios, el selector de sets no puede mostrarlos | Backend | 🟡 |
 | T-034 | Plantillas por época para los sets de Yu-Gi-Oh! **anteriores a 2020**. Hoy topan la completitud en ~70,7 % (ver **P-021**). La tabla histórica de Yugipedia ya está capturada en P-019; el blóqueo real es que hace falta un paso de asignación de plantilla posterior a la ingesta | Base de Datos / Backend | ⚪ |
-| T-022 | Guion `db:migrate` que cree la base de datos si falta y ejecute el migrador. Hoy ese paso previo es manual (ver S011) | Backend | 🟡 |
+| T-022 | Guion `db:migrate` que cree la base de datos si falta y ejecute el migrador. **Sólo afecta ya al arranque local**: en Docker la crea la imagen de MySQL (S019) | Backend | ⚪ |
 | T-023 | Revisar el orden de `findPendingSets`: `released_at DESC` hace que una ejecución acotada procese primero sets **futuros** y promocionales en vez de los jugables (ver S011) | Backend | ⚪ |
 | T-019 | `card_prints.image_failed_at` o similar. Hoy una URL de imagen permanentemente rota se reintenta en cada ejecución del job, para siempre (ver S010) | Base de Datos | 🟡 |
 | T-016 | Test que detecte *drift* entre `GAME_IDS` de `@tcg/shared` y el seed SQL de `games`. Hoy la correspondencia 1=MTG/2=YGO/3=PTCG vive en dos sitios sin nada que la verifique | QA | 🟡 |
