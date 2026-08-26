@@ -1,6 +1,6 @@
 # Tareas Pendientes
 
-**Última actualización:** 2026-08-26 (S028) · **Total abiertas:** 2 — 1 del proyecto (T-067) + T-005, que depende de ti
+**Última actualización:** 2026-08-26 (S028) · **Total abiertas:** 2 — 1 del proyecto (T-073) + T-005, que depende de ti
 
 Leyenda de prioridad: 🔴 crítica · 🟠 alta · 🟡 media · ⚪ baja
 
@@ -64,7 +64,7 @@ hacerlas.
 
 | ID | Tarea | Agente | Prio |
 |---|---|---|---|
-| T-067 | Plantilla propia para los sets de composición atípica. **MAMO y MAMS** no tienen ni una carta común y la plantilla pide ocho. **Black Bolt y White Flare** tienen 69 Illustration Rare de 172 impresiones —el 40 % del set frente al 8 % de un booster normal— y su plantilla les da el 10,2 %. En los cuatro casos la carta del chase ya es alcanzable; lo que falta es que el sobre se parezca al producto | Base de Datos | ⚪ |
+| T-073 | **La fidelidad de *Black Bolt* / *White Flare***. Salieron hace 404 días y están completos (172 de 172 declaradas), pero tienen 69 Illustration Rare de 172 impresiones —el 40 % del set frente al 8 % de un booster normal— y su plantilla les da el 10,2 %. Todas las cartas son alcanzables; lo que falta es que el sobre se parezca al producto, y para eso hacen falta tasas que nadie publica | Base de Datos | ⚪ |
 
 ### Además, anotado al hacer T-035
 

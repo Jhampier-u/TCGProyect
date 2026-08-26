@@ -1,7 +1,7 @@
 # 05 — Continuar aquí
 
 **Punto de guardado:** 2026-08-26, tras la sesión **S028**
-**Commit:** rama `main` · 381 tests de Vitest + 10 recorridos E2E en verde · `npm audit` limpio
+**Commit:** rama `main` · 384 tests de Vitest + 10 recorridos E2E en verde · `npm audit` limpio
 
 Este documento existe para retomar el proyecto en otra máquina o en otra sesión sin releer las 26
 bitácoras. Si sólo vas a leer un fichero, que sea éste.
@@ -158,10 +158,10 @@ son útiles para la lógica, pero **la fidelidad de sus datos determina lo que e
 **Los ocho hitos están cerrados** y no queda nada bloqueante. Lo único abierto del proyecto es una tarea de
 producto, y tiene una decisión detrás que conviene tomar antes de teclear:
 
-- **T-067** — plantilla propia para los sets de composición atípica. MAMO y MAMS no tienen ni una
-  carta común y la plantilla pide ocho; *Black Bolt* y *White Flare* tienen el 40 % del set en
-  Illustration Rare. Las cartas del chase ya son alcanzables: lo que falta es que el sobre se parezca
-  al producto, y para eso hacen falta tasas que nadie ha medido.
+- **T-073** — la fidelidad de *Black Bolt* / *White Flare*. Tienen el 40 % del set en Illustration
+  Rare y su plantilla les da el 10,2 %. Todas sus cartas son alcanzables; lo que falta es que el
+  sobre se parezca al producto, y para eso hacen falta tasas que nadie publica. Es lo único que queda
+  y es ⚪ con motivo.
 
 **Cómo se ejecuta la suite:**
 
@@ -179,7 +179,7 @@ Las ocho tareas de H8c están cerradas. Lo que queda abierto salió de hacerlas,
 
 | Tarea | Qué pasa si no se hace |
 |---|---|
-| **T-067** | MAMO y MAMS no tienen comunes y la plantilla pide ocho: alcanzable pero no realista |
+| **T-073** | *Black Bolt* y *White Flare*: 40 % del set en Illustration Rare, la plantilla les da el 10,2 % |
 
 ### Bloqueada por ti
 - **T-005 — API key de Pokémon TCG** (`dev.pokemontcg.io`). Sin ella la API responde igual pero con

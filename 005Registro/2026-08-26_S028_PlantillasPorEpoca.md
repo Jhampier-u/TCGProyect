@@ -456,6 +456,56 @@ esperar tres cosas iguales. Del DOM no se deduce: sale de abrir la captura.
 prueba no tenía cartas. Un test que nunca corre no prueba nada, así que ahora abre un sobre él mismo
 en vez de depender de que otro lo haya hecho — y de paso deja de depender del orden de ejecución.
 
+---
+
+# Séptima parte: T-067, y la ficha se equivocaba
+
+T-067 estaba fichada como *"plantilla propia para los sets de composición atípica"*, y para dos de los
+cuatro la medición dice otra cosa:
+
+```
+MAMO  sale en   9 dias · el origen declara  18 cartas · ingestadas 206
+MAMS  sale en  78 dias · el origen declara  24 cartas · ingestadas  66
+BLK   salio hace 404   ·                   172        ·            172
+```
+
+**No son productos raros: son sets a medio revelar.** *Magnificent Maestros* son 24 cartas, y el
+catálogo tiene 24 ultra + 24 starlight + 18 grand master **de esas mismas 24** — sólo se han
+anunciado los tratamientos premium. Las comunes llegarán el día que salga.
+
+Y eso **no se ve mirando la composición**: parece un set premium sin comunes. Se ve mirando la fecha.
+
+Abrirlo hoy entregaba **8,98 ultra rare por sobre** sobre 200 sobres, con **1600 avisos** del motor
+—ocho por sobre, uno por cada slot de común que cae al respaldo—.
+
+**Ninguna plantilla arregla eso: faltan las cartas, no las probabilidades.** Así que la fecha de
+salida se une a las reglas de "abrible", que es una regla **objetiva** en vez de otra estimación. Y
+como la reclasificación corre en cada pasada del CLI, el set se vuelve abrible **solo** el día que
+sale, sin que nadie tenga que acordarse.
+
+Detalle que evita un fallo que sólo aparecería en algunos husos: las fechas se comparan como cadenas
+`YYYY-MM-DD`. `new Date()` sobre una fecha suelta la interpreta en UTC, y la respuesta cambiaría
+según dónde corra el proceso. El día de salida cuenta ya como salido, y un set sin fecha no se toca.
+
+## Lo que sí queda, dicho con su motivo (T-073)
+
+*Black Bolt* y *White Flare* **sí** son atípicos de verdad: salieron hace 404 días, están completos
+—172 de 172 declaradas— y tienen **69 Illustration Rare de 172 impresiones**, el 40 % del set frente
+al 8 % de un booster normal. Su plantilla les da el 10,2 %.
+
+Todas sus cartas son alcanzables; lo que falta es que el sobre se parezca al producto. **Ése sí
+necesita tasas que nadie publica**, así que se registra en vez de inventarse.
+
+## Verificación de la séptima parte
+
+| Comprobación | Resultado |
+|---|---|
+| `npm test` | **384/384** en 31 ficheros |
+| Suite E2E | 10 passed |
+| Reclasificación | 7 sets cambiaron; MAMO y MAMS dejan de ofrecerse |
+| `npm run packs:cobertura` | "Todos los sets son completables" en los tres juegos |
+| Sets sin publicar en el catálogo | 8 en Magic, 2 en Yu-Gi-Oh!, 0 en Pokémon |
+
 ## Lo que NO se ha hecho, y por qué
 
 | ID | Qué queda |
@@ -476,5 +526,5 @@ que hace la aplicación, pero conviene saberlo antes de sacar conclusiones de es
 - **H8 cerrado.** H8a (suite E2E), H8b (seguridad) y H8c (las ocho de deuda técnica).
 - **T-068, T-069 y T-070 cerradas también**, fuera de H8c: las tres salieron del informe que se
   escribió para T-034.
-- Abiertas: T-067 y T-005, que depende del usuario. Ninguna bloquea nada.
+- Abiertas: **T-073** y T-005, que depende del usuario. Ninguna bloquea nada.
 - Problemas: 5 abiertos · 33 cerrados.
