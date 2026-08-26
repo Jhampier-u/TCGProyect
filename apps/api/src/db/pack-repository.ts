@@ -34,6 +34,10 @@ export class PackRepositoryMysql implements PackRepository {
    * Un `CASE` explicito y no un `ORDER BY (x IS NULL)`: con tres niveles, el
    * truco de ordenar por un booleano deja de leerse solo.
    *
+   * Un set que NO es un producto de sobres no resuelve ninguna plantilla
+   * (T-069). Es la barrera del servidor: la interfaz ya no los ofrece, pero un
+   * POST directo llegaria igual.
+   *
    * Un set sin `released_at` cae al nivel 3, que es lo correcto: sin fecha no
    * hay epoca. Y una plantilla de epoca lleva `is_default = 0` a proposito --
    * `uq_templates_one_default` solo admite una por (juego, set), asi que
@@ -45,7 +49,7 @@ export class PackRepositoryMysql implements PackRepository {
     }>(
       `SELECT t.id, t.game_id, t.name, t.card_count
        FROM pack_templates t
-       JOIN sets s ON s.game_id = t.game_id AND s.id = ?
+       JOIN sets s ON s.game_id = t.game_id AND s.id = ? AND s.is_openable = 1
        WHERE
              (t.set_id = s.id AND t.is_default = 1)
           OR (t.set_id IS NULL

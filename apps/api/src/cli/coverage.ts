@@ -33,11 +33,23 @@ async function main(): Promise<void> {
     for (const game of ['MTG', 'YGO', 'PTCG'] as GameCode[]) {
       if (filtro && filtro !== game) continue;
 
-      // Solo los sets con pool: un set sin impresiones abribles no es un sobre.
+      // Solo los sets con pool Y clasificados como producto de sobres (T-069).
       const sets = await db.select<{ id: number; code: string; released_at: string | null }>(
         `SELECT DISTINCT s.id, s.code, s.released_at
            FROM sets s JOIN card_prints p ON p.set_id = s.id AND p.in_boosters = 1
-          WHERE s.game_id = ? ORDER BY s.released_at`,
+          WHERE s.game_id = ? AND s.is_openable = 1 ORDER BY s.released_at`,
+        [GAME_IDS[game]],
+      );
+
+      // Lo que la clasificacion ha dejado FUERA, con nombre y todo. Los
+      // patrones de nombre son heuristica (T-069): uno demasiado ancho quitaria
+      // del catalogo un set de sobres real, y eso es peor que el problema que
+      // arregla. Por eso se ven aqui en vez de perderse en silencio.
+      const excluidos = await db.select<{ name: string; card_count: number }>(
+        `SELECT DISTINCT s.name, s.card_count
+           FROM sets s JOIN card_prints p ON p.set_id = s.id AND p.in_boosters = 1
+          WHERE s.game_id = ? AND s.is_openable = 0
+          ORDER BY s.card_count DESC`,
         [GAME_IDS[game]],
       );
 
@@ -93,6 +105,13 @@ async function main(): Promise<void> {
       console.log('  reparto por plantilla:');
       for (const [nombre, n] of [...reparto].sort((a, b) => b[1] - a[1])) {
         console.log(`    ${String(n).padStart(5)}  ${nombre}`);
+      }
+
+      if (excluidos.length > 0) {
+        console.log(`  ${excluidos.length} sets con pool NO se ofrecen (T-069), los mayores:`);
+        for (const e of excluidos.slice(0, 8)) {
+          console.log(`    ${String(e.card_count).padStart(5)} cartas  ${e.name}`);
+        }
       }
 
       // T-070. Se informa y NO se sale con codigo 1: una plantilla generica

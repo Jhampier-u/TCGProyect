@@ -79,6 +79,9 @@ export const LIST_SETS = {
               name: { type: 'string' },
               releasedAt: { type: ['string', 'null'] },
               cardCount: { type: 'integer' },
+              // T-069: si el set es un producto de sobres. Sale para que la
+              // pagina de sobres no ofrezca abrir una caja de mazos (P-033).
+              isOpenable: { type: 'boolean' },
               // `iconUrl` NO se expone, y no se expondra nunca:
               // `sets.icon_url` guarda la URL del ORIGEN
               // (images.ygoprodeck.com), y servirla al navegador es

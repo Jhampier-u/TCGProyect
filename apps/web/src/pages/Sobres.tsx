@@ -34,10 +34,16 @@ export function Sobres() {
   });
   const tiers = new Map((rarezas.data ?? []).map((r) => [r.code, r.tier]));
 
-  // Solo se ofrecen sets ABRIBLES. `poolSize` cuenta las impresiones con
-  // `in_boosters = 1`: un set 100% promocional tiene 0 y abrirlo devolveria un
-  // 422 (P-014). Mejor no ofrecerlo que dejar al usuario chocar con el error.
-  const abribles = (sets.data ?? []).filter((s) => s.poolSize > 0);
+  // Solo se ofrecen sets ABRIBLES, y hacen falta las dos condiciones:
+  //
+  //   `poolSize > 0`  cuenta las impresiones con `in_boosters = 1`: un set 100%
+  //                   promocional tiene 0 y abrirlo devolveria un 422 (P-014).
+  //   `isOpenable`    dice si el set es un PRODUCTO de sobres. Una caja de
+  //                   Structure Decks tiene 153 impresiones y pool de sobra, y
+  //                   aun asi no se abre en sobres (T-069, P-033).
+  //
+  // Mejor no ofrecerlo que dejar al usuario chocar con el error.
+  const abribles = (sets.data ?? []).filter((s) => s.poolSize > 0 && s.isOpenable);
 
   const abrir = useMutation({
     mutationFn: async () => {

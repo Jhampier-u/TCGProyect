@@ -105,10 +105,10 @@ export class CatalogQueryRepository {
   async listSets(game: GameCode): Promise<SetSummary[]> {
     const rows = await this.db.select<{
       id: number; external_id: string; code: string; name: string; released_at: string | null;
-      card_count: number; icon_url: string | null; icon_local_path: string | null;
+      card_count: number; is_openable: number; icon_url: string | null; icon_local_path: string | null;
       pool_size: number;
     }>(
-      `SELECT s.id, s.external_id, s.code, s.name, s.released_at, s.card_count, s.icon_url,
+      `SELECT s.id, s.external_id, s.code, s.name, s.released_at, s.card_count, s.is_openable, s.icon_url,
               s.icon_local_path,
               COUNT(p.id) AS pool_size
        FROM sets s
@@ -125,6 +125,7 @@ export class CatalogQueryRepository {
       name: r.name,
       releasedAt: r.released_at,
       cardCount: Number(r.card_count),
+      isOpenable: Number(r.is_openable) === 1,
       iconUrl: r.icon_url,
       iconPath: r.icon_local_path,
       poolSize: Number(r.pool_size),

@@ -3,6 +3,7 @@ import { GAME_IDS } from '@tcg/shared';
 import type { Database } from './connection.js';
 import type { ImageRepository, PendingImage } from '../images/types.js';
 import { iconKeyFromUrl } from '../images/image-harvester.js';
+import { clasificarSet } from '../ingest/openable.js';
 
 /**
  * Tamano de lote para los upserts.
@@ -47,14 +48,19 @@ export class CatalogRepository implements ImageRepository {
         s.name,
         s.releasedAt,
         s.cardCount,
+        // T-069: si el set es un producto de sobres. Se decide aqui, con el
+        // nombre y el tamano que el origen declara, y no se toca `in_boosters`:
+        // son dos cosas distintas y confundirlas es P-033.
+        clasificarSet({ game: s.game, name: s.name, cardCount: s.cardCount }).abrible ? 1 : 0,
         s.iconUrl,
       ]);
       await this.db.query(
-        `INSERT INTO sets (game_id, external_id, code, name, released_at, card_count, icon_url)
+        `INSERT INTO sets (game_id, external_id, code, name, released_at, card_count, is_openable, icon_url)
          VALUES ?
          ON DUPLICATE KEY UPDATE
            code = VALUES(code), name = VALUES(name),
            released_at = VALUES(released_at), card_count = VALUES(card_count),
+           is_openable = VALUES(is_openable),
            icon_url = VALUES(icon_url)`,
         [values],
       );
@@ -103,6 +109,49 @@ export class CatalogRepository implements ImageRepository {
       [GAME_IDS[game], ...externalIds],
     );
     return rows.map((r) => ({ id: Number(r.id), externalId: r.external_id }));
+  }
+
+  /**
+   * Vuelve a clasificar TODOS los sets (T-069).
+   *
+   * `upsertSets` decide `is_openable` al ingestar, pero eso solo alcanza a lo
+   * que se vuelva a ingestar. Los sets que ya estan en la base se quedarian con
+   * el valor por defecto -- abribles -- hasta que alguien reingestara los tres
+   * juegos enteros, que son horas de descargas.
+   *
+   * Esto los recorre y aplica el mismo clasificador, que sigue siendo la unica
+   * fuente de verdad. Es barato (unos miles de filas) e idempotente, asi que
+   * corre en cada ejecucion del CLI y no hace falta acordarse de nada.
+   *
+   * Devuelve cuantos han cambiado de valor, para que el CLI pueda decirlo.
+   */
+  async reclasificarSets(): Promise<number> {
+    const rows = await this.db.select<{
+      id: number; game_id: number; name: string; card_count: number; is_openable: number;
+    }>(`SELECT id, game_id, name, card_count, is_openable FROM sets`);
+
+    const cambian: number[] = [];
+    const abren: number[] = [];
+    for (const r of rows) {
+      const abrible = clasificarSet({
+        game: gameCodeOf(Number(r.game_id)),
+        name: r.name,
+        cardCount: Number(r.card_count),
+      }).abrible;
+      if (abrible === (Number(r.is_openable) === 1)) continue;
+      (abrible ? abren : cambian).push(Number(r.id));
+    }
+
+    for (const [ids, valor] of [[cambian, 0], [abren, 1]] as const) {
+      for (const lote of chunks(ids, BATCH_SIZE)) {
+        if (lote.length === 0) continue;
+        await this.db.query(
+          `UPDATE sets SET is_openable = ? WHERE id IN (${lote.map(() => '?').join(', ')})`,
+          [valor, ...lote],
+        );
+      }
+    }
+    return cambian.length + abren.length;
   }
 
   async markSetIngested(setId: number): Promise<void> {

@@ -128,6 +128,8 @@ export interface SetSummary {
   name: string;
   releasedAt: string | null;
   cardCount: number;
+  /** Si el set es un producto de sobres. Un Structure Deck no lo es (T-069). */
+  isOpenable: boolean;
   /**
    * Ruta LOCAL del icono, relativa al almacen de imagenes (T-035). Nunca una
    * URL externa: enlazar en caliente el origen es P-001. `null` mientras el

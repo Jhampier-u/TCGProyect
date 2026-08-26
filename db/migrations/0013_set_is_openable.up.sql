@@ -1,0 +1,44 @@
+-- =====================================================================
+-- ProyectoTCG - Migracion 0013 - sets.is_openable
+-- Agente: Base de Datos - Tarea: T-069 - Sesion: S028
+-- CORRIGE P-033
+-- =====================================================================
+-- POR QUE
+--
+-- La aplicacion ofrece abrir sobres de productos que no son sobres.
+-- `Legendary Arc-V Decks` es una caja de tres Structure Decks y sus 153
+-- impresiones estan marcadas `in_boosters = 1`, asi que tiene pool y sale como
+-- abrible.
+--
+-- La suposicion de P-014 decia: "en Yu-Gi-Oh! y Pokemon los productos que no
+-- son sobres son sets APARTE, no cartas dentro de un set de sobres". Es cierta,
+-- y por eso mismo insuficiente: los adaptadores marcan `in_boosters = true`
+-- para TODOS los sets de esos juegos, incluidos los que son aparte precisamente
+-- por no ser sobres.
+--
+-- POR QUE UNA COLUMNA EN `sets` Y NO TOCAR `in_boosters`
+--
+-- Son dos cosas distintas y confundirlas es el error que P-033 describe:
+--
+--   `card_prints.in_boosters` = "esta impresion puede salir de un sobre DE SU
+--       SET". Es por impresion: en Magic hay cartas que existen en un set pero
+--       no en sus sobres.
+--   `sets.is_openable`        = "este set es un producto de sobres". Es por set.
+--
+-- Ademas, corregir una mala clasificacion aqui es un UPDATE de una fila. Si
+-- viviera en `in_boosters` habria que reingestar el set entero.
+--
+-- EL VALOR POR DEFECTO ES 1 A PROPOSITO
+--
+-- Un set que nadie ha clasificado se comporta como hasta ahora. Equivocarse
+-- hacia "abrible" deja el estado actual; equivocarse hacia "no abrible" hace
+-- desaparecer contenido real sin que nadie se entere, que es peor.
+--
+-- NO LLEVA `USE`: ver la cabecera de la 0007 (P-032).
+-- =====================================================================
+
+ALTER TABLE sets
+  ADD COLUMN is_openable TINYINT(1) NOT NULL DEFAULT 1 AFTER card_count;
+
+-- No se anade indice: `listSets` ya recorre los sets de un juego filtrando por
+-- `game_id`, que si esta indexado, y son centenares de filas, no millones.

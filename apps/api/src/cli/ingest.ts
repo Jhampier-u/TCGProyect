@@ -100,6 +100,14 @@ async function main(): Promise<void> {
     },
   ];
 
+  // T-069. Barato e idempotente, asi que corre siempre: sin esto, los sets ya
+  // ingestados se quedarian con el valor por defecto hasta que alguien
+  // reingestara los tres juegos enteros.
+  const reclasificados = await repo.reclasificarSets();
+  if (reclasificados > 0) {
+    console.log(`[sets] ${reclasificados} han cambiado de "abrible" tras reclasificar.`);
+  }
+
   if (!opciones.imagesOnly) {
     for (const { game, adapter } of adaptadores) {
       if (opciones.game !== 'ALL' && opciones.game !== game) continue;

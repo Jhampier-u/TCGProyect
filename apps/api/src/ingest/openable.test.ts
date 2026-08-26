@@ -1,0 +1,94 @@
+import { describe, it, expect } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { clasificarSet, CARTAS_POR_SOBRE } from './openable.js';
+import { GAME_IDS, type GameCode } from '@tcg/shared';
+
+/** Nombres reales del catalogo, no inventados. */
+const SOBRES_DE_VERDAD = [
+  'Ignition Assault',
+  'Tactical Evolution',
+  'Ancient Sanctuary',
+  'Toon Chaos',
+  'Hidden Arsenal',
+  'Legend of Blue Eyes White Dragon',
+  'Breakers of Shadow',
+  "Pharaoh's Servant (25th Anniversary Edition)",
+  'GX Next Generation',
+  'War of the Giants Reinforcements',
+];
+
+const NO_SON_SOBRES = [
+  'Legendary Arc-V Decks',
+  'Structure Deck: Shaddoll Showdown',
+  'Starter Deck: Yugi',
+  'Yu-Gi-Oh! ARC-V Volume 2 promotional card',
+  'Mattel Action Figure promotional cards: Series 3',
+  'Shonen Jump Championship 2004 Prize Card',
+  'Duelist League Series 1 participation cards',
+  'Demo Deck 2015',
+  "Yugi's Collector Box",
+  'Duelist Revolution Sneak Peek Participation Card',
+  'Speed Duel Starter Decks: Twisted Nightmares',
+];
+
+describe('clasificarSet (T-069)', () => {
+  it('deja abribles los sets de sobres de verdad', () => {
+    for (const name of SOBRES_DE_VERDAD) {
+      const r = clasificarSet({ game: 'YGO', name, cardCount: 100 });
+      expect(r.abrible, `"${name}" deberia seguir siendo abrible: ${r.motivo ?? ''}`).toBe(true);
+    }
+  });
+
+  it('descarta los productos que no son de sobres', () => {
+    for (const name of NO_SON_SOBRES) {
+      const r = clasificarSet({ game: 'YGO', name, cardCount: 100 });
+      expect(r.abrible, `"${name}" no es un producto de sobres`).toBe(false);
+      expect(r.motivo).toBeTruthy();
+    }
+  });
+
+  it('descarta lo que no da ni para un sobre, sin mirar el nombre', () => {
+    // Aritmetica, no heuristica: un sobre de Yu-Gi-Oh! son 9 cartas. 520 sets
+    // del catalogo declaran menos, y 417 en Magic sobre 14.
+    expect(clasificarSet({ game: 'YGO', name: 'Un Set Cualquiera', cardCount: 8 }).abrible).toBe(false);
+    expect(clasificarSet({ game: 'YGO', name: 'Un Set Cualquiera', cardCount: 9 }).abrible).toBe(true);
+    expect(clasificarSet({ game: 'MTG', name: 'Stardates', cardCount: 1 }).abrible).toBe(false);
+    expect(clasificarSet({ game: 'PTCG', name: 'Un Set Cualquiera', cardCount: 10 }).abrible).toBe(true);
+  });
+
+  it('el motivo dice cual de las dos reglas ha sido', () => {
+    expect(clasificarSet({ game: 'YGO', name: 'Starter Deck: Kaiba', cardCount: 50 }).motivo)
+      .toContain('Starter Deck');
+    expect(clasificarSet({ game: 'YGO', name: 'Un Set Cualquiera', cardCount: 3 }).motivo)
+      .toContain('9');
+  });
+
+  it('un cardCount desconocido no descarta el set', () => {
+    // La API puede no declararlo. Ante la duda, abrible: equivocarse hacia "no
+    // abrible" hace desaparecer contenido real sin que nadie se entere.
+    expect(clasificarSet({ game: 'YGO', name: 'Un Set Cualquiera', cardCount: 0 }).abrible).toBe(true);
+  });
+});
+
+describe('CARTAS_POR_SOBRE no puede desviarse del seed', () => {
+  it('coincide con el `card_count` de las plantillas por defecto de la 0003', () => {
+    // Misma familia que el test de deriva de T-016. Si alguien cambia el tamano
+    // de un sobre en la migracion y no aqui, sets legitimos empezarian a
+    // desaparecer del catalogo -- o al reves -- sin un solo error.
+    const sql = readFileSync(
+      fileURLToPath(new URL('../../../../db/migrations/0003_seed_pack_templates.sql', import.meta.url)),
+      'utf8',
+    );
+
+    const delSeed = new Map<number, number>();
+    for (const m of sql.matchAll(/\(\s*\d+,\s*(\d+),\s*NULL,\s*'[^']*',\s*(\d+),\s*1\s*\)/g)) {
+      delSeed.set(Number(m[1]), Number(m[2]));
+    }
+
+    expect(delSeed.size).toBe(3);
+    for (const [game, cartas] of Object.entries(CARTAS_POR_SOBRE)) {
+      expect(delSeed.get(GAME_IDS[game as GameCode]), `${game} no coincide con el seed`).toBe(cartas);
+    }
+  });
+});
