@@ -4,6 +4,8 @@ import { Catalogo } from './pages/Catalogo.js';
 import { Acceso } from './pages/Acceso.js';
 import { Sobres } from './pages/Sobres.js';
 import { Coleccion } from './pages/Coleccion.js';
+import { Mazos } from './pages/Mazos.js';
+import { MazoEditor } from './pages/MazoEditor.js';
 
 /** Ruta que exige sesion. Redirige a /acceso conservando la intencion. */
 function Protegida({ children }: { children: React.ReactNode }) {
@@ -32,6 +34,9 @@ export function App() {
           <NavLink to="/coleccion" className={({ isActive }) => (isActive ? 'activo' : '')}>
             Mi coleccion
           </NavLink>
+          <NavLink to="/mazos" className={({ isActive }) => (isActive ? 'activo' : '')}>
+            Mis mazos
+          </NavLink>
         </nav>
         <div className="cabecera-derecha">
           {user ? (
@@ -51,6 +56,8 @@ export function App() {
           <Route path="/acceso" element={<Acceso />} />
           <Route path="/sobres" element={<Protegida><Sobres /></Protegida>} />
           <Route path="/coleccion" element={<Protegida><Coleccion /></Protegida>} />
+          <Route path="/mazos" element={<Protegida><Mazos /></Protegida>} />
+          <Route path="/mazos/:id" element={<Protegida><MazoEditor /></Protegida>} />
           <Route path="*" element={<div className="vacio">Pagina no encontrada.</div>} />
         </Routes>
       </main>
