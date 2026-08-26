@@ -63,7 +63,10 @@ CMD ["node", "apps/api/dist/index.js"]
 # ---------------------------------------------------------------------------
 FROM deps AS web
 WORKDIR /app
-COPY tsconfig.base.json tsconfig.json ./
+# El tsconfig.json RAIZ no viaja a proposito (P-025): referencia ./apps/api,
+# cuyo tsconfig no esta en esta imagen, y Vite lo sigue al transformar
+# @tcg/shared. Aqui solo hace falta la base, que es de la que hereda el paquete.
+COPY tsconfig.base.json ./
 COPY packages/shared packages/shared
 COPY apps/web apps/web
 

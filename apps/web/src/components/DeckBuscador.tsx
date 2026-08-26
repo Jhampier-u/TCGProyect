@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { GameCode } from '@tcg/shared';
 import { api, imageUrl, type CardSummary } from '../lib/api.js';
 import type { DraftCard } from '../lib/deck-draft.js';
@@ -16,6 +16,7 @@ export function DeckBuscador({ game, onAnadir }: DeckBuscadorProps) {
   const [set, setSet] = useState('');
   const [pidiendo, setPidiendo] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const cliente = useQueryClient();
 
   // Retardo para no consultar en cada tecla.
   useEffect(() => {
@@ -37,14 +38,24 @@ export function DeckBuscador({ game, onAnadir }: DeckBuscadorProps) {
    * Anadir pide el DETALLE de la impresion.
    *
    * `/api/cards` no trae `gameData`, y sin el no se puede validar la banlist de
-   * Yu-Gi-Oh! ni distinguir la Energia Basica de la Especial. React Query lo
-   * cachea y las cartas son inmutables: solo se paga la primera vez.
+   * Yu-Gi-Oh! ni distinguir la Energia Basica de la Especial.
+   *
+   * Va por `fetchQuery` y NO por `api.card` directamente: una llamada suelta no
+   * pasa por la cache de React Query y volver a anadir la misma carta pedia el
+   * detalle otra vez. `staleTime: Infinity` porque una carta ya cosechada es
+   * inmutable. Verificado en el panel de red (P-026).
    */
   const anadir = async (carta: CardSummary) => {
     setPidiendo(carta.printId);
     setError(null);
     try {
-      const detalle = (await api.card(carta.printId)).data;
+      const detalle = (
+        await cliente.fetchQuery({
+          queryKey: ['card', carta.printId],
+          queryFn: () => api.card(carta.printId),
+          staleTime: Infinity,
+        })
+      ).data;
       onAnadir({
         printId: detalle.printId,
         cardId: detalle.cardId,

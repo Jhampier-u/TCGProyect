@@ -71,7 +71,11 @@ export function DeckValidacion(props: DeckValidacionProps) {
     <>
       <div className="barra-guardar">
         <span className={`estado ${validation.valid ? 'valido' : 'invalido'}`}>
-          {validation.valid ? 'Mazo valido' : `${validation.issues.length} cosas por resolver`}
+          {validation.valid
+            ? 'Mazo valido'
+            : `${validation.issues.length} ${
+                validation.issues.length === 1 ? 'cosa' : 'cosas'
+              } por resolver`}
         </span>
         <button onClick={onGuardar} disabled={!sucio || guardando}>
           {guardando ? 'Guardando...' : sucio ? 'Guardar' : 'Guardado'}
