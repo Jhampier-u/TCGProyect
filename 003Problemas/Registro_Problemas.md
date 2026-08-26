@@ -1,6 +1,6 @@
 # Registro de Problemas
 
-**Última actualización:** 2026-08-25 (S020) · **Abiertos:** 5 · **Cerrados:** 18
+**Última actualización:** 2026-08-25 (S021) · **Abiertos:** 5 · **Cerrados:** 20
 
 Severidad: 🔴 crítica · 🟠 alta · 🟡 media · ⚪ baja
 
@@ -701,3 +701,62 @@ lo que sí**.
 
 **Regla que deja:** un test sólo cuenta cuando se le ha visto fallar. Y cuando el doble sustituye
 justo a la función que se quiere probar, el test no prueba nada.
+
+---
+
+## P-025 ✅ CERRADO · La imagen web de Docker llevaba rota dos sesiones
+**Estado:** CERRADO el 2026-08-25 (S021)
+**Origen:** abrir la aplicacion en el contenedor por primera vez desde que el frontend importa un
+**valor** de `@tcg/shared`.
+
+**Detalle.** Pantalla en blanco y un 500 del servidor de Vite:
+
+```
+[TSCONFIG_ERROR] Failed to load tsconfig '../api': Tsconfig not found
+  File: /app/packages/shared/dist/index.js
+```
+
+**Causa.** La etapa `deps` del Dockerfile copia `apps/api/package.json` para que `npm ci` resuelva
+el workspace. Eso hace que `/app/apps/api` **exista** en la imagen web, pero sin su `tsconfig.json`.
+El `tsconfig.json` **raiz** —que tambien viajaba— referencia ese proyecto, y Vite lo sigue al
+transformar `@tcg/shared`.
+
+**Por que llevaba dos sesiones oculta.** Hasta S021 el frontend solo importaba **tipos** de
+`@tcg/shared`. Los tipos se borran al compilar: el modulo **nunca se cargaba en tiempo de ejecucion**
+y Vite nunca lo transformaba. La primera importacion de un **valor** —`validateDeck`— lo destapo.
+
+En S019 se cargo el catalogo a traves del contenedor y funciono. Aquella verificacion era correcta:
+simplemente no ejercitaba este camino, porque no existia todavia.
+
+**Solucion.** El `tsconfig.json` raiz deja de copiarse a la imagen web. Solo viaja
+`tsconfig.base.json`, que es de la que hereda el paquete.
+
+**Leccion.** Un artefacto puede estar roto y **parecer sano durante sesiones enteras** si nada
+ejercita el camino que lo rompe. No basta con que la verificacion sea correcta: tiene que tocar el
+codigo que va a usarse.
+
+---
+
+## P-026 ✅ CERRADO · La cache que el spec prometia no existia
+**Estado:** CERRADO el 2026-08-25 (S021)
+**Origen:** **el panel de red del navegador**, en la comprobacion que T-047 tenia como criterio.
+
+**Detalle.** El spec (E6) decia que anadir una carta pediria su detalle una vez y que React Query lo
+cachearia, porque una carta cosechada es inmutable. La medicion dijo otra cosa:
+
+```
+GET /api/cards/193 -> 200      (primer anadido)
+GET /api/cards/193 -> 200      (segundo anadido de LA MISMA carta)
+```
+
+**Causa.** El buscador llamaba a `api.card(printId)` **directamente**. Una llamada suelta no pasa por
+la cache de React Query: no hay `queryKey`, no hay entrada, no hay cache. La promesa estaba escrita
+en el spec y **no implementada en el codigo**.
+
+**Solucion.** `queryClient.fetchQuery` con `queryKey: ['card', printId]` y `staleTime: Infinity`.
+**Reverificado en el panel de red: dos anadidos, una sola peticion.**
+
+**Leccion.** Un spec puede afirmar un comportamiento que el codigo no tiene, y compilar, y pasar los
+tests, y parecer correcto al leerlo. Lo unico que lo distingue es medirlo. El criterio de aceptacion
+de T-047 —"cero peticiones al cambiar cantidades"— se cumplia; el que fallaba era el otro, y estaba
+escrito en el plan justo para esto.

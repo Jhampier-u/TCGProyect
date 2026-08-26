@@ -1,6 +1,6 @@
 # Tareas Pendientes
 
-**Última actualización:** 2026-08-25 (S020) · **Total abiertas:** 11 — 10 del proyecto + T-005, que depende de ti
+**Última actualización:** 2026-08-25 (S021) · **Total abiertas:** 10 — 9 del proyecto + T-005, que depende de ti
 
 Leyenda de prioridad: 🔴 crítica · 🟠 alta · 🟡 media · ⚪ baja
 
@@ -26,12 +26,13 @@ hechos y verificados contra los orígenes reales.
 
 ## Hito H7 — Constructor de mazos 🟡 EN CURSO
 
-El backend está hecho y verificado (T-044, T-045, T-046 en S020). Faltan las dos pasadas siguientes.
+El backend (S020) y la interfaz (S021) están hechos y verificados. **Sólo falta el import/export
+para cerrar H7 y, con él, la última épica de producto.**
 
 | ID | Tarea | Agente | Prio |
 |---|---|---|---|
-| T-047 | **Interfaz del constructor de mazos.** Revalida en el cliente con el mismo motor de `@tcg/shared`, sin ir al servidor en cada carta | Frontend | 🟠 |
-| T-048 | Import/export de mazos en los formatos de texto de cada juego | Backend / Frontend | 🟡 |
+| T-048 | Import/export de mazos en los formatos de texto de cada juego | Backend / Frontend | 🟠 |
+| T-053 | **Revisión visual de la interfaz de mazos.** En S021 el panel del navegador no componía imágenes: se verificó por DOM y por red, no por vista | Frontend / QA | 🟡 |
 | T-050 | Confirmar contra datos reales el lado **positivo** de dos predicados: la Energía Básica de Pokémon y la tierra nevada de Magic. Ninguno aparece en los sets ingestados hasta hoy (ver S020). Depende en parte de **T-023** | QA | 🟡 |
 
 ## Hito H8 — Endurecimiento

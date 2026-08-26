@@ -1,6 +1,6 @@
 # Tareas Realizadas
 
-**Última actualización:** 2026-08-25 (S020)
+**Última actualización:** 2026-08-25 (S021)
 
 | ID | Tarea | Agente | Fecha | Sesión | Evidencia |
 |---|---|---|---|---|---|
@@ -66,3 +66,8 @@
 | T-046 | **Seis rutas de mazos** autenticadas, con esquema de entrada y salida; `requireUser` extraído y compartido | Backend | 2026-08-25 | S020 | `apps/api/src/api/deck-routes.ts` |
 | T-049 | **P-024 corregido**: la API no exponía el id de la carta desde H3. El esquema declaraba `cardId` y el repositorio devolvía `id` | Backend | 2026-08-25 | S020 | `apps/api/src/db/catalog-query-repository.ts` |
 | T-046v | Verificación: 68 tests nuevos + repositorio contra MySQL real + recorrido completo contra la API en Docker con 489 impresiones | QA / Seguridad | 2026-08-25 | S020 | Ver S020 en `005Registro` |
+| T-052 | `DECK_CARD` declara `oracleKey` y `gameData`. Sin ellos, D1 del spec de H7 era imposible de cumplir | Backend | 2026-08-25 | S021 | `apps/api/src/api/deck-schemas.ts` |
+| T-047a | `deck-draft.ts`: el borrador del mazo, puro y sin React, con 19 tests | Frontend | 2026-08-25 | S021 | `apps/web/src/lib/deck-draft.ts` |
+| T-047b | Cliente de API de mazos y `useDeckEditor` con la validación derivada | Frontend | 2026-08-25 | S021 | `apps/web/src/lib/` |
+| T-047c | **Interfaz del constructor**: lista, editor de dos columnas, buscador, zonas y panel de validación | Frontend | 2026-08-25 | S021 | `apps/web/src/pages/`, `components/` |
+| T-047v | Verificación en navegador: validación en cliente sin red, banlist aplicada, 0 URLs externas. Destapó P-025 y P-026 | QA | 2026-08-25 | S021 | Ver S021 en `005Registro` |

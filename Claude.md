@@ -2,7 +2,7 @@
 
 > **Rol:** Arquitecto Principal y Orquestador de Proyectos de Software.
 > **Producto:** Simulador de Apertura de Sobres + Constructor de Mazos unificado para MTG, Yu-Gi-Oh! y Pokémon TCG.
-> **Estado del Vault:** ACTIVO — última sesión S020 (2026-08-25)
+> **Estado del Vault:** ACTIVO — última sesión S021 (2026-08-25)
 
 ---
 
@@ -74,7 +74,8 @@ C:\ProyectoTCG\
 │   ├── 2026-08-25_S017_AnimacionDeApertura.md
 │   ├── 2026-08-25_S018_PuntoDeGuardado.md
 │   ├── 2026-08-25_S019_DockerCompose.md
-│   └── 2026-08-25_S020_ConstructorDeMazos.md
+│   ├── 2026-08-25_S020_ConstructorDeMazos.md
+│   └── 2026-08-25_S021_InterfazDeMazos.md
 │
 ├── db\                          <- esquema (fuera del Vault documental)
 │   ├── README.md
@@ -127,8 +128,9 @@ C:\ProyectoTCG\
 │           └── pokemontcg\     PokemonTcgAdapter (T-013)
 ├── apps\web\                    <- @tcg/web (Vite + React)
 │   └── src│       ├── lib\   api.ts (cliente) · auth.tsx (sesion)
-│       ├── pages\ Catalogo · Acceso · Sobres · Coleccion
-│       └── components\ CardTile · PackReveal (animacion) · styles.css
+│       ├── lib\   api · auth · deck-draft (borrador puro) · use-deck-editor
+│       ├── pages\ Catalogo · Acceso · Sobres · Coleccion · Mazos · MazoEditor
+│       └── components\ CardTile · PackReveal · DeckBuscador · DeckZona · DeckValidacion
 └── package.json                 <- npm workspaces
 ```
 
