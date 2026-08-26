@@ -1,6 +1,6 @@
 # Tareas Pendientes
 
-**Última actualización:** 2026-08-26 (S023) · **Total abiertas:** 9 — 8 del proyecto + T-005, que depende de ti
+**Última actualización:** 2026-08-26 (S024) · **Total abiertas:** 7 — 6 del proyecto + T-005, que depende de ti
 
 Leyenda de prioridad: 🔴 crítica · 🟠 alta · 🟡 media · ⚪ baja
 
@@ -39,12 +39,11 @@ Motor de reglas (S020), interfaz (S021) e import/export (S022), los tres verific
 **H8a — Suite E2E ✅ hecho (S023).** Playwright sobre Docker, 6 recorridos en verde. Cerró T-040 y
 T-053. Quedan los otros dos sub-proyectos:
 
-### H8b — Seguridad
+### H8b — Seguridad ✅ hecho (S024)
 
-| ID | Tarea | Agente | Prio |
-|---|---|---|---|
-| T-051 | La validación del esquema del cuerpo corre **antes** que la del token: un `POST` anónimo con cuerpo inválido responde 400 en vez de 401. Afecta a las rutas de H6 y H7. Se arregla moviendo `requireUser` a un hook `preValidation` | Seguridad | 🟠 |
-| T-062 | **Rate limiting propio**: hoy sólo hay un tope global de 300/min y el del login. Falta por ruta y por usuario, que es lo que pide el criterio de H8 | Seguridad | 🟠 |
+T-051 (401 antes que 400) y T-062 (límites por ruta), verificados. Anotado para el día que haya más
+de una réplica del API: los contadores están **en memoria**, así que el límite efectivo pasaría a ser
+N veces el configurado y habría que conectarlos a un almacén compartido.
 
 ### H8c — Deuda técnica
 

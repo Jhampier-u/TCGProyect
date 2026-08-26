@@ -1,6 +1,6 @@
 # Registro de Problemas
 
-**Última actualización:** 2026-08-26 (S023) · **Abiertos:** 5 · **Cerrados:** 24
+**Última actualización:** 2026-08-26 (S024) · **Abiertos:** 5 · **Cerrados:** 25
 
 Severidad: 🔴 crítica · 🟠 alta · 🟡 media · ⚪ baja
 
@@ -890,3 +890,33 @@ por panel de red. **Todo cuadraba**: los elementos existian, `.zona` eran 3, `.e
 
 **Leccion.** Hay defectos que solo ve un ojo. Verificar por DOM es necesario y no es suficiente, y
 por eso T-053 existia como tarea aparte en vez de darse por hecha.
+
+---
+
+## P-031 ✅ CERRADO · S023 se reporto como limpio sin serlo
+**Estado:** CERRADO el 2026-08-26 (S024)
+**Origen:** ejecutar `npm test` en S024 y ver `Test Files 3 failed`.
+
+**Detalle.** Vitest recoge los `*.spec.ts` de Playwright —encajan con su patron por defecto— e
+intenta ejecutarlos:
+
+```
+FAIL  e2e/src/humo.spec.ts
+Error: Playwright Test did not expect test() to be called here.
+```
+
+Los 332 tests de Vitest seguian pasando, asi que la linea de resumen decia `Tests 332 passed` y solo
+`Test Files` delataba el fallo.
+
+**Se comprobo si era nuevo antes de tocar nada: no lo era.** Ya estaba en el commit de cierre de
+S023, y se reporto esa sesion como "limpia".
+
+**Por que se colo.** La salida se leyo con `tail -4`, que mostraba la linea de los tests y cortaba la
+de encima. **Se reporto verde sobre una lectura incompleta.**
+
+**Solucion.** `vitest.config.ts` excluyendo `e2e/`. Las dos suites son de herramientas distintas y no
+deben mezclarse.
+
+**Leccion.** Truncar la salida de un comando puede esconder justo la senal que importa. Un resumen de
+tests tiene que incluir cuantos FICHEROS fallaron, no solo cuantos tests pasaron: son dos numeros y
+el bueno puede tapar al malo.

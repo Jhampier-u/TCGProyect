@@ -1,6 +1,6 @@
 # Tareas Realizadas
 
-**Última actualización:** 2026-08-26 (S023)
+**Última actualización:** 2026-08-26 (S024)
 
 | ID | Tarea | Agente | Fecha | Sesión | Evidencia |
 |---|---|---|---|---|---|
@@ -82,3 +82,6 @@
 | T-058 | Recorrido de humo con consola limpia, verificado inyectando un error | QA | 2026-08-26 | S023 | `e2e/src/humo.spec.ts` |
 | T-040 | **El volteo de las cartas se ha visto TERMINAR.** Bloqueada desde S017. Destapó P-029 | QA | 2026-08-26 | S023 | `e2e/src/sobres.spec.ts` |
 | T-053 | **La interfaz de mazos se ha visto de verdad.** Bloqueada desde S021. Destapó P-030 | QA / Frontend | 2026-08-26 | S023 | `e2e/src/mazos.spec.ts`, capturas |
+| T-051 | **401 antes que 400**: `requireUser` pasa a hook de `preValidation`, con las rutas de mazos encapsuladas | Seguridad | 2026-08-26 | S024 | `apps/api/src/api/require-user.ts` |
+| T-062 | **Límites de tasa por ruta**. El hueco grande era el registro: 18.000 Argon2id por hora | Seguridad | 2026-08-26 | S024 | `auth-routes.ts`, `deck-routes.ts`, `server.ts` |
+| T-063 | **P-031 corregido**: Vitest intentaba ejecutar los specs de Playwright y 3 ficheros fallaban en silencio | QA | 2026-08-26 | S024 | `vitest.config.ts` |
