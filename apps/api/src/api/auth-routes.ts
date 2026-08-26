@@ -1,4 +1,4 @@
-import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
+import type { FastifyInstance } from 'fastify';
 import type { GameCode } from '@tcg/shared';
 import {
   hashPassword,
@@ -9,6 +9,7 @@ import {
 import { EmailAlreadyExistsError, type UserRepository } from '../auth/user-repository.js';
 import type { CollectionRepository } from '../db/collection-repository.js';
 import type { CatalogQueryRepository } from '../db/catalog-query-repository.js';
+import { requireUser } from './require-user.js';
 import { DuplicateSeedError, EmptyPoolError, NoTemplateError, type PackService } from '../packs/index.js';
 import {
   COLLECTION_COMPLETION,
@@ -42,23 +43,6 @@ export async function registerAuthRoutes(
   options: AuthRoutesOptions,
 ): Promise<void> {
   const { users, collection, catalog, packs } = options;
-
-  /** Extrae el usuario del token. Devuelve null y responde 401 si no es valido. */
-  const requireUser = async (
-    request: FastifyRequest,
-    reply: FastifyReply,
-  ): Promise<{ id: number } | null> => {
-    try {
-      await request.jwtVerify();
-      const payload = request.user as { sub?: unknown };
-      const id = Number(payload?.sub);
-      if (!Number.isInteger(id) || id <= 0) throw new Error('sub invalido');
-      return { id };
-    } catch {
-      await reply.code(401).send({ error: 'unauthorized', message: 'Token ausente o invalido' });
-      return null;
-    }
-  };
 
   // ------------------------------------------------------------------ cuentas
 

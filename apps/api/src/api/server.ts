@@ -5,9 +5,11 @@ import fastifyStatic from '@fastify/static';
 import type { GameCode } from '@tcg/shared';
 import type { CatalogQueryRepository } from '../db/catalog-query-repository.js';
 import type { CollectionRepository } from '../db/collection-repository.js';
+import type { DeckRepository } from '../db/deck-repository.js';
 import type { UserRepository } from '../auth/user-repository.js';
 import type { PackService } from '../packs/index.js';
 import { registerAuthRoutes } from './auth-routes.js';
+import { registerDeckRoutes } from './deck-routes.js';
 import {
   GET_CARD,
   LIST_GAMES,
@@ -30,6 +32,7 @@ export interface ApiOptions {
     users: UserRepository;
     collection: CollectionRepository;
     packs: PackService;
+    decks: DeckRepository;
     jwtSecret: string;
     /** Caducidad del token. Corta a proposito: un JWT no se puede revocar (ADR-008). */
     tokenTtl?: string;
@@ -177,6 +180,8 @@ export async function buildFullServer(options: ApiOptions & { auth: NonNullable<
     catalog: options.catalog,
     packs: options.auth.packs,
   });
+
+  await registerDeckRoutes(app, { decks: options.auth.decks });
 
   return app;
 }

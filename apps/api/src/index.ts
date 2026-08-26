@@ -1,7 +1,7 @@
 import { mkdir } from 'node:fs/promises';
 
 import { loadConfig } from './config.js';
-import { Database, Migrator, CatalogQueryRepository, CollectionRepository, PackRepositoryMysql } from './db/index.js';
+import { Database, Migrator, CatalogQueryRepository, CollectionRepository, PackRepositoryMysql, DeckRepository } from './db/index.js';
 import { UserRepository, warmUp } from './auth/index.js';
 import { PackService } from './packs/index.js';
 import { buildFullServer } from './api/index.js';
@@ -42,6 +42,7 @@ async function main(): Promise<void> {
       users: new UserRepository(db),
       collection: new CollectionRepository(db),
       packs: new PackService({ repository: new PackRepositoryMysql(db) }),
+      decks: new DeckRepository(db),
       jwtSecret: config.jwtSecret,
     },
   });
