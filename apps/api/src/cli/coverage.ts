@@ -36,7 +36,7 @@ async function main(): Promise<void> {
       // Solo los sets con pool Y clasificados como producto de sobres (T-069).
       const sets = await db.select<{ id: number; code: string; released_at: string | null }>(
         `SELECT DISTINCT s.id, s.code, s.released_at
-           FROM sets s JOIN card_prints p ON p.set_id = s.id AND p.in_boosters = 1
+           FROM sets s JOIN card_prints p ON p.set_id = s.id AND p.in_boosters = 1 AND p.withdrawn_at IS NULL
           WHERE s.game_id = ? AND s.is_openable = 1 ORDER BY s.released_at`,
         [GAME_IDS[game]],
       );
@@ -47,7 +47,7 @@ async function main(): Promise<void> {
       // arregla. Por eso se ven aqui en vez de perderse en silencio.
       const excluidos = await db.select<{ name: string; card_count: number }>(
         `SELECT DISTINCT s.name, s.card_count
-           FROM sets s JOIN card_prints p ON p.set_id = s.id AND p.in_boosters = 1
+           FROM sets s JOIN card_prints p ON p.set_id = s.id AND p.in_boosters = 1 AND p.withdrawn_at IS NULL
           WHERE s.game_id = ? AND s.is_openable = 0
           ORDER BY s.card_count DESC`,
         [GAME_IDS[game]],
@@ -64,7 +64,7 @@ async function main(): Promise<void> {
           await db.select<{ code: string }>(
             `SELECT DISTINCT r.code
                FROM rarities r
-               JOIN card_prints p ON p.rarity_id = r.id AND p.in_boosters = 1
+               JOIN card_prints p ON p.rarity_id = r.id AND p.in_boosters = 1 AND p.withdrawn_at IS NULL
               WHERE r.game_id = ?`,
             [GAME_IDS[game]],
           )

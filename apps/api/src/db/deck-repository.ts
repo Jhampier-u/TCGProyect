@@ -363,6 +363,10 @@ export class DeckRepository {
    * las cartas una a una.
    */
   async resolvePrints(printIds: readonly number[]): Promise<ResolvedPrint[]> {
+    // Sin filtro de `withdrawn_at`, a proposito (T-083). Esto valida los ids que
+    // el usuario manda al guardar un mazo, y un mazo que ya contenia una
+    // impresion retirada tiene que poder guardarse. Filtrar aqui haria que
+    // guardar un mazo viejo fallara con "esa carta no existe".
     if (printIds.length === 0) return [];
     const huecos = printIds.map(() => '?').join(', ');
     const filas = await this.db.select<{ print_id: number; game: string }>(
@@ -427,12 +431,17 @@ export class DeckRepository {
        JOIN sets s ON s.id = p.set_id
        JOIN rarities r ON r.id = p.rarity_id
        WHERE c.game_id = ? AND (${condiciones.join(' OR ')})
-       ORDER BY p.id ASC`,
+       ORDER BY p.withdrawn_at IS NOT NULL, p.id ASC`,
       params,
     );
 
-    // `ORDER BY p.id ASC` + escribir solo si falta => se queda la impresion de
-    // menor id. Determinista y reproducible entre ejecuciones.
+    // `ORDER BY ... p.id ASC` + escribir solo si falta => se queda la impresion
+    // de menor id. Determinista y reproducible entre ejecuciones.
+    //
+    // Las RETIRADAS van al final en vez de excluirse (T-083): si de un nombre
+    // solo quedan retiradas, es preferible resolverlo a una de ellas que decirle
+    // al usuario que su carta no existe. Excluirlas convertiria un import
+    // correcto en una linea no reconocida.
     const porClave = new Map<string, (typeof filas)[number]>();
     const porNombre = new Map<string, (typeof filas)[number]>();
     const porImpresion = new Map<string, (typeof filas)[number]>();

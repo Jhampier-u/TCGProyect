@@ -117,7 +117,7 @@ export class PackRepositoryMysql implements PackRepository {
     const rows = await this.db.select<{ id: number; card_id: number; code: string }>(
       `SELECT p.id, p.card_id, r.code
        FROM card_prints p JOIN rarities r ON r.id = p.rarity_id
-       WHERE p.set_id = ? AND p.in_boosters = 1
+       WHERE p.set_id = ? AND p.in_boosters = 1 AND p.withdrawn_at IS NULL
        ORDER BY p.id`,
       [setId],
     );

@@ -128,7 +128,7 @@ export class CollectionRepository {
               COUNT(DISTINCT p.id) AS pool_size,
               COUNT(DISTINCT uc.card_print_id) AS owned
        FROM sets s
-       JOIN card_prints p ON p.set_id = s.id AND p.in_boosters = 1
+       JOIN card_prints p ON p.set_id = s.id AND p.in_boosters = 1 AND p.withdrawn_at IS NULL
        LEFT JOIN user_collection uc
               ON uc.card_print_id = p.id AND uc.user_id = ? AND uc.quantity > 0
        WHERE s.game_id = ?

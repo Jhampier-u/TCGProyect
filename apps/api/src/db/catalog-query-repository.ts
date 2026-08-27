@@ -112,7 +112,7 @@ export class CatalogQueryRepository {
               s.icon_local_path,
               COUNT(p.id) AS pool_size
        FROM sets s
-       LEFT JOIN card_prints p ON p.set_id = s.id AND p.in_boosters = 1
+       LEFT JOIN card_prints p ON p.set_id = s.id AND p.in_boosters = 1 AND p.withdrawn_at IS NULL
        WHERE s.game_id = ?
        GROUP BY s.id
        ORDER BY s.released_at DESC, s.id DESC`,
@@ -196,7 +196,7 @@ export class CatalogQueryRepository {
               p.id AS print_id, p.collector_number, p.image_local_path,
               r.code AS rarity
        FROM cards c
-       JOIN card_prints p ON p.card_id = c.id
+       JOIN card_prints p ON p.card_id = c.id AND p.withdrawn_at IS NULL
        JOIN sets s ON s.id = p.set_id
        JOIN rarities r ON r.id = p.rarity_id
        ${where.length > 0 ? `WHERE ${where.join(' AND ')}` : ''}
@@ -216,6 +216,16 @@ export class CatalogQueryRepository {
     };
   }
 
+  /**
+   * Detalle de UNA impresion, por su id.
+   *
+   * NO filtra por `withdrawn_at`, y es deliberado (T-083). La busqueda de arriba
+   * si lo hace: el catalogo navegable es lo que el origen ofrece hoy, y una
+   * impresion retirada ya no lo es. Pero aqui se llega desde una coleccion o
+   * desde una apertura, y esas si contienen retiradas -- por eso no se borran
+   * (P-005). Ocultarla aqui convertiria en 404 la ficha de una carta que el
+   * usuario tiene delante.
+   */
   async findCard(printId: number): Promise<CardDetail | null> {
     const rows = await this.db.select<CardRow & {
       rules_text: string | null; game_data: unknown; released_at: string | null;
