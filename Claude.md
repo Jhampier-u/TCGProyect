@@ -2,7 +2,7 @@
 
 > **Rol:** Arquitecto Principal y Orquestador de Proyectos de Software.
 > **Producto:** Simulador de Apertura de Sobres + Constructor de Mazos unificado para MTG, Yu-Gi-Oh! y Pokémon TCG.
-> **Estado del Vault:** ACTIVO — última sesión S028 (2026-08-26)
+> **Estado del Vault:** ACTIVO — última sesión S028 (2026-08-27)
 
 ---
 
@@ -119,7 +119,8 @@ C:\ProyectoTCG\
 │       ├── 0020_lineas_de_producto.{up,down}.sql
 │       ├── 0021_ygo_plantillas_de_linea.{up,down}.sql
 │       ├── 0022_ygo_collectors_rare.{up,down}.sql
-│       └── 0023_ygo_cola_larga.{up,down}.sql
+│       ├── 0023_ygo_cola_larga.{up,down}.sql
+│       └── 0024_impresiones_retiradas.{up,down}.sql
 │
 ├── packages\shared\             <- @tcg/shared: contrato de dominio
 │   └── src\

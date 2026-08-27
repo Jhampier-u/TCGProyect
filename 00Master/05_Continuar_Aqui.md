@@ -1,7 +1,7 @@
 # 05 — Continuar aquí
 
-**Punto de guardado:** 2026-08-26, tras la sesión **S028**
-**Commit:** rama `main` · 385 tests de Vitest + 10 recorridos E2E en verde · `npm audit` limpio
+**Punto de guardado:** 2026-08-27, tras la sesión **S028**
+**Commit:** rama `main` · 395 tests de Vitest + 10 recorridos E2E en verde · `npm audit` limpio
 
 Este documento existe para retomar el proyecto en otra máquina o en otra sesión sin releer las 26
 bitácoras. Si sólo vas a leer un fichero, que sea éste.
@@ -155,12 +155,13 @@ son útiles para la lógica, pero **la fidelidad de sus datos determina lo que e
 ## 5. Lo que está pendiente, por orden de interés
 
 ### El siguiente paso natural
-**Los ocho hitos están cerrados** y no queda nada bloqueante. Lo único abierto del proyecto es una tarea de
-producto, y tiene una decisión detrás que conviene tomar antes de teclear:
+**Los ocho hitos están cerrados y no queda ninguna tarea abierta.** T-083 fue la última: desde S028 la
+ingesta retira las impresiones que el origen dejó de listar — borra lo que nadie referencia y marca
+`card_prints.withdrawn_at` en lo que una apertura, una colección o un mazo sí referencia, para no
+reescribir un historial (P-005, RN-01). Con ella se cerró P-040.
 
-- **T-083** — cambiar la rareza de una impresión de Yu-Gi-Oh! la **duplica** en vez de actualizarla,
-  porque el `external_id` lleva la rareza dentro (P-040). Se mitigó a mano borrando 110 huérfanas;
-  falta que la ingesta retire lo que un set ya no produce, sin borrar lo que una apertura referencia.
+Lo siguiente, por tanto, es producto: qué se construye encima de lo que ya funciona. No hay deuda
+esperando turno.
 
 **Cómo se ejecuta la suite:**
 
@@ -176,9 +177,7 @@ tres APIs de terceros la haría fallar por motivos ajenos.
 
 Las ocho tareas de H8c están cerradas. Lo que queda abierto salió de hacerlas, y está abajo.
 
-| Tarea | Qué pasa si no se hace |
-|---|---|
-| **T-083** | Cambiar una rareza duplica la impresión en vez de actualizarla (P-040) |
+**Vacía de verdad.** T-083, la única que quedaba de esta lista, se cerró en S028.
 
 ### Bloqueada por ti
 **Nada.** T-005 se cerró en S028: la clave de Pokémon está puesta en `.env` y verificada.

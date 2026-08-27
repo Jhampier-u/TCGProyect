@@ -645,3 +645,112 @@ que hace la aplicación, pero conviene saberlo antes de sacar conclusiones de es
   escribió para T-034.
 - Abierta: **T-073**, ⚪. **Nada bloqueado por el usuario**: T-005 cerrada.
 - Problemas: 5 abiertos · 33 cerrados.
+
+---
+
+# Décima parte: T-083, y las filas que el origen dejó de listar (P-040)
+
+## Lo que estaba mal
+
+La clave natural de una impresión es `(set_id, external_id)`, y en Yu-Gi-Oh! el `external_id` lleva
+la rareza dentro — `SUDA-EN049::quarter_century_secret_rare`. Es correcto y necesario (P-013), pero
+tiene un precio que nadie había escrito: **si la rareza cambia, cambia la clave**, y el upsert deja de
+reconocer la fila. En vez de actualizarla, inserta otra.
+
+Se destapó al normalizar las etiquetas que no son rarezas (T-081): las impresiones de Yu-Gi-Oh!
+pasaron de 44.365 a 44.475. Las 110 nuevas convivían con las 110 viejas. Nada falló.
+
+La mitigación de aquel momento fue borrarlas a mano. Esto es el arreglo.
+
+## Retirar, no borrar
+
+Una impresión referenciada por una apertura **no se puede borrar**: `pack_openings` y
+`pack_opening_cards` son la fuente de verdad de RN-01, y borrar una carta que alguien sacó de un
+sobre reescribiría su historial (P-005). La clave foránea lo impide, y hace bien.
+
+Así que se distinguen dos casos, el mismo criterio que se usó con las plantillas en P-035:
+
+- sobrante que **nadie referencia** → se borra;
+- sobrante **referenciada** por una apertura, una colección o un mazo → se **retira**.
+
+Retirar es poner `card_prints.withdrawn_at` (migración 0024). La fila sigue ahí para que la apertura
+se resuelva, y desaparece del pool de sobres, del catálogo navegable, del recuento de completitud y
+del informe de cobertura: siete consultas, siete `AND p.withdrawn_at IS NULL`.
+
+**Y cuatro consultas más que a propósito NO lo llevan**, que es la parte que hay que escribir porque
+no se deduce:
+
+| Consulta | Por qué sigue viendo las retiradas |
+|---|---|
+| Ficha de una impresión (`findCard`) | Se llega desde una colección o una apertura, y ésas sí las contienen. Ocultarla sería un 404 en la ficha de una carta que el usuario tiene delante |
+| Listado de la colección | Es suya. La sacó de un sobre |
+| Repetición de una apertura | RN-01: la apertura se resuelve como ocurrió |
+| Validar ids al guardar un mazo | Un mazo que ya contenía una retirada tiene que poder guardarse |
+
+La quinta es un matiz, no un sí o un no: al resolver **nombres** a impresiones en un import, las
+retiradas van **al final** del desempate en vez de excluirse. Si de un nombre sólo quedan retiradas,
+es preferible resolverlo a una de ellas que decirle al usuario que su carta no existe.
+
+**Columna propia y no `in_boosters = 0`.** Habría funcionado y habría sido una verdad a medias: ese
+campo significa "esta impresión puede salir de un sobre de su set" (P-014), y una carta retirada no es
+que no salga en sobre, es que el origen ya no la lista. Con una columna propia, el día que alguien se
+pregunte por qué una carta desapareció de los sobres, la respuesta está ahí con su fecha.
+
+## Las dos cosas que había que hacer bien
+
+**La lista de vigentes se acumula sobre todo el set, no sobre el último lote.** El buffer se vacía
+cada 500 impresiones; mirar sólo lo que queda al final habría declarado sobrante todo lo anterior y
+lo habría borrado. Hay una prueba que ingesta tres impresiones y comprueba que llegan las tres.
+
+**Un origen vacío no puede vaciar un set.** Si el adaptador devuelve cero impresiones, no se retira
+nada. Sin esa condición, un 500 a mitad de una petición arrasaría el catálogo de un set en silencio —
+un problema mucho peor que el que se está arreglando. También tiene su prueba, y esa prueba **empezó
+pasando por el motivo equivocado**: el `FakeRepo` no tenía sets pendientes, así que la ingesta no
+miraba el set siquiera. Se le añadió `expect(repo.marcados).toEqual([1])`, que es lo que la habría
+hecho fallar.
+
+## El SQL nunca ejecutado, ejecutado
+
+Las tres pruebas unitarias no tocan la consulta que de verdad importa: la UNION contra
+`pack_opening_cards`, `user_collection` y `deck_cards` que decide qué se borra y qué se retira. Un SQL
+que nunca ha corrido no está comprobado.
+
+Se escribió una comprobación puntual contra la base real — un fichero de usar y tirar, no parte del
+producto — que sobre un set de 66 impresiones pidió retirar una referenciada y borrar una libre,
+verificó que la primera conserva su fila con fecha y la segunda desaparece, y devolvió el set a su
+estado.
+
+**Y a la primera no devolvió nada.** `finishes` es una columna JSON y el driver la entrega ya
+parseada; reinsertarla tal cual la bindea como lista de cadenas y MySQL la rechaza. La impresión
+borrada se quedó borrada. Se arregló el `JSON.stringify`, se volvió a pasar la comprobación entera —
+esta vez cerrando el círculo — y la impresión perdida se recuperó reingestando su set con
+`--set "Magnificent Maestros"`, que es la bandera que salta los filtros de pendiente y de fecha. El
+set volvió a sus 66 impresiones y el catálogo entero quedó en 181.951 con cero retiradas.
+
+Merece decirse tal cual: la comprobación que se escribió para no dañar datos dañó un dato, y lo
+destapó ella misma al fallar en su propio paso de restauración.
+
+## Verificación
+
+| Qué | Resultado |
+|---|---|
+| `npm run build` | limpio |
+| `npm test` | **395/395** en 31 ficheros |
+| Suite E2E | **10 passed** (16,1 s) |
+| `npm run packs:cobertura` | "Todos los sets son completables", con los filtros nuevos puestos |
+| Base real | set 419 devuelto a 66 impresiones · 181.951 impresiones · 0 retiradas |
+
+## Estado al cerrar S028
+
+- **Cero tareas abiertas.** T-083 era la última.
+- Problemas: **2 abiertos** (P-008 🟡 y P-016 🟠, los dos asumidos a propósito, no trabajo) ·
+  38 cerrados.
+- Migraciones publicadas: hasta la **0024**.
+
+## Lo que este registro no cuenta
+
+Las partes de T-076, T-079, T-073 y T-080 a T-082 no se escribieron aquí mientras ocurrían. Están en
+`001Reportes/Tareas_Realizadas.md` con su evidencia, y su razonamiento completo — los pesos estimados,
+la aritmética de reescalado, por qué las líneas de producto van por nombre y no por código — está en
+las cabeceras de sus migraciones, que es donde tiene que estar para que sobreviva. Queda dicho para
+que nadie busque en este fichero algo que no está.

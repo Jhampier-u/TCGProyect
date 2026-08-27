@@ -1,6 +1,6 @@
 # Tareas Pendientes
 
-**Última actualización:** 2026-08-27 (S028) · **Total abiertas:** 1 — T-083 (🟡), no bloqueante
+**Última actualización:** 2026-08-27 (S028) · **Total abiertas:** 0
 
 Leyenda de prioridad: 🔴 crítica · 🟠 alta · 🟡 media · ⚪ baja
 
@@ -62,9 +62,8 @@ FULLTEXT).
 juego y los productos que no son sobres han dejado de ofrecerse. Lo que sigue abierto salió de
 hacerlas.
 
-| ID | Tarea | Agente | Prio |
-|---|---|---|---|
-| T-083 | **P-040**: cambiar la rareza de una impresión de Yu-Gi-Oh! la DUPLICA en vez de actualizarla, porque el `external_id` lleva la rareza dentro. Se mitigó a mano borrando 110 huérfanas; falta que la ingesta retire lo que un set ya no produce — sin borrar lo que una apertura referencia (P-005) | Backend | 🟡 |
+**Ninguna abierta.** T-083 cerrada en S028: la ingesta ya retira lo que el origen dejó de listar,
+sin tocar lo que una apertura referencia. Con ella se cerró **P-040**.
 
 ### Además, anotado al hacer T-035
 

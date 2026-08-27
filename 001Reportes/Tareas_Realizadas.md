@@ -1,6 +1,6 @@
 # Tareas Realizadas
 
-**Última actualización:** 2026-08-26 (S028)
+**Última actualización:** 2026-08-27 (S028)
 
 | ID | Tarea | Agente | Fecha | Sesión | Evidencia |
 |---|---|---|---|---|---|
@@ -111,3 +111,4 @@
 | T-080 | **Líneas de producto de Yu-Gi-Oh!** (migraciones 0020-0022): `product_line` como nuevo nivel de precedencia, seis plantillas y los sets etiquetados solos en la ingesta. De 154 sets con cartas inalcanzables a 31 | Base de Datos / Backend | 2026-08-27 | S028 | `db/migrations/0020-0022`, `apps/api/src/ingest/openable.ts` |
 | T-081 | **Las etiquetas que no son rarezas, normalizadas**: `new`, `reprint`, `new_artwork`, `*_debut` y `force_smw` dejan de crear rarezas fantasma; `cr` se traduce a `collectors_rare`. De 31 sets con cartas inalcanzables a 20. Destapó **P-040** | Backend | 2026-08-27 | S028 | `packages/shared/src/normalize.ts` |
 | T-082 | **La cola larga de Yu-Gi-Oh!** (migración 0023). Casi ninguno de los 20 sets necesitaba plantilla propia: eran las de línea a las que les faltaba una rareza, más cuatro que no son sobres. **Los tres juegos quedan a cero sets con cartas inalcanzables** | Base de Datos / Backend | 2026-08-27 | S028 | `db/migrations/0023_*`, `apps/api/src/ingest/openable.ts` |
+| T-083 | **La ingesta retira lo que el origen dejó de listar** (migración 0024). Lo que sobra y nadie referencia se borra; lo que una apertura, una colección o un mazo referencia se **retira** con `withdrawn_at` y sale del pool sin reescribir el historial (P-005, RN-01). Un origen que devuelve cero impresiones no retira nada. Cierra **P-040** | Backend / Base de Datos | 2026-08-27 | S028 | `db/migrations/0024_*`, `apps/api/src/ingest/ingest-service.ts` |

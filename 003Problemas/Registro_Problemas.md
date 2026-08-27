@@ -1,6 +1,6 @@
 # Registro de Problemas
 
-**Última actualización:** 2026-08-27 (S028) · **Abiertos:** 3 · **Cerrados:** 37 · **Total:** 40
+**Última actualización:** 2026-08-27 (S028) · **Abiertos:** 2 · **Cerrados:** 38 · **Total:** 40
 
 Severidad: 🔴 crítica · 🟠 alta · 🟡 media · ⚪ baja
 
@@ -1412,8 +1412,8 @@ el catálogo entero es una prueba que ninguna muestra sustituye.**
 
 ---
 
-## P-040 🟡 ABIERTO · Cambiar la rareza de una impresion de Yu-Gi-Oh! no la actualiza: la duplica
-**Estado:** ABIERTO desde el 2026-08-27 (S028). Mitigado a mano esta vez.
+## P-040 ✅ CERRADO · Cambiar la rareza de una impresion de Yu-Gi-Oh! no la actualiza: la duplica
+**Estado:** CERRADO el 2026-08-27 (S028) — implementado y verificado en T-083.
 **Severidad:** 🟡
 **Origen:** normalizar las etiquetas que no son rarezas (T-081) y volver a ingestar.
 
@@ -1440,10 +1440,38 @@ origen -- duplica en silencio en vez de corregir. Nada falla y el catalogo queda
 **Mitigacion aplicada.** Se borraron las 110 huerfanas a mano, tras comprobar que **ninguna** estaba
 referenciada por aperturas, colecciones ni mazos. El recuento volvio exactamente a 44.365.
 
-**Lo que falta para cerrarlo.** Que la ingesta detecte las impresiones de un set que ya no produce y
-las retire, en vez de dejarlas. Es delicado: una impresion referenciada por una apertura NO se puede
-borrar (P-005, RN-01), asi que hara falta el mismo criterio de "retirar en vez de borrar" que se uso
-con las plantillas en P-035.
+**RESUELTO en S028 (T-083).** La ingesta ya no deja atras lo que el origen dejo de listar. Al
+terminar de guardar un set -- y **antes** de marcarlo como ingestado -- compara los `external_id` que
+el origen acaba de dar con los que la base tiene vivos, y con lo que sobra hace lo mismo que se hizo
+con las plantillas en P-035:
+
+- impresion sobrante que **nadie referencia** -> se borra;
+- impresion sobrante **referenciada** por una apertura, una coleccion o un mazo -> se **retira**:
+  se le pone `card_prints.withdrawn_at` (migracion 0024) y sale del pool de sobres, del catalogo
+  navegable, del recuento de completitud y del informe de cobertura, pero sigue en la base para que
+  la apertura que la entrego se siga resolviendo. RN-01 intacta.
+
+**Cuatro consultas siguen viendola a proposito**, y esta escrito en cada una: la ficha de una
+impresion, el listado de la coleccion, la repeticion de una apertura y la validacion de ids al
+guardar un mazo. Todas se alcanzan desde datos que SI contienen retiradas, y filtrarlas ahi
+convertiria en error algo que el usuario ya tiene. Al resolver nombres en un import las retiradas van
+al final del desempate en vez de excluirse, para no dejar sin resolver una linea correcta.
+
+Columna propia y no `in_boosters = 0`: ese campo significa "puede salir de un sobre de su set"
+(P-014), y una carta retirada no es que no salga, es que el origen ya no la lista. Con `withdrawn_at`
+la pregunta "por que desaparecio esta carta" tiene fecha.
+
+**La salvaguarda que importa.** Si el origen devuelve **cero** impresiones para un set, no se retira
+nada. Sin esa condicion un 500 a mitad de una peticion vaciaria un set entero en silencio, que es un
+problema mucho peor que el que arregla. Y la lista de vigentes se acumula sobre **todo** el set, no
+sobre el ultimo lote: el buffer se vacia cada 500 impresiones, y mirar solo el resto final habria
+declarado sobrante todo lo anterior.
+
+**Comprobado.** Tres pruebas unitarias sobre la ingesta (todos los `external_id`, el orden
+retirar-antes-de-marcar, y el origen vacio) mas una comprobacion puntual contra la base real: sobre
+un set de 66 impresiones se pidio retirar una referenciada y borrar una libre, se verifico que la
+primera conserva su fila con fecha y la segunda desaparece, y se dejo el set como estaba. El informe
+de cobertura sigue diciendo "todos los sets son completables" con los filtros nuevos puestos.
 
 **Leccion.** Meter un atributo en la clave natural resuelve un problema y crea otro: el atributo deja
 de poder cambiar. En S009 se eligio bien -- la alternativa era perder cartas -- pero el precio no se
