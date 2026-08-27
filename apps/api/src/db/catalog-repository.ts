@@ -189,6 +189,77 @@ export class CatalogRepository implements ImageRepository {
     return cambian.length + abren.length;
   }
 
+  /**
+   * Retira las impresiones de un set que el origen ya no lista (T-083, P-040).
+   *
+   * POR QUE HACE FALTA. La clave natural de una impresion incluye el
+   * `external_id`, y en Yu-Gi-Oh! ese identificador LLEVA LA RAREZA DENTRO
+   * (`SUDA-EN049::quarter_century_secret_rare`). Si la rareza cambia, cambia la
+   * clave: el upsert no reconoce la fila y en vez de actualizarla inserta otra.
+   * Medido al normalizar las etiquetas que no son rarezas, quedaron 110 filas
+   * duplicadas sin que nada fallara.
+   *
+   * DOS CASOS, Y LA DIFERENCIA IMPORTA:
+   *
+   *  - Sin referencias -> se BORRA. Es una fila que nadie ha tocado.
+   *  - Con referencias -> se RETIRA. Una impresion que alguien saco de un sobre
+   *    NO se puede borrar: `pack_opening_cards` es la fuente de verdad de RN-01
+   *    y hacerlo reescribiria su historial (P-005). Se marca `withdrawn_at`, que
+   *    la saca del pool y de la completitud sin tocar el pasado.
+   *
+   * Se compara en memoria en vez de con un `NOT IN` gigante: un set son
+   * centenares de impresiones, no millones, y un `IN` de 450 elementos es peor
+   * que traerlas y restar conjuntos.
+   *
+   * Devuelve cuantas se han borrado y cuantas retirado, para poder decirlo.
+   */
+  async retirarImpresionesAusentes(
+    setId: number,
+    vigentes: ReadonlySet<string>,
+  ): Promise<{ borradas: number; retiradas: number }> {
+    const filas = await this.db.select<{ id: number; external_id: string }>(
+      `SELECT id, external_id FROM card_prints WHERE set_id = ? AND withdrawn_at IS NULL`,
+      [setId],
+    );
+
+    const sobrantes = filas.filter((f) => !vigentes.has(f.external_id)).map((f) => Number(f.id));
+    if (sobrantes.length === 0) return { borradas: 0, retiradas: 0 };
+
+    // Que impresiones toca alguien: una apertura, una coleccion o un mazo.
+    const huecos = sobrantes.map(() => '?').join(', ');
+    const referidas = new Set(
+      (
+        await this.db.select<{ id: number }>(
+          `SELECT DISTINCT card_print_id AS id FROM pack_opening_cards WHERE card_print_id IN (${huecos})
+           UNION SELECT DISTINCT card_print_id FROM user_collection WHERE card_print_id IN (${huecos})
+           UNION SELECT DISTINCT card_print_id FROM deck_cards WHERE card_print_id IN (${huecos})`,
+          [...sobrantes, ...sobrantes, ...sobrantes],
+        )
+      ).map((r) => Number(r.id)),
+    );
+
+    const aBorrar = sobrantes.filter((id) => !referidas.has(id));
+    const aRetirar = sobrantes.filter((id) => referidas.has(id));
+
+    for (const lote of chunks(aBorrar, BATCH_SIZE)) {
+      if (lote.length === 0) continue;
+      await this.db.query(
+        `DELETE FROM card_prints WHERE id IN (${lote.map(() => '?').join(', ')})`,
+        lote,
+      );
+    }
+    for (const lote of chunks(aRetirar, BATCH_SIZE)) {
+      if (lote.length === 0) continue;
+      await this.db.query(
+        `UPDATE card_prints SET withdrawn_at = CURRENT_TIMESTAMP
+          WHERE id IN (${lote.map(() => '?').join(', ')})`,
+        lote,
+      );
+    }
+
+    return { borradas: aBorrar.length, retiradas: aRetirar.length };
+  }
+
   async markSetIngested(setId: number): Promise<void> {
     await this.db.query(`UPDATE sets SET ingested_at = CURRENT_TIMESTAMP WHERE id = ?`, [setId]);
   }

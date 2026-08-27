@@ -15,6 +15,11 @@ export interface IngestRepository {
     externalIds: readonly string[],
   ): Promise<Array<{ id: number; externalId: string }>>;
   savePrints(game: GameCode, setId: number, prints: DomainPrint[]): Promise<number>;
+  /** Retira lo que el origen ya no lista para ese set (T-083). */
+  retirarImpresionesAusentes(
+    setId: number,
+    vigentes: ReadonlySet<string>,
+  ): Promise<{ borradas: number; retiradas: number }>;
   markSetIngested(setId: number): Promise<void>;
 }
 
@@ -150,6 +155,8 @@ export class IngestService {
 
     this.#progress({ type: 'bulk_started', game });
 
+    const vigentes = new Map<string, Set<string>>();
+
     for await (const print of adapter.fetchAllPrints()) {
       const setId = porExternalId.get(print.setExternalId);
       if (setId === undefined) continue; // set ya ingestado o fuera del lote
@@ -157,6 +164,13 @@ export class IngestService {
       const buffer = buffers.get(print.setExternalId) ?? [];
       buffer.push(print);
       buffers.set(print.setExternalId, buffer);
+
+      // Se recuerda TODO lo que el origen lista, no solo el lote en curso: al
+      // cerrar el set hay que saber que sobra, y el buffer se vacia por el
+      // camino (T-083).
+      let vistos = vigentes.get(print.setExternalId);
+      if (!vistos) { vistos = new Set(); vigentes.set(print.setExternalId, vistos); }
+      vistos.add(print.externalId);
 
       if (buffer.length >= UMBRAL) {
         report.impresiones += await this.#repo.savePrints(game, setId, buffer);
@@ -170,10 +184,44 @@ export class IngestService {
     for (const [externalId, buffer] of buffers) {
       const setId = porExternalId.get(externalId)!;
       if (buffer.length > 0) report.impresiones += await this.#repo.savePrints(game, setId, buffer);
+      await this.#retirarSobrantes(setId, vigentes.get(externalId) ?? new Set(), externalId, game);
       await this.#repo.markSetIngested(setId);
       report.setsProcesados += 1;
       this.#progress({ type: 'set_done', game, set: externalId, prints: buffer.length });
     }
+  }
+
+  /**
+   * Quita del set lo que el origen ya no lista (T-083, corrige P-040).
+   *
+   * Se llama JUSTO ANTES de marcar el set como ingestado, que es el unico
+   * momento en que se sabe con certeza que se ha leido entero. Hacerlo antes
+   * -- por lote -- borraria lo que aun no ha llegado.
+   *
+   * SALVAGUARDA: si el origen no devolvio NADA para el set, no se toca nada. Un
+   * fallo de red a mitad no puede vaciar un set entero; sin esta condicion, una
+   * respuesta vacia por un 500 arrasaria el catalogo del set en silencio, que es
+   * exactamente la familia de fallos que este proyecto persigue.
+   */
+  async #retirarSobrantes(
+    setId: number,
+    vigentes: ReadonlySet<string>,
+    externalId: string,
+    game: GameCode,
+  ): Promise<void> {
+    if (vigentes.size === 0) return;
+
+    const { borradas, retiradas } = await this.#repo.retirarImpresionesAusentes(setId, vigentes);
+    if (borradas + retiradas === 0) return;
+
+    this.#warn({
+      game,
+      subject: externalId,
+      code: 'malformed_field',
+      message:
+        `El origen ya no lista ${borradas + retiradas} impresiones de ${externalId}: ` +
+        `${borradas} borradas, ${retiradas} retiradas por estar en aperturas o colecciones`,
+    });
   }
 
   /** Camino incremental: un set cada vez, aislando fallos. */
@@ -204,15 +252,18 @@ export class IngestService {
       try {
         let acumulado: DomainPrint[] = [];
         let total = 0;
+        const vigentes = new Set<string>();
 
         for await (const print of adapter.fetchPrints(set)) {
           acumulado.push(print);
+          vigentes.add(print.externalId);
           if (acumulado.length >= 500) {
             total += await this.#repo.savePrints(game, pendiente.id, acumulado);
             acumulado = [];
           }
         }
         if (acumulado.length > 0) total += await this.#repo.savePrints(game, pendiente.id, acumulado);
+        await this.#retirarSobrantes(pendiente.id, vigentes, set.externalId, game);
 
         // Marcar SOLO despues de persistir todo el set. Si se marcara antes, un
         // fallo a mitad dejaria el set como completo con la mitad de las cartas

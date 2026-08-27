@@ -23,6 +23,18 @@ class FakeRepo implements IngestRepository {
     this.operaciones.push(`savePrints(${setId}, ${prints.length})`);
     return prints.length;
   }
+  /** Lo que se pidio retirar, por set. Vacio = no se llamo. */
+  retiradas: Array<{ setId: number; vigentes: string[] }> = [];
+
+  async retirarImpresionesAusentes(
+    setId: number,
+    vigentes: ReadonlySet<string>,
+  ): Promise<{ borradas: number; retiradas: number }> {
+    this.retiradas.push({ setId, vigentes: [...vigentes].sort() });
+    this.operaciones.push(`retirar(${setId}, ${vigentes.size})`);
+    return { borradas: 0, retiradas: 0 };
+  }
+
   async markSetIngested(setId: number): Promise<void> {
     this.marcados.push(setId);
     this.operaciones.push(`markSetIngested(${setId})`);
@@ -226,5 +238,54 @@ describe('acotacion del trabajo', () => {
 
     await new IngestService({ repository: repo, maxSetsPerRun: 5 }).ingest(new FakeAdapter(muchos));
     expect(limiteRecibido).toBe(5);
+  });
+});
+
+describe('retirada de impresiones que el origen ya no lista (T-083)', () => {
+  it('pasa TODOS los external_id del set, no solo el ultimo lote', async () => {
+    // Es el fallo que este metodo tiene que evitar: el buffer se vacia cada 500
+    // impresiones, asi que si se mirara solo lo que queda al final, todo lo
+    // anterior pareceria sobrante y se borraria.
+    const repo = new FakeRepo();
+    repo.pendientes = [{ id: 1, externalId: 'a' }];
+    const adapter = new FakeAdapter([set('a')], {
+      a: [print('a', 'x1'), print('a', 'x2'), print('a', 'x3')],
+    });
+
+    await new IngestService({ repository: repo, maxSetsPerRun: 5 }).ingest(adapter);
+
+    expect(repo.retiradas).toHaveLength(1);
+    expect(repo.retiradas[0]!.vigentes).toEqual(['x1', 'x2', 'x3']);
+  });
+
+  it('retira ANTES de marcar el set como ingestado', async () => {
+    // El orden importa: marcar primero dejaria el set como completo con filas
+    // sobrantes dentro si la retirada fallara.
+    const repo = new FakeRepo();
+    repo.pendientes = [{ id: 1, externalId: 'a' }];
+    const adapter = new FakeAdapter([set('a')], { a: [print('a', 'x1')] });
+
+    await new IngestService({ repository: repo, maxSetsPerRun: 5 }).ingest(adapter);
+
+    const iRetirar = repo.operaciones.findIndex((o) => o.startsWith('retirar('));
+    const iMarcar = repo.operaciones.findIndex((o) => o.startsWith('markSetIngested('));
+    expect(iRetirar).toBeGreaterThanOrEqual(0);
+    expect(iRetirar).toBeLessThan(iMarcar);
+  });
+
+  it('NO retira nada si el origen no devolvio ninguna impresion', async () => {
+    // La salvaguarda que importa. Un fallo de red a mitad no puede vaciar un set
+    // entero: sin esta condicion, una respuesta vacia por un 500 arrasaria el
+    // catalogo del set en silencio.
+    const repo = new FakeRepo();
+    repo.pendientes = [{ id: 1, externalId: 'a' }];
+    const adapter = new FakeAdapter([set('a')], { a: [] });
+
+    await new IngestService({ repository: repo, maxSetsPerRun: 5 }).ingest(adapter);
+
+    // Y el set SI se proceso: sin esto la prueba pasaria tambien si la ingesta
+    // no hubiera mirado el set siquiera, que es como se escribio la primera vez.
+    expect(repo.marcados).toEqual([1]);
+    expect(repo.retiradas).toEqual([]);
   });
 });
