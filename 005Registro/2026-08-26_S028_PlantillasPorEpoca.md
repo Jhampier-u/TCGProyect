@@ -573,6 +573,56 @@ con `200`: lo que fallaba era la aserción, que miraba **un instante** en vez de
 con pocos sets la descarga terminaba antes. **Un test que depende de llegar antes que la red no mide
 lo que dice medir**, así que ahora espera.
 
+---
+
+# Novena parte: T-075, y lo que salió de reingestar dos sets
+
+Los dos que se cayeron entraron **a la primera**:
+
+```
+svp: 200 impresiones · swsh12pt5: 160 impresiones
+procesados 2 · fallidos 0 · imagenes descargadas 359 · fallidas 1
+```
+
+**La imagen fallida es un 404 real del origen** (`svp-102`): la carta no tiene imagen publicada. Es
+exactamente el caso para el que se hizo T-019 — lleva 1 intento de 3 y dejará de pedirse. Nada que
+arreglar; el contador funcionando.
+
+## Pero la cobertura señaló dos cosas más
+
+**Una bolsa de promocionales colada.** `Scarlet & Violet Black Star Promos`: 200 impresiones, todas
+de rareza `promo`, techo 0 %. Los patrones cazaban `promotional cards` pero no `Promos`. Son **173
+sets del catálogo** —`Magic Online Promos` con 3094 cartas, `War of the Spark Promos`, los cuatro
+`Black Star Promos`— y ninguno es un producto de sobres.
+
+**Y las galerías habían vuelto.** Ése fue error mío: **no reconstruí la imagen de `ingest`** tras
+añadir su patrón, así que el contenedor reclasificó con las reglas viejas.
+
+## La tercera vez es la que se arregla
+
+`ingest` es un servicio de compose con **imagen propia** aunque comparta `Dockerfile` con `api`. Ha
+mordido tres veces —S025, y dos en esta sesión— y siempre con el mismo síntoma: **la ingesta termina
+en verde y hace lo que hacía antes del cambio**.
+
+Acordarse no es un arreglo. El comando documentado pasa a llevar `--build`:
+
+```bash
+docker compose --profile ingest run --rm --build ingest --game YGO --sets 3
+```
+
+Actualizado en el README —con la nota de por qué—, en el punto de entrada, en infraestructura, en el
+spec de H8a y en la fixture de la suite E2E, que es la que dicta el comando cuando faltan datos. Los
+planes viejos de `004Arquitectura` no se tocan: son históricos.
+
+## Estado final
+
+| | |
+|---|---|
+| Catálogo | MTG 1177 · YGO 1163 · **PTCG 5069** impresiones · 7408 imágenes |
+| `npm run packs:cobertura` | **"Todos los sets son completables"**, los tres juegos |
+| `npm test` | **385/385** en 31 ficheros |
+| Suite E2E · `npm audit` | 10 passed · limpio |
+
 ## Lo que NO se ha hecho, y por qué
 
 | ID | Qué queda |
@@ -593,5 +643,5 @@ que hace la aplicación, pero conviene saberlo antes de sacar conclusiones de es
 - **H8 cerrado.** H8a (suite E2E), H8b (seguridad) y H8c (las ocho de deuda técnica).
 - **T-068, T-069 y T-070 cerradas también**, fuera de H8c: las tres salieron del informe que se
   escribió para T-034.
-- Abiertas: **T-073** y **T-075**, las dos ⚪. **Nada bloqueado por el usuario**: T-005 cerrada.
+- Abierta: **T-073**, ⚪. **Nada bloqueado por el usuario**: T-005 cerrada.
 - Problemas: 5 abiertos · 33 cerrados.

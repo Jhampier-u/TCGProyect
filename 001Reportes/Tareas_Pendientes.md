@@ -1,6 +1,6 @@
 # Tareas Pendientes
 
-**Última actualización:** 2026-08-26 (S028) · **Total abiertas:** 2 — T-073 y T-075, las dos ⚪ y ninguna bloqueante
+**Última actualización:** 2026-08-26 (S028) · **Total abiertas:** 1 — T-073, ⚪ y no bloqueante
 
 Leyenda de prioridad: 🔴 crítica · 🟠 alta · 🟡 media · ⚪ baja
 
@@ -117,4 +117,4 @@ resolverla contra `rarities.code` del juego correspondiente:
 
 | ID | Tarea | Agente | Prio |
 |---|---|---|---|
-| T-075 | **Reingestar los dos sets que fallaron**: `swsh12pt5` (Crown Zenith, 160 cartas) con HTTP 500 y `svp` con 502 — P-016 puro. Se recuperan relanzando el CLI, pero conviene hacerlo: sin Crown Zenith, su galería queda huérfana de set padre | Backend | ⚪ |
+*(T-075 cerrada en S028.)*

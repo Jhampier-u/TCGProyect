@@ -32,7 +32,7 @@ Desde S019 hay un camino de un comando. Es el recomendado:
 ```bash
 cp .env.example .env      # rellenar JWT_SECRET; ver README
 docker compose up --build
-docker compose --profile ingest run --rm ingest --game YGO --sets 2
+docker compose --profile ingest run --rm --build ingest --game YGO --sets 2
 ```
 
 Frontend en http://localhost:5173, API en http://localhost:3000. **MySQL se publica en el 3307**
@@ -166,7 +166,7 @@ producto, y tiene una decisión detrás que conviene tomar antes de teclear:
 **Cómo se ejecuta la suite:**
 
 ```bash
-docker compose --profile ingest run --rm ingest --game YGO --sets 4   # sólo si falta catálogo
+docker compose --profile ingest run --rm --build ingest --game YGO --sets 4   # sólo si falta catálogo
 docker compose --profile e2e run --rm e2e
 ```
 

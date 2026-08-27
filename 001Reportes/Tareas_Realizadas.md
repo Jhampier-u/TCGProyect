@@ -104,3 +104,4 @@
 | T-067 | **Los sets sin publicar dejan de ser abribles**: dos de los cuatro "de composición atípica" eran sets a medio revelar, no productos raros. Regla objetiva, no otra estimación | Backend | 2026-08-26 | S028 | `apps/api/src/ingest/openable.ts` |
 | T-005 | **API key de Pokémon TCG** puesta y verificada. Desbloquea la ingesta completa | Usuario | 2026-08-26 | S028 | `.env` (no versionado) |
 | T-074 | **La era Sword & Shield y dos huecos de Scarlet & Violet** (migración 0014). Salió de que la ingesta creciera ×3,6 y el informe señalara 11 sets con cartas inalcanzables | Base de Datos | 2026-08-26 | S028 | `db/migrations/0014_*` |
+| T-075 | **Reingestados los dos sets caídos**: `Crown Zenith` (160) y `Black Star Promos` (200), a la primera. Destapó dos huecos del clasificador: las bolsas de promocionales y que el comando documentado de ingesta no reconstruía la imagen | Backend | 2026-08-26 | S028 | `apps/api/src/ingest/openable.ts`, `README.md` |

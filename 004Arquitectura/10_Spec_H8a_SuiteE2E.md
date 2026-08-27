@@ -87,7 +87,7 @@ En su lugar:
 
 - **Precondición comprobada al arrancar.** Si `GET /api/games/YGO/sets` no devuelve ningún set con
   `poolSize > 0`, la suite se detiene con el comando exacto que hay que ejecutar:
-  `docker compose --profile ingest run --rm ingest --game YGO --sets 4`.
+  `docker compose --profile ingest run --rm --build ingest --game YGO --sets 4`.
 - **Cada test crea su propio usuario** por API, con correo único por ejecución. Sin estado
   compartido entre tests y sin orden obligatorio.
 - **Las precondiciones se montan por API, no por interfaz.** Si un test de mazos necesita un mazo con

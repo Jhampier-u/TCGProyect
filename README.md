@@ -59,8 +59,15 @@ imagen de MySQL y las migraciones se aplican solas al arrancar la API.
 Para poblar el catálogo, la ingesta se lanza como una ejecución puntual:
 
 ```bash
-docker compose --profile ingest run --rm ingest --game YGO --sets 3
+docker compose --profile ingest run --rm --build ingest --game YGO --sets 3
 ```
+
+> **El `--build` no es adorno.** `ingest` es un servicio de compose con su **propia imagen**, aunque
+> comparta `Dockerfile` con `api`: reconstruir `api` no lo reconstruye. Sin `--build`, el contenedor
+> corre el código de la última vez que alguien se acordó de construirlo. Ha mordido tres veces
+> (S025 y dos en S028), y las tres el síntoma fue el mismo: la ingesta termina en verde y hace lo
+> que hacía antes del cambio.
+
 
 Detalles que evitan sorpresas:
 
@@ -201,7 +208,7 @@ sembrado lleva anotado si es `[OFICIAL]`, `[DERIVADO]` (con el cálculo) o `[EST
 | `npm run dev:api` | Arranca la API (migra primero) |
 | `npm run dev:web` | Arranca el frontend |
 | `docker compose up --build` | Levanta el entorno completo: mysql, redis, api y web |
-| `docker compose --profile ingest run --rm ingest` | Ingesta dentro de Docker |
+| `docker compose --profile ingest run --rm --build ingest` | Ingesta dentro de Docker |
 | `docker compose --profile e2e run --rm e2e` | Suite E2E con Playwright |
 
 ---

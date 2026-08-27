@@ -38,6 +38,11 @@ const NO_SON_SOBRES = [
   'Lost Origin Trainer Gallery',
   'Silver Tempest Trainer Gallery',
   'Crown Zenith Galarian Gallery',
+  // Bolsas de promocionales. `Scarlet & Violet Black Star Promos` son 200
+  // impresiones de rareza `promo`; `Magic Online Promos`, 3094 cartas.
+  'Scarlet & Violet Black Star Promos',
+  'Magic Online Promos',
+  'War of the Spark Promos',
 ];
 
 describe('clasificarSet (T-069)', () => {

@@ -35,6 +35,12 @@ const NO_ES_SOBRE: ReadonlyArray<{ patron: RegExp; que: string }> = [
   // "Legendary Arc-V Decks", "Legendary Hero Decks": cajas de mazos.
   { patron: /\bDecks\b/i, que: 'caja de mazos' },
   { patron: /promotional cards?\b/i, que: 'promocional' },
+  // `Scarlet & Violet Black Star Promos`, `Magic Online Promos`, `War of the
+  // Spark Promos`. Son 173 sets del catalogo y NINGUNO es un producto de
+  // sobres: son la bolsa de promocionales de su bloque. `promotional cards` no
+  // los cazaba, y colarse cuesta caro -- PR-SV son 200 impresiones, todas de
+  // rareza `promo`, que ninguna plantilla nombra ni debe nombrar.
+  { patron: /\bPromos\b/i, que: 'bolsa de promocionales' },
   { patron: /\bPrize Card\b/i, que: 'carta de premio' },
   { patron: /\bparticipation cards?\b/i, que: 'carta de participacion' },
   { patron: /\bParticipation Card\b/i, que: 'carta de participacion' },

@@ -117,7 +117,7 @@ export async function setAbribleDeYgo(request: APIRequestContext): Promise<SetAb
   if (!abrible) {
     throw new Error(
       'FALTAN DATOS: no hay ningun set de Yu-Gi-Oh! con cartas abribles.\n' +
-        'Ejecuta:  docker compose --profile ingest run --rm ingest --game YGO --sets 4',
+        'Ejecuta:  docker compose --profile ingest run --rm --build ingest --game YGO --sets 4',
     );
   }
   return abrible;

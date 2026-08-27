@@ -17,7 +17,7 @@ haga una vez y la compartan backend y frontend.
 
 ```bash
 docker compose up --build
-docker compose --profile ingest run --rm ingest --game YGO --sets 3
+docker compose --profile ingest run --rm --build ingest --game YGO --sets 3
 docker compose --profile e2e run --rm e2e
 ```
 
