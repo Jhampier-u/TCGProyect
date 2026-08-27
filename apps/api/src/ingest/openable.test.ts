@@ -50,14 +50,14 @@ const NO_SON_SOBRES = [
 describe('clasificarSet (T-069)', () => {
   it('deja abribles los sets de sobres de verdad', () => {
     for (const name of SOBRES_DE_VERDAD) {
-      const r = clasificarSet({ game: 'YGO', name, cardCount: 100, releasedAt: '2020-01-01' }, HOY);
+      const r = clasificarSet({ game: 'YGO', name, code: 'XX', cardCount: 100, releasedAt: '2020-01-01' }, HOY);
       expect(r.abrible, `"${name}" deberia seguir siendo abrible: ${r.motivo ?? ''}`).toBe(true);
     }
   });
 
   it('descarta los productos que no son de sobres', () => {
     for (const name of NO_SON_SOBRES) {
-      const r = clasificarSet({ game: 'YGO', name, cardCount: 100, releasedAt: '2020-01-01' }, HOY);
+      const r = clasificarSet({ game: 'YGO', name, code: 'XX', cardCount: 100, releasedAt: '2020-01-01' }, HOY);
       expect(r.abrible, `"${name}" no es un producto de sobres`).toBe(false);
       expect(r.motivo).toBeTruthy();
     }
@@ -66,16 +66,16 @@ describe('clasificarSet (T-069)', () => {
   it('descarta lo que no da ni para un sobre, sin mirar el nombre', () => {
     // Aritmetica, no heuristica: un sobre de Yu-Gi-Oh! son 9 cartas. 520 sets
     // del catalogo declaran menos, y 417 en Magic sobre 14.
-    expect(clasificarSet({ game: 'YGO', name: 'Un Set Cualquiera', cardCount: 8, releasedAt: '2020-01-01' }, HOY).abrible).toBe(false);
-    expect(clasificarSet({ game: 'YGO', name: 'Un Set Cualquiera', cardCount: 9, releasedAt: '2020-01-01' }, HOY).abrible).toBe(true);
-    expect(clasificarSet({ game: 'MTG', name: 'Stardates', cardCount: 1, releasedAt: '2020-01-01' }, HOY).abrible).toBe(false);
-    expect(clasificarSet({ game: 'PTCG', name: 'Un Set Cualquiera', cardCount: 10, releasedAt: '2020-01-01' }, HOY).abrible).toBe(true);
+    expect(clasificarSet({ game: 'YGO', name: 'Un Set Cualquiera', code: 'XX', cardCount: 8, releasedAt: '2020-01-01' }, HOY).abrible).toBe(false);
+    expect(clasificarSet({ game: 'YGO', name: 'Un Set Cualquiera', code: 'XX', cardCount: 9, releasedAt: '2020-01-01' }, HOY).abrible).toBe(true);
+    expect(clasificarSet({ game: 'MTG', name: 'Stardates', code: 'XX', cardCount: 1, releasedAt: '2020-01-01' }, HOY).abrible).toBe(false);
+    expect(clasificarSet({ game: 'PTCG', name: 'Un Set Cualquiera', code: 'XX', cardCount: 10, releasedAt: '2020-01-01' }, HOY).abrible).toBe(true);
   });
 
   it('el motivo dice cual de las dos reglas ha sido', () => {
-    expect(clasificarSet({ game: 'YGO', name: 'Starter Deck: Kaiba', cardCount: 50, releasedAt: '2020-01-01' }, HOY).motivo)
+    expect(clasificarSet({ game: 'YGO', name: 'Starter Deck: Kaiba', code: 'XX', cardCount: 50, releasedAt: '2020-01-01' }, HOY).motivo)
       .toContain('Starter Deck');
-    expect(clasificarSet({ game: 'YGO', name: 'Un Set Cualquiera', cardCount: 3, releasedAt: '2020-01-01' }, HOY).motivo)
+    expect(clasificarSet({ game: 'YGO', name: 'Un Set Cualquiera', code: 'XX', cardCount: 3, releasedAt: '2020-01-01' }, HOY).motivo)
       .toContain('9');
   });
 
@@ -84,16 +84,16 @@ describe('clasificarSet (T-069)', () => {
     // es su subconjunto. Un patron que se llevara los dos por delante quitaria
     // del catalogo un set de 160 cartas.
     expect(
-      clasificarSet({ game: 'PTCG', name: 'Crown Zenith', cardCount: 160, releasedAt: '2023-01-20' }, HOY)
+      clasificarSet({ game: 'PTCG', name: 'Crown Zenith', code: 'XX', cardCount: 160, releasedAt: '2023-01-20' }, HOY)
         .abrible,
     ).toBe(true);
     expect(
-      clasificarSet({ game: 'PTCG', name: 'Lost Origin', cardCount: 196, releasedAt: '2022-09-09' }, HOY)
+      clasificarSet({ game: 'PTCG', name: 'Lost Origin', code: 'XX', cardCount: 196, releasedAt: '2022-09-09' }, HOY)
         .abrible,
     ).toBe(true);
     // `Hidden Fates` es un booster; `Hidden Fates Shiny Vault`, su boveda.
     expect(
-      clasificarSet({ game: 'PTCG', name: 'Hidden Fates', cardCount: 69, releasedAt: '2019-08-23' }, HOY)
+      clasificarSet({ game: 'PTCG', name: 'Hidden Fates', code: 'XX', cardCount: 69, releasedAt: '2019-08-23' }, HOY)
         .abrible,
     ).toBe(true);
   });
@@ -106,11 +106,11 @@ describe('clasificarSet (T-069)', () => {
     //
     // Abrirlo hoy entrega 8,98 ultra rare por sobre, medido sobre 200 sobres.
     expect(
-      clasificarSet({ game: 'YGO', name: 'Magnificent Maestros', cardCount: 24, releasedAt: '2026-11-12' }, HOY)
+      clasificarSet({ game: 'YGO', name: 'Magnificent Maestros', code: 'XX', cardCount: 24, releasedAt: '2026-11-12' }, HOY)
         .abrible,
     ).toBe(false);
     expect(
-      clasificarSet({ game: 'YGO', name: 'Eternity Code', cardCount: 105, releasedAt: '2020-04-30' }, HOY)
+      clasificarSet({ game: 'YGO', name: 'Eternity Code', code: 'XX', cardCount: 105, releasedAt: '2020-04-30' }, HOY)
         .abrible,
     ).toBe(true);
   });
@@ -118,7 +118,7 @@ describe('clasificarSet (T-069)', () => {
   it('el dia de salida YA cuenta como salido', () => {
     // Un `<` en vez de un `<=` esconderia el set justo el dia que sale.
     expect(
-      clasificarSet({ game: 'YGO', name: 'Un Set', cardCount: 100, releasedAt: HOY }, HOY).abrible,
+      clasificarSet({ game: 'YGO', name: 'Un Set', code: 'XX', cardCount: 100, releasedAt: HOY }, HOY).abrible,
     ).toBe(true);
   });
 
@@ -126,14 +126,14 @@ describe('clasificarSet (T-069)', () => {
     // Muchos promocionales antiguos no la traen. Ante la duda, abrible: los
     // otros dos filtros siguen aplicandose.
     expect(
-      clasificarSet({ game: 'YGO', name: 'Un Set', cardCount: 100, releasedAt: null }, HOY).abrible,
+      clasificarSet({ game: 'YGO', name: 'Un Set', code: 'XX', cardCount: 100, releasedAt: null }, HOY).abrible,
     ).toBe(true);
   });
 
   it('un cardCount desconocido no descarta el set', () => {
     // La API puede no declararlo. Ante la duda, abrible: equivocarse hacia "no
     // abrible" hace desaparecer contenido real sin que nadie se entere.
-    expect(clasificarSet({ game: 'YGO', name: 'Un Set Cualquiera', cardCount: 0, releasedAt: '2020-01-01' }, HOY).abrible).toBe(true);
+    expect(clasificarSet({ game: 'YGO', name: 'Un Set Cualquiera', code: 'XX', cardCount: 0, releasedAt: '2020-01-01' }, HOY).abrible).toBe(true);
   });
 });
 
@@ -195,6 +195,25 @@ describe('lineaDeProducto (T-080)', () => {
     ]) {
       expect(lineaDeProducto('YGO', nombre), nombre).toBeNull();
     }
+  });
+
+  it('el codigo desempata donde el nombre no puede (T-082)', () => {
+    // `2019 Gold Sarcophagus Tin` es la LATA (14 cartas promocionales) y
+    // `2019 Gold Sarcophagus Tin Mega Pack` el sobre que lleva dentro (270).
+    // Por nombre no se separan; por codigo si.
+    expect(
+      clasificarSet({ game: 'YGO', name: '2019 Gold Sarcophagus Tin', code: 'TN19', cardCount: 14, releasedAt: '2019-08-29' }, HOY)
+        .abrible,
+    ).toBe(false);
+    expect(
+      clasificarSet({ game: 'YGO', name: '2019 Gold Sarcophagus Tin Mega Pack', code: 'MP19', cardCount: 270, releasedAt: '2019-08-29' }, HOY)
+        .abrible,
+    ).toBe(true);
+    // Y los Mega Pack que no llevan "Mega Pack" en el nombre se reconocen igual.
+    expect(lineaDeProducto('YGO', '2021 Tin of Ancient Battles', 'MP21')).toBe('mega_pack');
+    expect(lineaDeProducto('YGO', '25th Anniversary Tin: Dueling Mirrors', 'MP24')).toBe('mega_pack');
+    // `MP1` son las promocionales de McDonald's de 2002: DOS digitos, no uno.
+    expect(lineaDeProducto('YGO', "McDonald's Promotional Cards", 'MP1')).toBeNull();
   });
 
   it('solo aplica a Yu-Gi-Oh!', () => {

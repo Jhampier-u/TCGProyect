@@ -118,7 +118,8 @@ C:\ProyectoTCG\
 │       ├── 0019_blk_wht_fidelidad.{up,down}.sql
 │       ├── 0020_lineas_de_producto.{up,down}.sql
 │       ├── 0021_ygo_plantillas_de_linea.{up,down}.sql
-│       └── 0022_ygo_collectors_rare.{up,down}.sql
+│       ├── 0022_ygo_collectors_rare.{up,down}.sql
+│       └── 0023_ygo_cola_larga.{up,down}.sql
 │
 ├── packages\shared\             <- @tcg/shared: contrato de dominio
 │   └── src\

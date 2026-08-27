@@ -1,6 +1,6 @@
 # Tareas Pendientes
 
-**Última actualización:** 2026-08-27 (S028) · **Total abiertas:** 2 — T-082 (⚪) y T-083 (🟡), ninguna bloqueante
+**Última actualización:** 2026-08-27 (S028) · **Total abiertas:** 1 — T-083 (🟡), no bloqueante
 
 Leyenda de prioridad: 🔴 crítica · 🟠 alta · 🟡 media · ⚪ baja
 
@@ -65,7 +65,6 @@ hacerlas.
 | ID | Tarea | Agente | Prio |
 |---|---|---|---|
 | T-083 | **P-040**: cambiar la rareza de una impresión de Yu-Gi-Oh! la DUPLICA en vez de actualizarla, porque el `external_id` lleva la rareza dentro. Se mitigó a mano borrando 110 huérfanas; falta que la ingesta retire lo que un set ya no produce — sin borrar lo que una apertura referencia (P-005) | Backend | 🟡 |
-| T-082 | **La cola larga de Yu-Gi-Oh!**: 15 sets, cada uno con una o dos rarezas sueltas (`ultra_rare_pharaohs_rare`, `10000_secret_rare`, `ghost_gold_rare`, `platinum_rare`, `ultra_parallel_rare`…). Son productos de uno o dos sets; cada uno necesitaría su propia plantilla por `set_id`, que es el nivel 1 de precedencia y ahora sí se puede usar | Base de Datos | ⚪ |
 
 ### Además, anotado al hacer T-035
 

@@ -59,13 +59,13 @@ export class CatalogRepository implements ImageRepository {
         // nombre y el tamano que el origen declara, y no se toca `in_boosters`:
         // son dos cosas distintas y confundirlas es P-033.
         clasificarSet(
-          { game: s.game, name: s.name, cardCount: s.cardCount, releasedAt: s.releasedAt },
+          { game: s.game, name: s.name, code: s.code, cardCount: s.cardCount, releasedAt: s.releasedAt },
           hoyISO(),
         ).abrible
           ? 1
           : 0,
         // La linea de producto a la que pertenece, si es de alguna (T-080).
-        lineaDeProducto(s.game, s.name),
+        lineaDeProducto(s.game, s.name, s.code),
         s.iconUrl,
       ]);
       await this.db.query(
@@ -145,9 +145,9 @@ export class CatalogRepository implements ImageRepository {
    */
   async reclasificarSets(): Promise<number> {
     const rows = await this.db.select<{
-      id: number; game_id: number; name: string; card_count: number;
+      id: number; game_id: number; name: string; code: string; card_count: number;
       released_at: string | Date | null; is_openable: number; product_line: string | null;
-    }>(`SELECT id, game_id, name, card_count, released_at, is_openable, product_line FROM sets`);
+    }>(`SELECT id, game_id, name, code, card_count, released_at, is_openable, product_line FROM sets`);
 
     // Se calcula UNA vez para toda la pasada: si se tomara por fila, una
     // ejecucion a medianoche clasificaria unos sets con un dia y otros con el
@@ -161,13 +161,14 @@ export class CatalogRepository implements ImageRepository {
         {
           game: gameCodeOf(Number(r.game_id)),
           name: r.name,
+          code: r.code,
           cardCount: Number(r.card_count),
           // `DATE` llega como `Date` con mysql2; se recorta a `YYYY-MM-DD`.
           releasedAt: r.released_at ? String(r.released_at).slice(0, 10) : null,
         },
         hoy,
       ).abrible;
-      const linea = lineaDeProducto(gameCodeOf(Number(r.game_id)), r.name);
+      const linea = lineaDeProducto(gameCodeOf(Number(r.game_id)), r.name, r.code);
       if (linea !== r.product_line) {
         await this.db.query(`UPDATE sets SET product_line = ? WHERE id = ?`, [linea, Number(r.id)]);
       }

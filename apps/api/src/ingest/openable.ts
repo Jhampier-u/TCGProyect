@@ -58,6 +58,22 @@ const NO_ES_SOBRE: ReadonlyArray<{ patron: RegExp; que: string }> = [
   // sobres del padre. Medido: la boveda de Hidden Fates son 94 impresiones de
   // las que 80 son shiny, y su techo era del 14,9%.
   { patron: /\bShiny Vault\b/i, que: 'boveda shiny de un set padre' },
+  // `Noble Knights of the Round Table Box Set`: 38 impresiones, TODAS platinum
+  // rare. Una caja de coleccionista, no un sobre.
+  { patron: /\bBox Set\b/i, que: 'caja' },
+];
+
+/**
+ * Codigos de set que el origen usa como convencion propia (T-082).
+ *
+ * `TN19`, `TN23` son la LATA en si, con sus 14-16 cartas promocionales. El Mega
+ * Pack que viene dentro es un set APARTE, con codigo `MP19` / `MP23` y 270-283
+ * impresiones. Por nombre no se distinguen -- las dos se llaman "2019 Gold
+ * Sarcophagus Tin ..." -- y por eso en T-069 se descarto un patron `Tin`:
+ * habria matado los Mega Pack, que si son sobres. El codigo si los separa.
+ */
+const CODIGOS_QUE_NO_SON_SOBRES: ReadonlyArray<{ patron: RegExp; que: string }> = [
+  { patron: /^TN\d{2}$/i, que: 'lata, no el Mega Pack que lleva dentro' },
 ];
 
 /**
@@ -81,6 +97,8 @@ const NO_ES_SOBRE: ReadonlyArray<{ patron: RegExp; que: string }> = [
 export interface SetAClasificar {
   game: GameCode;
   name: string;
+  /** Codigo del set. El origen lo usa como convencion y a veces dice mas que el nombre. */
+  code: string;
   /** Cartas que el origen declara. 0 o negativo = no lo declara. */
   cardCount: number;
   /** `YYYY-MM-DD`, o nulo si el origen no la da. */
@@ -120,6 +138,9 @@ export function clasificarSet(set: SetAClasificar, hoy: string): Clasificacion {
   for (const { patron, que } of NO_ES_SOBRE) {
     if (patron.test(set.name)) return { abrible: false, motivo: `nombre de ${que}` };
   }
+  for (const { patron, que } of CODIGOS_QUE_NO_SON_SOBRES) {
+    if (patron.test(set.code)) return { abrible: false, motivo: `codigo de ${que}` };
+  }
 
   // Comparacion de cadenas `YYYY-MM-DD`, que ordena igual que las fechas y no
   // arrastra husos horarios: `new Date()` sobre una fecha suelta la interpreta
@@ -155,13 +176,20 @@ export function clasificarSet(set: SetAClasificar, hoy: string): Clasificacion {
  * SIGUEN SIENDO HEURISTICA, asi que lo que asignan sale en
  * `npm run packs:cobertura` -- misma disciplina que T-069.
  */
-const LINEAS: ReadonlyArray<{ linea: string; patron: RegExp }> = [
+const LINEAS: ReadonlyArray<{ linea: string; patron: RegExp; porCodigo?: RegExp }> = [
   { linea: 'duel_terminal', patron: /\b(Duel Terminal|Hidden Arsenal: Chapter)\b/i },
   { linea: 'gold_series', patron: /\b(Gold Series|Premium Gold|Maximum Gold)\b/i },
   { linea: 'battle_pack', patron: /\b(Battle Pack|Star Pack|War of the Giants: Round)\b/i },
-  { linea: 'mega_pack', patron: /\bMega[- ]Pack\b/i },
+  // Los Mega Pack de lata NO llevan "Mega Pack" en el nombre desde 2021:
+  // `2021 Tin of Ancient Battles`, `25th Anniversary Tin: Dueling Mirrors`. El
+  // codigo si es consistente -- MP14 a MP25 -- y con DOS digitos no colisiona
+  // con `MP1`, las promocionales de McDonald's de 2002.
+  { linea: 'mega_pack', patron: /\bMega[- ]Pack\b/i, porCodigo: /^MP\d{2}$/i },
   { linea: 'rarity_collection', patron: /\b(Rarity Collection|Quarter Century (Bonanza|Stampede))\b/i },
   { linea: 'legendary_duelists', patron: /\bLegendary Duelists?\b/i },
+  // Tres productos distintos comparten el codigo MVP1 -- Movie Pack, Gold
+  // Edition y Secret Edition -- y cada uno es de UNA sola rareza.
+  { linea: 'movie_pack', patron: /\bMovie Pack\b/i },
 ];
 
 /**
@@ -171,7 +199,7 @@ const LINEAS: ReadonlyArray<{ linea: string; patron: RegExp }> = [
  * con su propia escalera de rarezas. Magic y Pokemon cambian de estructura por
  * EPOCA, y eso ya lo cubre la ventana de fechas.
  */
-export function lineaDeProducto(game: GameCode, name: string): string | null {
+export function lineaDeProducto(game: GameCode, name: string, code = ''): string | null {
   if (game !== 'YGO') return null;
-  return LINEAS.find((l) => l.patron.test(name))?.linea ?? null;
+  return LINEAS.find((l) => l.patron.test(name) || (l.porCodigo?.test(code) ?? false))?.linea ?? null;
 }

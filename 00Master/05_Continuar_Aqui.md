@@ -158,11 +158,9 @@ son útiles para la lógica, pero **la fidelidad de sus datos determina lo que e
 **Los ocho hitos están cerrados** y no queda nada bloqueante. Lo único abierto del proyecto es una tarea de
 producto, y tiene una decisión detrás que conviene tomar antes de teclear:
 
-- **T-080** — plantillas por línea de producto de Yu-Gi-Oh!. Son 80 sets: Duel Terminal, Gold Series,
-  Battle Pack, Mega Pack, Rarity Collection y Legendary Duelists. **El mecanismo de épocas no vale**
-  porque corren en paralelo a los Core Booster en las mismas fechas: hace falta usar el nivel 1 de
-  precedencia de `findTemplate` (plantilla por `set_id`, que existe y nunca se ha usado) y decidir un
-  criterio para asignarla. Es una decisión de diseño, no más de lo mismo.
+- **T-083** — cambiar la rareza de una impresión de Yu-Gi-Oh! la **duplica** en vez de actualizarla,
+  porque el `external_id` lleva la rareza dentro (P-040). Se mitigó a mano borrando 110 huérfanas;
+  falta que la ingesta retire lo que un set ya no produce, sin borrar lo que una apertura referencia.
 
 **Cómo se ejecuta la suite:**
 
@@ -180,7 +178,7 @@ Las ocho tareas de H8c están cerradas. Lo que queda abierto salió de hacerlas,
 
 | Tarea | Qué pasa si no se hace |
 |---|---|
-| **T-080** | 80 sets de Yu-Gi-Oh! de líneas de producto con cartas inalcanzables |
+| **T-083** | Cambiar una rareza duplica la impresión en vez de actualizarla (P-040) |
 
 ### Bloqueada por ti
 **Nada.** T-005 se cerró en S028: la clave de Pokémon está puesta en `.env` y verificada.
