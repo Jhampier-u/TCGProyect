@@ -1,6 +1,6 @@
 # Tareas Pendientes
 
-**Última actualización:** 2026-08-26 (S028) · **Total abiertas:** 1 — T-073, ⚪ y no bloqueante
+**Última actualización:** 2026-08-26 (S028) · **Total abiertas:** 1 — T-080 (líneas de producto de Yu-Gi-Oh!), ⚪ y no bloqueante
 
 Leyenda de prioridad: 🔴 crítica · 🟠 alta · 🟡 media · ⚪ baja
 
@@ -64,7 +64,7 @@ hacerlas.
 
 | ID | Tarea | Agente | Prio |
 |---|---|---|---|
-| T-073 | **La fidelidad de *Black Bolt* / *White Flare***. Salieron hace 404 días y están completos (172 de 172 declaradas), pero tienen 69 Illustration Rare de 172 impresiones —el 40 % del set frente al 8 % de un booster normal— y su plantilla les da el 10,2 %. Todas las cartas son alcanzables; lo que falta es que el sobre se parezca al producto, y para eso hacen falta tasas que nadie publica | Base de Datos | ⚪ |
+| T-080 | **Plantillas por línea de producto de Yu-Gi-Oh!**. 80 sets con cartas inalcanzables: Duel Terminal (DT01-07, HAC1), Gold Series (GLD1-5, PGLD, MAGO), Battle Pack (BP01-03, SP13-18), Mega Pack (MP19-25), Rarity Collection (RA01-05) y Legendary Duelists (LED7-9, LD10). **El mecanismo de épocas no sirve**: corren en paralelo a los Core Booster en las mismas fechas, así que una ventana por fecha las solaparía. Necesita plantillas por `set_id` — el nivel 1 de precedencia, que existe y nunca se ha usado — y un criterio para asignarlas | Base de Datos | ⚪ |
 
 ### Además, anotado al hacer T-035
 

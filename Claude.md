@@ -111,7 +111,11 @@ C:\ProyectoTCG\
 │       ├── 0012_ptcg_era_templates.{up,down}.sql
 │       ├── 0013_set_is_openable.{up,down}.sql
 │       ├── 0014_ptcg_swsh_y_huecos.{up,down}.sql
-│       └── 0015_widen_cmc.{up,down}.sql
+│       ├── 0015_widen_cmc.{up,down}.sql
+│       ├── 0016_mtg_special_y_bonus.{up,down}.sql
+│       ├── 0017_ygo_paralelas_todas_las_epocas.{up,down}.sql
+│       ├── 0018_ptcg_eras_historicas.{up,down}.sql
+│       └── 0019_blk_wht_fidelidad.{up,down}.sql
 │
 ├── packages\shared\             <- @tcg/shared: contrato de dominio
 │   └── src\
