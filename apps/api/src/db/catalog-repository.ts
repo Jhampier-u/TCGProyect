@@ -3,7 +3,7 @@ import { GAME_IDS } from '@tcg/shared';
 import type { Database } from './connection.js';
 import type { ImageRepository, PendingImage } from '../images/types.js';
 import { iconKeyFromUrl } from '../images/image-harvester.js';
-import { clasificarSet } from '../ingest/openable.js';
+import { clasificarSet, lineaDeProducto } from '../ingest/openable.js';
 
 /** Hoy en `YYYY-MM-DD`, en hora local, que es como el origen fecha los sets. */
 function hoyISO(): string {
@@ -64,15 +64,17 @@ export class CatalogRepository implements ImageRepository {
         ).abrible
           ? 1
           : 0,
+        // La linea de producto a la que pertenece, si es de alguna (T-080).
+        lineaDeProducto(s.game, s.name),
         s.iconUrl,
       ]);
       await this.db.query(
-        `INSERT INTO sets (game_id, external_id, code, name, released_at, card_count, is_openable, icon_url)
+        `INSERT INTO sets (game_id, external_id, code, name, released_at, card_count, is_openable, product_line, icon_url)
          VALUES ?
          ON DUPLICATE KEY UPDATE
            code = VALUES(code), name = VALUES(name),
            released_at = VALUES(released_at), card_count = VALUES(card_count),
-           is_openable = VALUES(is_openable),
+           is_openable = VALUES(is_openable), product_line = VALUES(product_line),
            icon_url = VALUES(icon_url)`,
         [values],
       );
@@ -144,8 +146,8 @@ export class CatalogRepository implements ImageRepository {
   async reclasificarSets(): Promise<number> {
     const rows = await this.db.select<{
       id: number; game_id: number; name: string; card_count: number;
-      released_at: string | Date | null; is_openable: number;
-    }>(`SELECT id, game_id, name, card_count, released_at, is_openable FROM sets`);
+      released_at: string | Date | null; is_openable: number; product_line: string | null;
+    }>(`SELECT id, game_id, name, card_count, released_at, is_openable, product_line FROM sets`);
 
     // Se calcula UNA vez para toda la pasada: si se tomara por fila, una
     // ejecucion a medianoche clasificaria unos sets con un dia y otros con el
@@ -165,6 +167,11 @@ export class CatalogRepository implements ImageRepository {
         },
         hoy,
       ).abrible;
+      const linea = lineaDeProducto(gameCodeOf(Number(r.game_id)), r.name);
+      if (linea !== r.product_line) {
+        await this.db.query(`UPDATE sets SET product_line = ? WHERE id = ?`, [linea, Number(r.id)]);
+      }
+
       if (abrible === (Number(r.is_openable) === 1)) continue;
       (abrible ? abren : cambian).push(Number(r.id));
     }

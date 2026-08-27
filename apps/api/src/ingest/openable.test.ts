@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { clasificarSet, CARTAS_POR_SOBRE } from './openable.js';
+import { clasificarSet, lineaDeProducto, CARTAS_POR_SOBRE } from './openable.js';
 import { GAME_IDS, type GameCode } from '@tcg/shared';
 
 /** Nombres reales del catalogo, no inventados. */
@@ -156,5 +156,51 @@ describe('CARTAS_POR_SOBRE no puede desviarse del seed', () => {
     for (const [game, cartas] of Object.entries(CARTAS_POR_SOBRE)) {
       expect(delSeed.get(GAME_IDS[game as GameCode]), `${game} no coincide con el seed`).toBe(cartas);
     }
+  });
+});
+
+describe('lineaDeProducto (T-080)', () => {
+  it('reconoce las seis lineas por nombres reales del catalogo', () => {
+    const casos: Array<[string, string]> = [
+      ['Duel Terminal 5a', 'duel_terminal'],
+      ['Hidden Arsenal: Chapter 1', 'duel_terminal'],
+      ['Gold Series 4: Pyramids Edition', 'gold_series'],
+      ['Premium Gold: Return of the Bling', 'gold_series'],
+      ['Maximum Gold: El Dorado', 'gold_series'],
+      ['Battle Pack 2: War of the Giants', 'battle_pack'],
+      ['Star Pack ARC-V', 'battle_pack'],
+      ['War of the Giants: Round 2', 'battle_pack'],
+      ['2014 Mega-Tin Mega Pack', 'mega_pack'],
+      ['2025 Mega-Pack Tin', 'mega_pack'],
+      ['25th Anniversary Rarity Collection II', 'rarity_collection'],
+      ['Quarter Century Bonanza', 'rarity_collection'],
+      ['Legendary Duelists: Rage of Ra', 'legendary_duelists'],
+      ['Legendary Duelists', 'legendary_duelists'],
+    ];
+    for (const [nombre, linea] of casos) {
+      expect(lineaDeProducto('YGO', nombre), nombre).toBe(linea);
+    }
+  });
+
+  it('NO se lleva por delante los Core Booster que se le parecen', () => {
+    // Los tres los cazaba un prefijo de codigo, y son sets de sobres normales.
+    // Por eso la clasificacion es por NOMBRE: medido, no supuesto.
+    for (const nombre of [
+      'Burst Protocol',            // BPRO, lo cazaba /^BP/
+      'Legacy of Destruction',     // LEDE, lo cazaba /^LED/
+      'Legendary Dragon Decks',    // LEDD, idem
+      "McDonald's Promotional Cards", // MP1, lo cazaba /^MP1/
+      'Battles of Legend: Crystal Revenge',
+      'Maze of Millennia',
+    ]) {
+      expect(lineaDeProducto('YGO', nombre), nombre).toBeNull();
+    }
+  });
+
+  it('solo aplica a Yu-Gi-Oh!', () => {
+    // Magic y Pokemon cambian de estructura por EPOCA, y eso ya lo cubre la
+    // ventana de fechas. Buscar lineas ahi seria inventarse un problema.
+    expect(lineaDeProducto('MTG', 'Battle Pack: Epic Dawn')).toBeNull();
+    expect(lineaDeProducto('PTCG', 'Gold Series')).toBeNull();
   });
 });

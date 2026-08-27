@@ -138,3 +138,40 @@ export function clasificarSet(set: SetAClasificar, hoy: string): Clasificacion {
 
   return { abrible: true };
 }
+
+/**
+ * Lineas de producto de Yu-Gi-Oh! (T-080).
+ *
+ * POR NOMBRE Y NO POR CODIGO, y esto se decidio MIDIENDO. Los prefijos de codigo
+ * parecian mas fiables y son una trampa: `^BP` se lleva `BPRO` (Burst Protocol,
+ * un Core Booster), `^LED` se lleva `LEDE` (Legacy of Destruction, otro) y
+ * `^MP1` se lleva las promocionales de McDonald's de 2002. Los nombres, en
+ * cambio, separan limpio: "Legendary Duelists" no casa con "Legendary Dragon
+ * Decks" ni con "Legacy of Destruction".
+ *
+ * Comprobado contra los 1032 nombres reales del catalogo antes de conectarlo:
+ * 70 sets en seis lineas, sin un solo falso positivo revisable.
+ *
+ * SIGUEN SIENDO HEURISTICA, asi que lo que asignan sale en
+ * `npm run packs:cobertura` -- misma disciplina que T-069.
+ */
+const LINEAS: ReadonlyArray<{ linea: string; patron: RegExp }> = [
+  { linea: 'duel_terminal', patron: /\b(Duel Terminal|Hidden Arsenal: Chapter)\b/i },
+  { linea: 'gold_series', patron: /\b(Gold Series|Premium Gold|Maximum Gold)\b/i },
+  { linea: 'battle_pack', patron: /\b(Battle Pack|Star Pack|War of the Giants: Round)\b/i },
+  { linea: 'mega_pack', patron: /\bMega[- ]Pack\b/i },
+  { linea: 'rarity_collection', patron: /\b(Rarity Collection|Quarter Century (Bonanza|Stampede))\b/i },
+  { linea: 'legendary_duelists', patron: /\bLegendary Duelists?\b/i },
+];
+
+/**
+ * A que linea de producto pertenece un set, o `null` si a ninguna.
+ *
+ * Solo Yu-Gi-Oh!: es el unico de los tres juegos que publica lineas paralelas
+ * con su propia escalera de rarezas. Magic y Pokemon cambian de estructura por
+ * EPOCA, y eso ya lo cubre la ventana de fechas.
+ */
+export function lineaDeProducto(game: GameCode, name: string): string | null {
+  if (game !== 'YGO') return null;
+  return LINEAS.find((l) => l.patron.test(name))?.linea ?? null;
+}

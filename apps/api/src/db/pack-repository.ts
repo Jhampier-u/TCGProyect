@@ -28,8 +28,14 @@ export class PackRepositoryMysql implements PackRepository {
    *
    * Precedencia, de mas especifica a menos:
    *   1. La propia del set (`set_id`)
-   *   2. La de la EPOCA cuya ventana contiene `sets.released_at` (T-034)
-   *   3. La generica del juego
+   *   2. La de su LINEA DE PRODUCTO (`product_line`, T-080)
+   *   3. La de la EPOCA cuya ventana contiene `sets.released_at` (T-034)
+   *   4. La generica del juego
+   *
+   * La linea va ANTES que la epoca porque es mas especifica: un Gold Series de
+   * 2010 es antes un Gold Series que un sobre de 2010. Y las lineas no se
+   * pueden expresar como ventanas -- corren en paralelo a los Core Booster en
+   * las mismas fechas -- que es justo por lo que hizo falta este nivel.
    *
    * Un `CASE` explicito y no un `ORDER BY (x IS NULL)`: con tres niveles, el
    * truco de ordenar por un booleano deja de leerse solo.
@@ -52,17 +58,20 @@ export class PackRepositoryMysql implements PackRepository {
        JOIN sets s ON s.game_id = t.game_id AND s.id = ? AND s.is_openable = 1
        WHERE
              (t.set_id = s.id AND t.is_default = 1)
-          OR (t.set_id IS NULL
+          OR (t.set_id IS NULL AND t.product_line IS NOT NULL
+              AND t.product_line = s.product_line)
+          OR (t.set_id IS NULL AND t.product_line IS NULL
               AND (t.valid_from IS NOT NULL OR t.valid_to IS NOT NULL)
               AND s.released_at IS NOT NULL
               AND (t.valid_from IS NULL OR s.released_at >= t.valid_from)
               AND (t.valid_to   IS NULL OR s.released_at <= t.valid_to))
-          OR (t.set_id IS NULL AND t.is_default = 1
+          OR (t.set_id IS NULL AND t.product_line IS NULL AND t.is_default = 1
               AND t.valid_from IS NULL AND t.valid_to IS NULL)
        ORDER BY CASE
                   WHEN t.set_id = s.id THEN 1
-                  WHEN t.valid_from IS NOT NULL OR t.valid_to IS NOT NULL THEN 2
-                  ELSE 3
+                  WHEN t.product_line IS NOT NULL THEN 2
+                  WHEN t.valid_from IS NOT NULL OR t.valid_to IS NOT NULL THEN 3
+                  ELSE 4
                 END
        LIMIT 1`,
       [setId],
