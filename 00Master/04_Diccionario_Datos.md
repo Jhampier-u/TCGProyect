@@ -112,8 +112,14 @@ fechas de salida que una plantilla describe. `findTemplate` resuelve en tres niv
 | Nivel | Condición |
 |---|---|
 | 1 | La plantilla propia del set (`set_id = s.id`) |
-| 2 | La de la **época** cuya ventana contiene `sets.released_at` |
-| 3 | La genérica del juego (`set_id`, `valid_from` y `valid_to` a NULL, `is_default = 1`) |
+| 2 | La de su **línea de producto** (`product_line`, T-080) |
+| 3 | La de la **época** cuya ventana contiene `sets.released_at` |
+| 4 | La genérica del juego (todo a NULL, `is_default = 1`) |
+
+**La línea va antes que la época** porque es más específica: un *Gold Series* de 2010 es antes un
+Gold Series que un sobre de 2010. Y las líneas **no se pueden expresar como ventanas**: Gold Series
+(2008-2021), Battle Pack (2012-2026) y Mega Pack (2014-2025) se solapan entre sí y con los Core
+Booster de esos mismos años. Ése es exactamente el motivo de que este nivel exista.
 
 Un NULL en cualquiera de las dos fechas significa **sin límite por ese lado**; las dos a NULL
 significan que la plantilla no es de época. Las de época llevan `is_default = 0` porque

@@ -1,6 +1,6 @@
 # Tareas Pendientes
 
-**Última actualización:** 2026-08-26 (S028) · **Total abiertas:** 1 — T-080 (líneas de producto de Yu-Gi-Oh!), ⚪ y no bloqueante
+**Última actualización:** 2026-08-26 (S028) · **Total abiertas:** 2 — T-081 y T-082, las dos ⚪ y ninguna bloqueante
 
 Leyenda de prioridad: 🔴 crítica · 🟠 alta · 🟡 media · ⚪ baja
 
@@ -64,7 +64,8 @@ hacerlas.
 
 | ID | Tarea | Agente | Prio |
 |---|---|---|---|
-| T-080 | **Plantillas por línea de producto de Yu-Gi-Oh!**. 80 sets con cartas inalcanzables: Duel Terminal (DT01-07, HAC1), Gold Series (GLD1-5, PGLD, MAGO), Battle Pack (BP01-03, SP13-18), Mega Pack (MP19-25), Rarity Collection (RA01-05) y Legendary Duelists (LED7-9, LD10). **El mecanismo de épocas no sirve**: corren en paralelo a los Core Booster en las mismas fechas, así que una ventana por fecha las solaparía. Necesita plantillas por `set_id` — el nivel 1 de precedencia, que existe y nunca se ha usado — y un criterio para asignarlas | Base de Datos | ⚪ |
+| T-081 | **Normalizar las etiquetas que no son rarezas** (P-007). YGOPRODeck mete en el campo de rareza cosas que describen el ESTADO de la carta: `new` (80 impresiones), `reprint` (11), `new_artwork` (9), `european_oceanian_debut` (6), `cr`, `force_smw`, `european_debut`, `oceanian_debut`. Dejan 16 sets con cartas inalcanzables, y **no deben ir en ninguna plantilla**: el arreglo es mapearlas a su rareza real en la ingesta | Backend | ⚪ |
+| T-082 | **La cola larga de Yu-Gi-Oh!**: 15 sets, cada uno con una o dos rarezas sueltas (`ultra_rare_pharaohs_rare`, `10000_secret_rare`, `ghost_gold_rare`, `platinum_rare`, `ultra_parallel_rare`…). Son productos de uno o dos sets; cada uno necesitaría su propia plantilla por `set_id`, que es el nivel 1 de precedencia y ahora sí se puede usar | Base de Datos | ⚪ |
 
 ### Además, anotado al hacer T-035
 
