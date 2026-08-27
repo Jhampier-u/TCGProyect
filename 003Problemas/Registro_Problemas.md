@@ -1,6 +1,6 @@
 # Registro de Problemas
 
-**Última actualización:** 2026-08-26 (S028) · **Abiertos:** 5 · **Cerrados:** 33
+**Última actualización:** 2026-08-26 (S028) · **Abiertos:** 5 · **Cerrados:** 34
 
 Severidad: 🔴 crítica · 🟠 alta · 🟡 media · ⚪ baja
 
@@ -1341,3 +1341,54 @@ El comentario del código las llamaba *"última línea"* y no había línea.
 **Lección, y ya van varias de la misma familia.** El límite estaba escrito, revisado y comentado; lo
 que no estaba era medido. Es P-029 otra vez —una salvaguarda que existe y no hace nada— y no lo
 encontró una auditoría de seguridad (H8b, que iba de esto), sino intentar relanzar unos tests.
+
+---
+
+## P-039 ✅ CERRADO · La ingesta completa de Magic abortaba con un error sin nombre
+**Estado:** CERRADO el 2026-08-26 (S028) — migración 0015
+**Severidad:** 🟠
+**Origen:** **la primera ingesta completa de Magic**, a los 98 sets de 1045.
+
+**Detalle.** El CLI abortó con esto:
+
+```
+[MTG] abortado: Out of range value for column '(null)' at row 1
+```
+
+**El nombre de columna vacío es la pista**, y no es un error de MySQL: es lo que pone cuando el
+desbordamiento ocurre calculando una columna **generada**. En `cards` hay cinco, y la culpable era
+`cmc DECIMAL(4,1)`, que topa en **999,9**.
+
+**El dato no estaba mal; la columna estaba estrecha.** Magic tiene cartas con coste de maná de
+**1.000.000** —las de los *Un-sets*, *Gleemax* entre ellas— y los cuatro sets que las traen (`unh`,
+`ust`, `und`, `unf`) estaban justo en la cola de ingesta. El máximo que había entrado en 27 sesiones
+era **16**.
+
+**Reproducido antes de tocar nada**, con el mismo mensaje:
+
+```sql
+CREATE TABLE t (game_data JSON, cmc DECIMAL(4,1) GENERATED ALWAYS AS (...) STORED);
+INSERT INTO t VALUES ('{"cmc": 16}');       -- entra
+INSERT INTO t VALUES ('{"cmc": 1000000}');  -- ERROR 1264 (22003)
+```
+
+**Por qué no se veía venir leyendo el esquema.** Un `SELECT` con ese mismo `CAST` **no falla**: trunca
+a 999,9 y emite un aviso. Es el `INSERT` en modo estricto el que lo convierte en error. Comprobar el
+esquema con una consulta habría dado tranquilidad falsa.
+
+**Solución:** migración `0015`, `DECIMAL(9,1)` — cabe hasta 99.999.999,9 y conserva los decimales,
+que Magic usa de verdad (las cartas de medio maná tienen cmc 0,5). Hay que **repetir la expresión
+generada entera**: un `MODIFY` que la omita convierte la columna en una normal y vacía. Y como `cmc`
+está en `idx_cards_game_cmc`, MySQL rehace el índice.
+
+**El rollback puede fallar, y está escrito que es correcto que falle.** Volver a `DECIMAL(4,1)` con
+esas cartas dentro da el mismo error 1264. Truncarlas para poder deshacer sería cambiar un problema
+visible por uno silencioso.
+
+**Verificado:** tras la migración, la ingesta terminó los 1045 sets con **0 fallidos** y
+`MAX(cmc) = 1000000.0`.
+
+**Lección, y es de las que este proyecto ya conoce.** El tipo de una columna es una **suposición sobre
+los datos**, y llevaba 27 sesiones sin ponerse a prueba porque el catálogo era pequeño. Es la familia
+de P-013 y P-015: una decisión de esquema que parece obvia hasta que llegan los datos raros. **Ingerir
+el catálogo entero es una prueba que ninguna muestra sustituye.**

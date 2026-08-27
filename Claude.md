@@ -110,7 +110,8 @@ C:\ProyectoTCG\
 │       ├── 0011_ygo_modern_gaps.{up,down}.sql
 │       ├── 0012_ptcg_era_templates.{up,down}.sql
 │       ├── 0013_set_is_openable.{up,down}.sql
-│       └── 0014_ptcg_swsh_y_huecos.{up,down}.sql
+│       ├── 0014_ptcg_swsh_y_huecos.{up,down}.sql
+│       └── 0015_widen_cmc.{up,down}.sql
 │
 ├── packages\shared\             <- @tcg/shared: contrato de dominio
 │   └── src\
