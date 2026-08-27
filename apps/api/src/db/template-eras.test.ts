@@ -31,6 +31,7 @@ const YGO_MODERNA_BASE = leer('0006_ygo_modern_booster.up.sql');
 const YGO_ERAS = leer('0010_ygo_era_templates.up.sql');
 const YGO_MODERNA = leer('0011_ygo_modern_gaps.up.sql');
 const PTCG_ERAS = leer('0012_ptcg_era_templates.up.sql');
+const PTCG_SWSH = leer('0014_ptcg_swsh_y_huecos.up.sql');
 
 interface Juego {
   id: number;
@@ -56,10 +57,10 @@ const JUEGOS: Juego[] = [
   {
     id: 3,
     nombre: 'Pokemon',
-    ventanasEn: [PTCG_ERAS],
-    plantillasEn: [PTCG_ERAS],
+    ventanasEn: [PTCG_ERAS, PTCG_SWSH],
+    plantillasEn: [PTCG_ERAS, PTCG_SWSH],
     siembrasEn: [SEED],
-    ventanasEsperadas: 2,
+    ventanasEsperadas: 4,
   },
 ];
 

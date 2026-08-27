@@ -33,6 +33,11 @@ const NO_SON_SOBRES = [
   "Yugi's Collector Box",
   'Duelist Revolution Sneak Peek Participation Card',
   'Speed Duel Starter Decks: Twisted Nightmares',
+  // Pokemon: subconjuntos de galeria, no productos (medido: 30, 30 y 70
+  // impresiones y ni una comun entre los tres).
+  'Lost Origin Trainer Gallery',
+  'Silver Tempest Trainer Gallery',
+  'Crown Zenith Galarian Gallery',
 ];
 
 describe('clasificarSet (T-069)', () => {
@@ -65,6 +70,20 @@ describe('clasificarSet (T-069)', () => {
       .toContain('Starter Deck');
     expect(clasificarSet({ game: 'YGO', name: 'Un Set Cualquiera', cardCount: 3, releasedAt: '2020-01-01' }, HOY).motivo)
       .toContain('9');
+  });
+
+  it('NO descarta el set padre de una galeria', () => {
+    // `Crown Zenith` es un booster de verdad; `Crown Zenith Galarian Gallery`
+    // es su subconjunto. Un patron que se llevara los dos por delante quitaria
+    // del catalogo un set de 160 cartas.
+    expect(
+      clasificarSet({ game: 'PTCG', name: 'Crown Zenith', cardCount: 160, releasedAt: '2023-01-20' }, HOY)
+        .abrible,
+    ).toBe(true);
+    expect(
+      clasificarSet({ game: 'PTCG', name: 'Lost Origin', cardCount: 196, releasedAt: '2022-09-09' }, HOY)
+        .abrible,
+    ).toBe(true);
   });
 
   it('descarta lo que todavia NO HA SALIDO (T-067)', () => {

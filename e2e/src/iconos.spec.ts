@@ -32,22 +32,32 @@ test('el selector de sets ensena iconos y son rutas LOCALES', async ({ page, usu
   // Y se cargan de verdad: un `<img>` roto tambien "esta visible", que es como
   // P-036 se paso quince 404 sin que nadie lo notara.
   //
-  // Solo se exigen los que estan DENTRO de la parte visible de la lista. Los
-  // iconos van con `loading="lazy"` -- correcto en una lista de cientos de sets
-  // -- asi que los de mas abajo aun no se han pedido, y exigirlos seria pedirle
-  // al test que falle por hacer las cosas bien.
-  const rotos = await iconos.evaluateAll((els) => {
-    const lista = document.querySelector('.selector-set-lista')?.getBoundingClientRect();
-    if (!lista) return ['no hay lista'];
-    return els
-      .filter((e) => {
-        const r = e.getBoundingClientRect();
-        return r.top >= lista.top && r.bottom <= lista.bottom;
-      })
-      .filter((e) => !(e as HTMLImageElement).complete || (e as HTMLImageElement).naturalWidth === 0)
-      .map((e) => e.getAttribute('src') ?? '?');
-  });
-  expect(rotos, 'iconos visibles que no han cargado').toEqual([]);
+  // Se ESPERA a que carguen en vez de mirar un instante. La primera version
+  // comprobaba de golpe y paso hasta que el catalogo crecio: con mas sets en la
+  // lista, la descarga tarda mas que la asercion y el test empezo a fallar por
+  // una carrera, no por un icono roto. Un test que depende de llegar antes que
+  // la red no mide lo que dice medir.
+  //
+  // Solo se exigen los que estan DENTRO de la parte visible de la lista: van con
+  // `loading="lazy"` -- correcto con cientos de sets -- asi que los de mas abajo
+  // ni siquiera se han pedido.
+  await expect
+    .poll(
+      async () =>
+        iconos.evaluateAll((els) => {
+          const lista = document.querySelector('.selector-set-lista')?.getBoundingClientRect();
+          if (!lista) return ['no hay lista'];
+          return els
+            .filter((e) => {
+              const r = e.getBoundingClientRect();
+              return r.top >= lista.top && r.bottom <= lista.bottom;
+            })
+            .filter((e) => !(e as HTMLImageElement).complete || (e as HTMLImageElement).naturalWidth === 0)
+            .map((e) => e.getAttribute('src') ?? '?');
+        }),
+      { timeout: 10_000, message: 'iconos visibles que no llegaron a cargar' },
+    )
+    .toEqual([]);
 
   await page.screenshot({ path: 'artefactos/selector-iconos.png' });
 });

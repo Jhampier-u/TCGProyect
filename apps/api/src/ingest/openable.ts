@@ -41,6 +41,12 @@ const NO_ES_SOBRE: ReadonlyArray<{ patron: RegExp; que: string }> = [
   { patron: /\bCollector Box\b/i, que: 'caja de coleccionista' },
   { patron: /\bGift Box\b/i, que: 'caja regalo' },
   { patron: /\bValue Box\b/i, que: 'caja' },
+  // Pokemon: `Lost Origin Trainer Gallery`, `Crown Zenith Galarian Gallery`.
+  // No son productos: son el SUBCONJUNTO de galeria de su set padre, y sus
+  // cartas salen en los sobres del padre. Se ingestan como set aparte y sin ni
+  // una comun, asi que ni la aritmetica ni la fecha los cazan. El patron exige
+  // las dos palabras para no llevarse por delante al padre (`Crown Zenith`).
+  { patron: /\b(Trainer|Galarian) Gallery\b/i, que: 'galeria de un set padre' },
 ];
 
 /**
