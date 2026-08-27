@@ -1,7 +1,7 @@
 # 05 — Continuar aquí
 
 **Punto de guardado:** 2026-08-26, tras la sesión **S028**
-**Commit:** rama `main` · 384 tests de Vitest + 10 recorridos E2E en verde · `npm audit` limpio
+**Commit:** rama `main` · 385 tests de Vitest + 10 recorridos E2E en verde · `npm audit` limpio
 
 Este documento existe para retomar el proyecto en otra máquina o en otra sesión sin releer las 26
 bitácoras. Si sólo vas a leer un fichero, que sea éste.
@@ -182,8 +182,7 @@ Las ocho tareas de H8c están cerradas. Lo que queda abierto salió de hacerlas,
 | **T-073** | *Black Bolt* y *White Flare*: 40 % del set en Illustration Rare, la plantilla les da el 10,2 % |
 
 ### Bloqueada por ti
-- **T-005 — API key de Pokémon TCG** (`dev.pokemontcg.io`). Sin ella la API responde igual pero con
-  cuota diaria muy inferior: suficiente para desarrollar, insuficiente para la ingesta completa.
+**Nada.** T-005 se cerró en S028: la clave de Pokémon está puesta en `.env` y verificada.
 
 ---
 

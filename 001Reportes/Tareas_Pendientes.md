@@ -1,6 +1,6 @@
 # Tareas Pendientes
 
-**Última actualización:** 2026-08-26 (S028) · **Total abiertas:** 2 — 1 del proyecto (T-073) + T-005, que depende de ti
+**Última actualización:** 2026-08-26 (S028) · **Total abiertas:** 2 — T-073 y T-075, las dos ⚪ y ninguna bloqueante
 
 Leyenda de prioridad: 🔴 crítica · 🟠 alta · 🟡 media · ⚪ baja
 
@@ -11,7 +11,7 @@ previo. Sólo queda una tarea, y depende de ti, no del proyecto.
 
 | ID | Tarea | Agente | Prio | Depende de |
 |---|---|---|---|---|
-| T-005 | Obtener API key de Pokémon TCG en dev.pokemontcg.io | Usuario | 🟠 | — |
+*(T-005 cerrada en S028: la clave está puesta y verificada.)*
 
 ## Hito H1 — Esquema de datos ✅ COMPLETADO
 
@@ -112,3 +112,9 @@ resolverla contra `rarities.code` del juego correspondiente:
 - Motor `PackService` determinista por seed (H4) — el índice covering `idx_prints_pool` ya existe.
 - Componente `<PackOpening />` con Framer Motion (H5).
 - Auth JWT + hash Argon2id (H6) — `users.password_hash` ya dimensionado a VARCHAR(255).
+
+### Anotado al ampliar la ingesta de Pokémon (S028)
+
+| ID | Tarea | Agente | Prio |
+|---|---|---|---|
+| T-075 | **Reingestar los dos sets que fallaron**: `swsh12pt5` (Crown Zenith, 160 cartas) con HTTP 500 y `svp` con 502 — P-016 puro. Se recuperan relanzando el CLI, pero conviene hacerlo: sin Crown Zenith, su galería queda huérfana de set padre | Backend | ⚪ |

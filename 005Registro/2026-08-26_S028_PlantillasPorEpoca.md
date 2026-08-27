@@ -506,6 +506,73 @@ necesita tasas que nadie publica**, así que se registra en vez de inventarse.
 | `npm run packs:cobertura` | "Todos los sets son completables" en los tres juegos |
 | Sets sin publicar en el catálogo | 8 en Magic, 2 en Yu-Gi-Oh!, 0 en Pokémon |
 
+---
+
+# Octava parte: la ingesta de Pokémon, y lo que destapó (T-005, T-074)
+
+El usuario dio la clave de la API. La ingesta:
+
+```
+sets descubiertos 174 · procesados 18 · fallidos 2 · impresiones 3414
+[imagenes] descargadas 3414 · ya en disco 0 · fallidas 0 · reduccion 97.1%
+```
+
+**Cero imágenes fallidas.** Los dos sets caídos son P-016 tal cual —`swsh12pt5` con un 500 y `svp`
+con un 502—; se recuperan relanzando (**T-075**).
+
+| | antes | después |
+|---|---|---|
+| Sets de Pokémon ingestados | 9 | **27** |
+| Impresiones de Pokémon | 1295 | **4709** |
+| Imágenes en disco | 3635 | **7049** (173 MB) |
+
+## Y la comprobación hizo exactamente lo que se escribió para hacer
+
+Con el catálogo **3,6 veces más grande**, `packs:cobertura` señaló **once sets con cartas
+inalcanzables, tres al 0 %** — con nombre, porcentaje y rareza. Nadie tuvo que ir a mirar.
+
+Medido, eran **tres problemas distintos y sólo dos de plantilla**:
+
+**Las galerías.** *Lost Origin Trainer Gallery*, *Silver Tempest Trainer Gallery* y *Crown Zenith
+Galarian Gallery*: 30, 30 y 70 impresiones **sin ni una común**. No son productos: son el subconjunto
+de galería de su set padre, y sus cartas salen en los sobres del padre. Va al clasificador (T-069),
+no a una plantilla — con un test de que **el set padre sobrevive**, porque un patrón que se llevara
+`Crown Zenith` por delante quitaría un set de 160 cartas.
+
+**La era Sword & Shield**, que no tenía plantilla. *Silver Tempest* trae once rarezas de las que la
+de Scarlet & Violet nombra tres: techo del 67 %.
+
+**Dos huecos dentro de Scarlet & Violet.** *Paldean Fates* es una bóveda shiny —132 de sus 245
+impresiones lo son— y la plantilla no nombraba ninguna de las dos rarezas shiny: techo del 46,1 %. Y
+las `ace_spec_rare`, 33 impresiones repartidas por seis sets.
+
+**Las ACE SPEC van a la genérica y no a una ventana propia, y la cabecera dice por qué:** la ventana
+existiría —seis sets, diez meses— pero con peso 20 el coste de llevarla siempre es ~1 % de los hits
+mal repartido, contra una plantilla más que mantener para siempre.
+
+## Verificación, con sobres reales
+
+```
+SIT  Booster Sword & Shield · las ONCE rarezas del set vistas
+     rare 41,0% · rare_holo 26,3% · rare_holo_v 14,0% · rare_ultra 5,3% ...
+PAF  Booster Paldean Fates  · shiny_rare 30,0% · shiny_ultra_rare 3,7%
+TEF  Booster Scarlet & Violet · ace_spec_rare 2,0%
+```
+
+| Comprobación | Resultado |
+|---|---|
+| `npm run packs:cobertura` | **"Todos los sets son completables"**, los tres juegos |
+| `npm test` | **385/385** en 31 ficheros |
+| Suite E2E · `npm audit` | 10 passed · limpio |
+| Los pesos de las 5 plantillas de PTCG | suman 1000, con `JSON_TABLE` |
+
+## Un test que pasaba por llegar antes que la red
+
+Al crecer el catálogo, el test de los iconos empezó a fallar. Los ficheros estaban y la API los servía
+con `200`: lo que fallaba era la aserción, que miraba **un instante** en vez de esperar. Pasaba porque
+con pocos sets la descarga terminaba antes. **Un test que depende de llegar antes que la red no mide
+lo que dice medir**, así que ahora espera.
+
 ## Lo que NO se ha hecho, y por qué
 
 | ID | Qué queda |
@@ -526,5 +593,5 @@ que hace la aplicación, pero conviene saberlo antes de sacar conclusiones de es
 - **H8 cerrado.** H8a (suite E2E), H8b (seguridad) y H8c (las ocho de deuda técnica).
 - **T-068, T-069 y T-070 cerradas también**, fuera de H8c: las tres salieron del informe que se
   escribió para T-034.
-- Abiertas: **T-073** y T-005, que depende del usuario. Ninguna bloquea nada.
+- Abiertas: **T-073** y **T-075**, las dos ⚪. **Nada bloqueado por el usuario**: T-005 cerrada.
 - Problemas: 5 abiertos · 33 cerrados.
