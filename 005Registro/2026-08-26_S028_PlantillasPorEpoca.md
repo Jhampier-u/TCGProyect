@@ -648,7 +648,403 @@ que hace la aplicación, pero conviene saberlo antes de sacar conclusiones de es
 
 ---
 
-# Décima parte: T-083, y las filas que el origen dejó de listar (P-040)
+> **Nota de honestidad sobre las seis partes que siguen.** No se escribieron mientras ocurrían: se
+> reconstruyeron el 2026-08-27, al cerrar la sesión, a partir de las cabeceras de las migraciones, los
+> mensajes de commit y la tabla de tareas realizadas. Las cifras y la aritmética son las que quedaron
+> registradas en el momento; lo que no está aquí es el orden exacto en que se probaron las cosas, que
+> ya no se puede recuperar. Se dejan escritas porque el razonamiento —por qué una columna y no una
+> plantilla por set, por qué se descartó una regla que parecía obvia— es lo que no se deduce leyendo
+> el SQL.
+
+---
+
+# Décima parte: T-076, un error sin nombre de columna (P-039)
+
+## Cómo salió
+
+La primera ingesta completa de Magic abortó a los **98 sets de 1045**:
+
+```
+[MTG] abortado: Out of range value for column '(null)' at row 1
+```
+
+**El nombre de columna vacío es la pista.** MySQL lo deja así cuando el desbordamiento ocurre
+calculando una columna **generada**. En `cards` hay cinco, y la culpable era `cmc DECIMAL(4,1)`, que
+topa en 999,9.
+
+El dato no estaba mal: **la columna estaba estrecha.** Magic tiene cartas con coste de maná de
+**1.000.000** —las de los *Un-sets*, *Gleemax* entre ellas— y los cuatro sets que las traen (`unh`,
+`ust`, `und`, `unf`) estaban justo en la cola. El máximo que había entrado en 27 sesiones era **16**.
+
+## Reproducido antes de tocar nada
+
+```sql
+CREATE TABLE t (game_data JSON, cmc DECIMAL(4,1) GENERATED ALWAYS AS (...));
+INSERT INTO t VALUES ('{"cmc": 16}');       -- entra
+INSERT INTO t VALUES ('{"cmc": 1000000}');  -- ERROR 1264 (22003)
+```
+
+Y aquí está lo que explica por qué nadie lo vio venir leyendo el esquema: un
+`SELECT ... CAST(1000000 AS DECIMAL(4,1))` **sólo trunca** a 999,9 con un aviso. Es el `INSERT` en
+modo estricto el que lo convierte en error. El mismo valor, dos comportamientos, según la sentencia.
+
+## Lo que hubo que cuidar al arreglarlo
+
+`DECIMAL(9,1)` cabe hasta 99.999.999,9 —sitio de sobra por encima del millón sin irse a un tipo
+mayor— y **conserva el decimal**, porque el coste convertido de Magic lo usa de verdad: las cartas
+con medio maná (`{1/2}`) tienen `cmc` 0,5.
+
+Un `MODIFY` sobre una columna generada **exige repetir la expresión entera**. Omitirla la convertiría
+en una columna normal y vacía, en silencio. Y como `cmc` está en `idx_cards_game_cmc`, MySQL rehace
+ese índice.
+
+El rollback de esta migración **puede fallar, y debe**: si ya hay una carta con coste 1.000.000
+guardada, estrechar la columna otra vez no cabe. Está dicho en la cabecera del `.down.sql` en vez de
+dejar que alguien lo descubra.
+
+---
+
+# Undécima parte: T-077 y T-078, lo que sólo se ve con el catálogo entero
+
+Con Magic y Yu-Gi-Oh! ingestados completos, el informe de cobertura dejó de hablar de una muestra.
+
+## T-077 — `special` y `bonus` en el Play Booster (0016)
+
+1045 sets de Magic, 207 con pool y ofrecidos, y **sólo nueve** con cartas inalcanzables. Es una
+noticia buena y dice algo del juego: el vocabulario de rarezas de Magic —common, uncommon, rare,
+mythic— lleva treinta años estable, así que **una sola plantilla cubre de 1993 a 2026**. Nada que ver
+con Pokémon, que necesitó cuatro épocas para tres años.
+
+Los nueve fallaban por dos rarezas que la plantilla no nombraba:
+
+| Set | Impresiones | Techo | Rareza |
+|---|---|---|---|
+| `tsr` Time Spiral Remastered | 410 | 70,5 % | `special` |
+| `tsb` Time Spiral Timeshifted | 121 | **0,0 %** | el set entero |
+| `mps` Kaladesh Inventions | 54 | 0,0 % | `special` |
+| `mp2` Amonkhet Invocations | 54 | 0,0 % | `special` |
+| `plst` The List | 4654 | 99,9 % | `special` |
+| `cmr` / `clb` / `cmm` Commander | 361/361/451 | 99,7-99,8 % | `special` |
+| `vma` Vintage Masters | 325 | 97,2 % | `bonus` |
+
+Scryfall marca `special` lo que va en una hoja aparte —los Timeshifted de borde morado, los
+Masterpiece, los inventos de Kaladesh— y `bonus` la hoja extra de Vintage Masters. En el producto
+real son **insertos**: aparecen en el sobre, pero no en la tabla de rarezas normal. Van al slot 13,
+el último y el único siempre foil, que es el sitio del producto donde de verdad aparece un inserto.
+
+**Lo que esto no arregla, y se dijo en su sitio:** `tsb`, `mps` y `mp2` son hojas de inserto
+*enteras*, no productos; sus cartas salen en los sobres del set padre. Pasan a ser completables, pero
+"abrir un sobre" de ellas seguirá entregando catorce cartas `special`, que no se parece a nada real.
+Misma familia que las galerías de Pokémon (T-069).
+
+**Y una regla obvia que se descartó midiendo.** "Un set de una sola rareza no es un producto" habría
+resuelto los tres de golpe, y caza **505 sets de Yu-Gi-Oh!**, entre ellos productos reales como `MVP1`
+o `WI26`, donde todas las cartas son Ultra Rare por diseño. Habría quitado más contenido real del que
+arregla —el mismo error que ya se evitó con el patrón `Tin` en T-069—. Es la tercera heurística
+plausible que esta sesión rechaza porque la medición dice que no.
+
+## T-078 — las paralelas están en las cuatro épocas, no en una (0017)
+
+Un error de la **0010**, que sólo el catálogo completo podía destapar: puso `ultimate_rare` y
+`ghost_rare` sólo en la época 2 (2008-2016). Con nueve sets de Yu-Gi-Oh! ingestados no había forma de
+verlo. Con los 1032, sí: **143 sets** con cartas inalcanzables, y los primeros de la lista eran de
+2004-2007 —*Soul of the Duelist*, *Rise of Destiny*, *Flaming Eternity*— topados en el 70-74 % por
+`ultimate_rare`.
+
+Contado por época sobre los sets ofrecidos:
+
+| Época | `ultimate_rare` | `ghost_rare` | sets |
+|---|---|---|---|
+| 1 · hasta 2008-09-01 | 348 | 4 | 16 |
+| 2 · hasta 2016-01-13 | 290 | 30 | 48 |
+| 3 · hasta 2020-04-29 | 54 | 0 | 18 |
+| 4 · genérica | 479 | 22 | 37 |
+
+Las dos rarezas van de 2004 a 2026. **No son de una época: son las paralelas del Core Booster**, y
+llevan ahí toda la vida. La 0010 acertó en que existen y falló en dónde.
+
+Los pesos son los mismos que la 0010 estimó para la época 2 —`ultimate` 42 (~1 por caja), `ghost` 3
+(~1 cada doce cajas)—, porque no hay motivo para que cambien de época y usar dos escalas distintas
+para lo mismo sería peor. Siguen siendo `[ESTIMADO]`.
+
+**La lección, por tercera vez.** Una muestra de nueve sets no ejercita el mismo camino que el catálogo
+entero. P-017, P-020, y ahora esto.
+
+---
+
+# Duodécima parte: T-079, las cinco épocas históricas de Pokémon (0018)
+
+Con los 174 sets de Pokémon ingestados, el informe señaló **un centenar** de sets con cartas
+inalcanzables. La causa era la ya conocida: cada bloque de la historia del juego tiene su rareza
+estrella, y sólo estaban descritas las tres últimas eras.
+
+Medido sobre los sets ofrecidos, con fechas reales y no de memoria:
+
+| Rareza | Sets | Ventana |
+|---|---|---|
+| `rare_holo_ex` | 37 | 2003-07-01 .. 2016-11-02 |
+| `rare_holo_gx` | 15 | 2017-02-03 .. 2019-11-01 |
+| `rare_holo_lv_x` | 11 | 2007-05-01 .. 2009-11-04 |
+| `rare_holo_star` | 9 | 2004-11-01 .. 2007-02-02 |
+| `rare_prism_star` | 6 | 2018-02-02 .. 2019-02-01 |
+| `rare_break` | 5 | 2015-11-04 .. 2016-11-02 |
+| `rare_prime` · `legend` | 4 · 4 | 2010-02-10 .. 2010-11-03 |
+| `rare_ace` | 4 | 2012-11-07 .. 2013-08-14 |
+| `rare_shining` | 3 | 2001-09-21 .. 2017-10-06 |
+
+Y tres que **no son de una época sino de fondo**: `rare_holo` (1999-2023), `rare_secret` (2000-2023) y
+`rare_ultra` (2011-2023). Van en todas las épocas donde existen.
+
+## Un fallo que esto corrigió de paso
+
+`Booster Sword & Shield` (0014) se había creado con `valid_from` NULL, así que **se tragaba toda la
+historia anterior a 2023**: los sets de 1999 resolvían a la plantilla de 2020. Con nueve sets
+ingestados no había forma de verlo. Se le puso su inicio real.
+
+Las seis ventanas quedan contiguas y sin solape, del *clásico* (hasta 2007-04-30) a *Sword & Shield*
+(2020-01-01 .. 2023-03-30). **Los nueve primeros slots son los mismos en todas**: 4 comunes, 3
+infrecuentes y 2 reversos. Un sobre de Pokémon ha llevado esa estructura toda su historia moderna; lo
+que cambia de época es el hit.
+
+Con esto, **Magic y Pokémon quedaron a cero sets con cartas inalcanzables.**
+
+---
+
+# Decimotercera parte: T-073, que un sobre se parezca a su producto (0019)
+
+Esta no es una tarea de cobertura. Desde la 0012 **todas** las cartas de *Black Bolt* y *White Flare*
+eran alcanzables, incluida la `black_white_rare`, que es una sola carta. Lo que fallaba era el
+**realismo**.
+
+Los dos sets son idénticos en composición:
+
+```
+illustration_rare           69 de 172 impresiones   40,1 % del set
+rare                        11
+ultra_rare                   8
+special_illustration_rare    7
+double_rare                  6
+black_white_rare             1
+```
+
+Un booster normal de Scarlet & Violet lleva un **8 %** de Illustration Rare. Estos llevan el **40 %**,
+y la plantilla les daba el **10,2 %** del slot del hit. El sobre salía mucho menos brillante de lo que
+el producto real es.
+
+## La diferencia entre estimar e inventar
+
+No hay tasa publicada por sobre para estos dos sets. Se estimó con una regla que **se puede decir en
+voz alta**, que es exactamente lo que separa una estimación de un número a ojo:
+
+1. **Las rarezas de caza mantienen la tasa de su época.** La escasez de una Special Illustration Rare
+   no depende de cómo esté compuesto el set: es rara porque el fabricante la imprime poco. Se quedan
+   en 41 y 25, como en la 0012.
+2. **El resto del peso —934— se reparte en proporción a lo que el set tiene de cada rareza.** Si 69 de
+   las 94 cartas de esos niveles son Illustration Rare, un sobre de este set entrega una Illustration
+   Rare la mayoría de las veces. Eso es lo que hace a estos dos sets lo que son.
+
+```
+934 * 11/94 = 109   rare
+934 *  6/94 =  60   double_rare
+934 * 69/94 = 686   illustration_rare
+934 *  8/94 =  79   ultra_rare
+------------------------------
+              934  +  41 + 25 = 1000
+```
+
+El hit pasa del 10,2 % al **66,3 %** para Illustration Rare, medido sobre 300 sobres.
+
+**Y lo que esta estimación no es**, dicho en la propia migración: no es una medición. Si aparece la
+tasa real del fabricante, esto es un `UPDATE` (ADR-005). Y no se aplica a ningún otro set —la
+plantilla es sólo de estos dos, por su ventana de un día— precisamente porque la regla depende de una
+composición que sólo ellos tienen.
+
+---
+
+# Decimocuarta parte: T-080, un nivel de precedencia que faltaba (0020-0022)
+
+Quedaban **154 sets** con cartas inalcanzables, y **80 de ellos pertenecían a líneas de producto**:
+Duel Terminal, Gold Series, Battle Pack, Mega Pack, Rarity Collection y Legendary Duelists. Cada una
+tiene su propia escalera de rarezas —un Gold Series trae `gold_rare`, un Duel Terminal cuatro grados
+de `duel_terminal_*_parallel_rare`— y ninguna plantilla las nombraba.
+
+## Por qué las épocas no podían resolverlo
+
+```
+Gold Series    2008-04-02 .. 2021-11-18
+Battle Pack    2012-05-24 .. 2026-02-05
+Mega Pack      2014-08-28 .. 2025-09-04
+```
+
+Se solapan **entre sí y con los Core Booster de esos mismos años**. Una ventana por fecha no puede
+decir "los sets de 2015 son Battle Pack", porque en 2015 también salieron Core Boosters y Mega Packs.
+El test de solapes lo rechazaría, y tendría razón.
+
+## Por qué una columna y no una plantilla por set
+
+`pack_templates.set_id` existe desde H4 y habría permitido una plantilla por set: serían **70
+plantillas casi idénticas** —las diez de Gold Series describen el mismo producto— y **cada set nuevo
+de una línea exigiría añadir la suya a mano**. Eso es exactamente el "paso de asignación posterior a
+la ingesta" que mantuvo T-034 bloqueada trece sesiones. No se vuelve a construir.
+
+Lo que es verdad del dominio es otra cosa: **un set pertenece a una línea, y una línea tiene una
+estructura de sobre.** Modelado así son seis plantillas, y los sets se etiquetan solos en la ingesta
+—igual que `is_openable` (T-069) y por la misma razón: lo que se calcula solo no se olvida.
+
+La precedencia de `findTemplate` pasa a tener cuatro niveles:
+
+| # | Nivel | Columna |
+|---|---|---|
+| 1 | plantilla propia del set | `set_id` |
+| 2 | **línea de producto** | `product_line` ← nuevo |
+| 3 | época que cubre su fecha | `valid_from` / `valid_to` |
+| 4 | genérica del juego | — |
+
+**La línea va antes que la época** porque es más específica: un Gold Series de 2010 es antes un Gold
+Series que un sobre de 2010.
+
+## Por nombre y no por código, y esto también se decidió midiendo
+
+Los prefijos de código parecían más fiables y son una trampa: `^BP` se lleva `BPRO` (Burst Protocol,
+un Core Booster), `^LED` se lleva `LEDE` (Legacy of Destruction, otro) y `^MP1` se lleva las
+promocionales de McDonald's de 2002. Los nombres separan limpio: *Legendary Duelists* no casa con
+*Legendary Dragon Decks* ni con *Legacy of Destruction*.
+
+Comprobado contra los **1032 nombres reales** del catálogo antes de conectarlo: 70 sets en seis
+líneas, sin un solo falso positivo. La única excepción va por código y está justificada en su sitio:
+los Mega Pack de lata **no llevan "Mega Pack" en el nombre desde 2021** —*2021 Tin of Ancient
+Battles*, *25th Anniversary Tin: Dueling Mirrors*—, pero el código sí es consistente, `MP14` a `MP25`,
+y con dos dígitos no colisiona con `MP1`.
+
+## Los pesos, con el método declarado
+
+Misma regla que en la 0019: **el slot se reparte en proporción a lo que los sets de esa línea tienen
+de cada rareza.** Composición medida sobre los sets ofrecidos:
+
+```
+Duel Terminal   normal_par 591 · rare_par 147 · common 143 · super_par 87 · ultra_par 86
+Gold Series     gold 272 · rare 208 · common 160 · premium_gold 106 · gold_secret 93
+Battle Pack     common 843 · starfoil 440 · shatterfoil 287 · mosaic 215 · rare 160 ...
+Mega Pack       common 1564 · ultra 642 · prismatic_secret 390 · rare 310 · super 273 ...
+Rarity Coll.    platinum_secret 787 · qcsr 716 · ultra 461 · ultimate 398 · collectors 397 ...
+Legendary Duel. common 345 · super 105 · ultra 101 · rare 100 · qcsr 25 · secret 10
+```
+
+**Rarity Collection no tiene ni una común**: sus cinco slots salen todos del extremo premium. Es el
+único caso, y por eso su plantilla no se parece a ninguna otra.
+
+## La cola que quedó, y por qué no se le hizo una línea (0022)
+
+Tras las plantillas de línea sobrevivían 19 sets con `rare` y 16 con `collectors_rare` inalcanzables.
+Medidos, son todos la misma familia: **los mini-boosters modernos** —*Toon Chaos*, *Genesis Impact*,
+*Ancient Guardians*, *King's Court*, *Maze of Memories*, *Crossover Breakers*, *Phantom Revenge*—, con
+unas 35-42 `rare` y 14-17 `collectors_rare` sobre pools de 74-105.
+
+**Esto matiza P-019 sin contradecirlo.** Aquella medición decía que el slot de Rare desapareció de los
+sobres en 2020, y es cierto de los Core Booster de línea principal: *Supreme Darkness* no tiene ni
+una. Pero estos mini-boosters sí la conservan, y es casi la mitad de su pool. La conclusión de P-019
+era correcta para lo que se midió entonces —un solo set— y demasiado ancha para el catálogo completo.
+
+No se les hizo línea propia, y es deliberado: sus nombres no comparten nada, así que cualquier patrón
+sería adivinar. Van a la genérica, donde el respaldo del motor se encarga: en un set sin `rare` esa
+entrada se cae a otra del mismo slot y no cambia nada.
+
+**De 154 sets con cartas inalcanzables a 31.**
+
+---
+
+# Decimoquinta parte: T-081, cuando el origen mete el estado en el campo de la rareza
+
+De los 31 que quedaban, 16 no tenían un problema de plantilla: tenían un problema de **dato**.
+
+YGOPRODeck usa `set_rarity` para dos cosas distintas —la rareza de verdad y, a veces, el **estado** de
+la carta en ese set—. Medido sobre el catálogo completo:
+
+```
+new                       80 impresiones
+reprint                   11
+new_artwork                9
+european_oceanian_debut    6
+force_smw · european_debut · oceanian_debut   1 cada una
+```
+
+**"New" no dice que la carta sea común: dice que no es una reimpresión.** Dejarlas pasar creaba
+rarezas fantasma que ninguna plantilla podía nombrar —ni debía—, y por eso 16 sets salían en el
+informe como si les faltara una plantilla cuando lo que falta es el dato en el origen.
+
+Se tratan como **rareza irrecuperable**, que es el caso que el contrato de T-007 ya cubría: `null`
+aquí, el adaptador cae a `FALLBACK_RARITY_CODE` y emite un aviso.
+
+**El precio, dicho.** Esas cartas quedan registradas como comunes, y algunas no lo son: las 22 de
+*Battles of Legend: Monster Mayhem* conviven con secret y starlight. Se acepta porque la alternativa
+es peor —sin rareza utilizable son **inobtenibles para siempre**, y P-021 enseñó lo que cuesta un set
+que el coleccionista no puede cerrar—. El aviso deja constancia de cada una.
+
+En la dirección contraria va `cr`: aparece una vez en *Quarter Century Stampede*, un set que además
+tiene `collectors_rare`. Es la misma rareza escrita corta, y traducirla **es lo contrario de
+inventar**: crear `cr` como rareza propia habría partido en dos algo que es uno.
+
+**De 31 a 20.** Y destapó **P-040**, que fue lo que acabó siendo T-083: al reingestar, las 110
+impresiones cuya rareza había cambiado no se actualizaron —se duplicaron.
+
+---
+
+# Decimosexta parte: T-082, la cola larga y la sorpresa (0023)
+
+Los 20 restantes parecían veinte productos sueltos que necesitarían veinte plantillas propias.
+Medidos uno a uno, **casi ninguno la necesitaba**: eran las plantillas de línea a las que les faltaba
+una rareza, más cuatro sets que no son sobres.
+
+| Rareza que faltaba | Sets | Dónde |
+|---|---|---|
+| `ghost_rare` | LED7, LED8, LED9, LD10 | en `legendary_duelists` |
+| `secret_rare` | HAC1 | en `duel_terminal` |
+| `dt_normal_rare_parallel_rare` | DT07 | un quinto grado de Duel Terminal |
+| `ghost_gold_rare` | GLD5 | en `gold_series` |
+| `common` | RA05 | **una sola** carta común de 692 |
+| `prismatic_secret_rare` | WSUP | en la época 2 |
+| `ultra_rare_pharaohs_rare` | KICO, MAMA | en la genérica |
+| `10000_secret_rare` | BLAR | una carta |
+| `ultra_parallel_rare` | TBC1 | ídem |
+
+Los pesos son pequeños y `[ESTIMADO]`: todas estas rarezas aparecen una o dos veces por set. Se
+añaden con peso bajo y **se reescala lo que había**, para que cada slot siga sumando 1000 sin deformar
+la línea. La aritmética va en cada bloque de la migración.
+
+Se sembraron además **cinco rarezas** que estaban en la base por descubrimiento, con el `tier` 50 que
+les puso `ensureRarity`. Misma razón que en la 0011 y la 0020: el tier ordena el respaldo del motor, y
+una plantilla no debe apoyarse en un valor que llegó por accidente.
+
+**Los cuatro que no eran plantilla se arreglaron en el clasificador**, no aquí: los Mega Pack de lata
+(MP21, MP22, MP24) y las latas (TN19). El problema no era la plantilla, era que sus nombres no dicen
+lo que son —y el patrón por código los separa, que es lo único que distingue la lata del Mega Pack que
+lleva dentro—.
+
+Y un caso que merece nombre propio: **tres productos distintos comparten el código `MVP1`** —Movie
+Pack, Gold Edition y Secret Edition— y cada uno es de **una sola rareza**. Cinco cartas del mismo
+nivel; el respaldo del motor entrega la que el set concreto tenga, que es exactamente para lo que
+existe.
+
+**Los tres juegos quedan a cero sets con cartas inalcanzables.**
+
+---
+
+# Y una corrección del propio Vault
+
+Entre T-080 y T-082 se paró a arreglar el Vault, no el código. **P-005 llevaba doce sesiones diciendo
+"pendiente de que el motor lo respete (H4)"** cuando H4 se cerró en S012: el arreglo estaba puesto y
+verificado todo ese tiempo; lo que faltaba era escribirlo. Su criterio de aceptación pedía editar
+`pack_slots` y que una apertura vieja devolviera las mismas cartas — S028 editó plantillas **catorce
+veces**, y la apertura #1 pertenece a un set que **ya ni siquiera es abrible**, y sigue intacta con el
+nombre de su plantilla congelado. También se corrigieron los recuentos de tareas y problemas, que
+habían derivado.
+
+Es la misma clase de deriva que P-032 (tres sesiones) y que la ficha equivocada de T-067. Un documento
+que no se actualiza no es neutral: **miente con autoridad**.
+
+---
+
+# Decimoséptima parte: T-083, y las filas que el origen dejó de listar (P-040)
 
 ## Lo que estaba mal
 
@@ -747,10 +1143,14 @@ destapó ella misma al fallar en su propio paso de restauración.
   38 cerrados.
 - Migraciones publicadas: hasta la **0024**.
 
-## Lo que este registro no cuenta
+## Lo que este registro no contaba, y ya cuenta
 
-Las partes de T-076, T-079, T-073 y T-080 a T-082 no se escribieron aquí mientras ocurrían. Están en
-`001Reportes/Tareas_Realizadas.md` con su evidencia, y su razonamiento completo — los pesos estimados,
-la aritmética de reescalado, por qué las líneas de producto van por nombre y no por código — está en
-las cabeceras de sus migraciones, que es donde tiene que estar para que sobreviva. Queda dicho para
-que nadie busque en este fichero algo que no está.
+Las partes décima a decimosexta -- T-076 a T-082 -- no se escribieron mientras ocurrían. Se
+reconstruyeron al cerrar la sesión a partir de las cabeceras de las migraciones, los mensajes de
+commit y la tabla de tareas realizadas, y llevan dicho arriba que son una reconstrucción. Lo que no se
+ha podido recuperar es el orden exacto en que se probaron las cosas dentro de cada tarea; el
+razonamiento sí, porque estaba escrito donde tenía que estar.
+
+**T-077 y T-078 no existían en ningún sitio salvo la cabecera de sus migraciones** -- ni siquiera en
+`Tareas_Realizadas.md`. Se han añadido. Dos tareas que corrigieron el catálogo completo y que, de no
+haberse mirado, habrían desaparecido del proyecto sin dejar rastro fuera del SQL.
