@@ -44,12 +44,61 @@ const FEMALE_SIGN = String.fromCharCode(0x2640);
 const GENDER_SIGNS = new RegExp(`[${MALE_SIGN}${FEMALE_SIGN}]`, 'g');
 
 /**
+ * Cadenas que el origen mete en el campo de rareza y NO son rarezas (T-081).
+ *
+ * YGOPRODeck usa `set_rarity` para dos cosas distintas: la rareza de verdad y,
+ * a veces, el ESTADO de la carta en ese set. Medido sobre el catalogo completo:
+ *
+ *   new                       80 impresiones
+ *   reprint                   11
+ *   new_artwork                9
+ *   european_oceanian_debut    6
+ *   force_smw / european_debut / oceanian_debut   1 cada una
+ *
+ * "New" no dice que la carta sea comun: dice que no es una reimpresion. Dejarlas
+ * pasar creaba rarezas fantasma que ninguna plantilla podia nombrar -- ni debia
+ * --, y por eso 16 sets salian en el informe de cobertura como si les faltara
+ * una plantilla cuando lo que falta es el dato en el origen.
+ *
+ * Se tratan como rareza IRRECUPERABLE, que es el caso que el contrato de T-007
+ * ya cubre: `null` aqui, el adaptador cae a `FALLBACK_RARITY_CODE` y emite un
+ * aviso.
+ *
+ * EL PRECIO, DICHO: esas cartas quedan registradas como comunes, y algunas no lo
+ * son -- las 22 de `Battles of Legend: Monster Mayhem` conviven con secret y
+ * starlight. Se acepta porque la alternativa es peor: sin rareza utilizable son
+ * INOBTENIBLES para siempre, y P-021 enseno lo que cuesta un set que el
+ * coleccionista no puede cerrar. El aviso deja constancia de cada una.
+ */
+const NO_SON_RAREZAS = new Set([
+  'new',
+  'reprint',
+  'new_artwork',
+  'european_debut',
+  'oceanian_debut',
+  'european_oceanian_debut',
+  'force_smw',
+]);
+
+/**
+ * Abreviaturas que el origen usa para una rareza que SI existe (T-081).
+ *
+ * `cr` aparece una vez en `Quarter Century Stampede`, un set que ademas tiene
+ * `collectors_rare`: es la misma rareza escrita corta. Traducirla es lo
+ * contrario de inventar -- crear `cr` como rareza propia habria partido en dos
+ * algo que es uno.
+ */
+const ALIAS: ReadonlyMap<string, string> = new Map([['cr', 'collectors_rare']]);
+
+/**
  * Convierte la cadena de rareza de una API en un `rarities.code`.
  *
  * Reglas (contrato de T-007):
  *  1. minusculas, sin acentos, sin apostrofos
  *  2. cualquier run de caracteres no alfanumericos -> "_"
- *  3. devuelve null si queda vacia, si es puramente numerica o si excede 48
+ *  3. devuelve null si queda vacia, si es puramente numerica, si excede 48 o si
+ *     es una ETIQUETA DE ESTADO disfrazada de rareza (T-081)
+ *  4. traduce las abreviaturas conocidas a la rareza que nombran
  *
  * El paso 1 es el que salva el caso real de YGOPRODeck: "PLatinum Secret Rare"
  * (con L intercalada, errata del origen) cae correctamente en
@@ -74,8 +123,9 @@ export function normalizeRarityCode(raw: string | null | undefined): string | nu
   if (code === '') return null;
   if (/^\d+$/.test(code)) return null; // "2" y "3" no son rarezas
   if (code.length > RARITY_CODE_MAX_LENGTH) return null;
+  if (NO_SON_RAREZAS.has(code)) return null; // T-081: es un estado, no una rareza
 
-  return code;
+  return ALIAS.get(code) ?? code;
 }
 
 /**

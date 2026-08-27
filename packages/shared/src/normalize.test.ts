@@ -171,3 +171,29 @@ describe('normalizeOracleKeyFromName', () => {
     );
   });
 });
+
+describe('etiquetas que no son rarezas (T-081)', () => {
+  it('rechaza el estado de la carta disfrazado de rareza', () => {
+    // YGOPRODeck usa `set_rarity` para dos cosas. "New" no dice que la carta sea
+    // comun: dice que no es una reimpresion. Dejarlas pasar creaba rarezas
+    // fantasma que ninguna plantilla podia -- ni debia -- nombrar.
+    for (const bruto of ['New', 'Reprint', 'New Artwork', 'European Debut',
+                         'Oceanian Debut', 'European/Oceanian Debut', 'Force SMW']) {
+      expect(normalizeRarityCode(bruto), bruto).toBeNull();
+    }
+  });
+
+  it('NO se lleva por delante rarezas que se le parecen', () => {
+    // El filtro es por igualdad exacta, no por contener la palabra: una rareza
+    // que empiece por "new" o acabe en "debut" seguiria siendo valida.
+    expect(normalizeRarityCode('New Secret Rare')).toBe('new_secret_rare');
+    expect(normalizeRarityCode('Debut Rare')).toBe('debut_rare');
+  });
+
+  it('traduce las abreviaturas a la rareza que nombran', () => {
+    // `cr` sale una vez en Quarter Century Stampede, un set que ADEMAS tiene
+    // collectors_rare: es la misma rareza escrita corta.
+    expect(normalizeRarityCode('CR')).toBe('collectors_rare');
+    expect(normalizeRarityCode("Collector's Rare")).toBe('collectors_rare');
+  });
+});

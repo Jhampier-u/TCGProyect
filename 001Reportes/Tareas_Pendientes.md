@@ -1,6 +1,6 @@
 # Tareas Pendientes
 
-**Última actualización:** 2026-08-27 (S028) · **Total abiertas:** 2 — T-081 y T-082, las dos ⚪ y ninguna bloqueante
+**Última actualización:** 2026-08-27 (S028) · **Total abiertas:** 2 — T-082 (⚪) y T-083 (🟡), ninguna bloqueante
 
 Leyenda de prioridad: 🔴 crítica · 🟠 alta · 🟡 media · ⚪ baja
 
@@ -64,7 +64,7 @@ hacerlas.
 
 | ID | Tarea | Agente | Prio |
 |---|---|---|---|
-| T-081 | **Normalizar las etiquetas que no son rarezas** (P-007). YGOPRODeck mete en el campo de rareza cosas que describen el ESTADO de la carta: `new` (80 impresiones), `reprint` (11), `new_artwork` (9), `european_oceanian_debut` (6), `cr`, `force_smw`, `european_debut`, `oceanian_debut`. Dejan 16 sets con cartas inalcanzables, y **no deben ir en ninguna plantilla**: el arreglo es mapearlas a su rareza real en la ingesta | Backend | ⚪ |
+| T-083 | **P-040**: cambiar la rareza de una impresión de Yu-Gi-Oh! la DUPLICA en vez de actualizarla, porque el `external_id` lleva la rareza dentro. Se mitigó a mano borrando 110 huérfanas; falta que la ingesta retire lo que un set ya no produce — sin borrar lo que una apertura referencia (P-005) | Backend | 🟡 |
 | T-082 | **La cola larga de Yu-Gi-Oh!**: 15 sets, cada uno con una o dos rarezas sueltas (`ultra_rare_pharaohs_rare`, `10000_secret_rare`, `ghost_gold_rare`, `platinum_rare`, `ultra_parallel_rare`…). Son productos de uno o dos sets; cada uno necesitaría su propia plantilla por `set_id`, que es el nivel 1 de precedencia y ahora sí se puede usar | Base de Datos | ⚪ |
 
 ### Además, anotado al hacer T-035

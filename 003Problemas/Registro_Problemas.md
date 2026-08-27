@@ -1,6 +1,6 @@
 # Registro de Problemas
 
-**Última actualización:** 2026-08-27 (S028) · **Abiertos:** 2 · **Cerrados:** 37 · **Total:** 39
+**Última actualización:** 2026-08-27 (S028) · **Abiertos:** 3 · **Cerrados:** 37 · **Total:** 40
 
 Severidad: 🔴 crítica · 🟠 alta · 🟡 media · ⚪ baja
 
@@ -1409,3 +1409,42 @@ visible por uno silencioso.
 los datos**, y llevaba 27 sesiones sin ponerse a prueba porque el catálogo era pequeño. Es la familia
 de P-013 y P-015: una decisión de esquema que parece obvia hasta que llegan los datos raros. **Ingerir
 el catálogo entero es una prueba que ninguna muestra sustituye.**
+
+---
+
+## P-040 🟡 ABIERTO · Cambiar la rareza de una impresion de Yu-Gi-Oh! no la actualiza: la duplica
+**Estado:** ABIERTO desde el 2026-08-27 (S028). Mitigado a mano esta vez.
+**Severidad:** 🟡
+**Origen:** normalizar las etiquetas que no son rarezas (T-081) y volver a ingestar.
+
+**Detalle.** La clave natural de una impresion es `(set_id, external_id)`, y en Yu-Gi-Oh! el
+`external_id` **lleva la rareza dentro**:
+
+```
+SUDA-EN049::quarter_century_secret_rare
+LAVD-ENL13::new
+```
+
+Es correcto y necesario -- P-013: en Yu-Gi-Oh! la misma carta sale en dos rarezas dentro del mismo
+set, asi que sin la rareza en la clave una taparia a la otra. Pero tiene una consecuencia que no
+estaba escrita: **si la rareza de una impresion cambia, cambia su clave**, y el upsert deja de
+reconocerla. En vez de actualizar la fila, inserta otra.
+
+**Medido.** Al normalizar `new` a `common` y reingestar 15 sets, las impresiones de Yu-Gi-Oh! pasaron
+de 44.365 a **44.475**: las 110 filas nuevas convivian con las 110 viejas, misma carta fisica y mismo
+numero de coleccionista, con dos rarezas distintas.
+
+**Por que importa.** Cualquier cambio en `normalizeRarityCode` -- o una correccion de rareza en el
+origen -- duplica en silencio en vez de corregir. Nada falla y el catalogo queda con cartas fantasma.
+
+**Mitigacion aplicada.** Se borraron las 110 huerfanas a mano, tras comprobar que **ninguna** estaba
+referenciada por aperturas, colecciones ni mazos. El recuento volvio exactamente a 44.365.
+
+**Lo que falta para cerrarlo.** Que la ingesta detecte las impresiones de un set que ya no produce y
+las retire, en vez de dejarlas. Es delicado: una impresion referenciada por una apertura NO se puede
+borrar (P-005, RN-01), asi que hara falta el mismo criterio de "retirar en vez de borrar" que se uso
+con las plantillas en P-035.
+
+**Leccion.** Meter un atributo en la clave natural resuelve un problema y crea otro: el atributo deja
+de poder cambiar. En S009 se eligio bien -- la alternativa era perder cartas -- pero el precio no se
+habia pagado hasta hoy.
