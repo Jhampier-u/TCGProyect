@@ -1,6 +1,6 @@
 # Tareas Pendientes
 
-**Última actualización:** 2026-08-26 (S028) · **Total abiertas:** 2 — T-081 y T-082, las dos ⚪ y ninguna bloqueante
+**Última actualización:** 2026-08-27 (S028) · **Total abiertas:** 2 — T-081 y T-082, las dos ⚪ y ninguna bloqueante
 
 Leyenda de prioridad: 🔴 crítica · 🟠 alta · 🟡 media · ⚪ baja
 

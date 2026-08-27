@@ -1,6 +1,6 @@
 # Registro de Problemas
 
-**Última actualización:** 2026-08-26 (S028) · **Abiertos:** 5 · **Cerrados:** 34
+**Última actualización:** 2026-08-27 (S028) · **Abiertos:** 2 · **Cerrados:** 37 · **Total:** 39
 
 Severidad: 🔴 crítica · 🟠 alta · 🟡 media · ⚪ baja
 
@@ -100,8 +100,12 @@ proporcional al fichero. Hay además un test que comprueba la propiedad de forma
 
 ---
 
-## P-005 🔴 · La semilla por sí sola NO garantiza reproducir una apertura (rompía RN-01)
-**Estado:** MITIGADO en el esquema — pendiente de que el motor lo respete (H4)
+## P-005 ✅ CERRADO · La semilla por sí sola NO garantiza reproducir una apertura (rompía RN-01)
+**Estado:** CERRADO el 2026-08-27 (S028). Mitigado en el esquema en S002, cumplido por el motor en H4.
+
+> **La ficha llevaba doce sesiones desactualizada.** Decía "pendiente de que el motor lo respete
+> (H4)", y H4 se cerró en S012. El arreglo estaba hecho y verificado; lo que faltaba era escribirlo
+> aquí. Es la misma deriva que este proyecto persigue en el código, colada en la documentación.
 **Origen:** detectado por el Agente Base de Datos al implementar T-006.
 **Detalle:** ADR-005 dice que una apertura se reproduce ejecutando el PRNG con la semilla guardada.
 Pero la salida del PRNG depende de `pack_slots`, que es **editable** (esa es justo su virtud). Si
@@ -115,9 +119,22 @@ silencio, sin ningún error visible.
 2. `pack_openings.template_snapshot JSON` congela la configuración vigente en el momento de abrir.
 La semilla queda como prueba de auditoría (permite demostrar que el resultado no fue manipulado),
 no como mecanismo de reproducción.
-**Pendiente:** el `PackService` de H4 debe leer de `pack_opening_cards` al reproducir, jamás
-re-ejecutar el PRNG. Criterio de aceptación de QA: editar `pack_slots` y comprobar que una
-apertura antigua devuelve exactamente las mismas cartas.
+**Cumplido.** `PackService.replay()` delega en `findOpening()`, que lee las filas persistidas: el
+PRNG no se vuelve a ejecutar jamás al reproducir.
+
+**El criterio de aceptación se ha cumplido con creces, y varias veces.** Pedía editar `pack_slots` y
+comprobar que una apertura antigua devuelve las mismas cartas. En S028 se editaron las plantillas
+**catorce veces** —las migraciones 0010 a 0022— y además:
+
+```
+apertura 1 · set MAMS · 2026-08-26 12:45 · 9 cartas
+plantilla congelada: "Core Booster (Eternity Code en adelante)"
+```
+
+**Ese set ya ni siquiera es abrible**: T-067 lo excluyó por no haber salido todavía. Aun así su
+apertura sigue entera, con su número de cartas y el nombre de la plantilla que estaba vigente al
+abrirla. Ni el cambio de plantillas ni la desaparición del producto tocan el historial, que es
+exactamente lo que RN-01 promete.
 
 ---
 
