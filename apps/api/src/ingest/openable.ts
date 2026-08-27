@@ -53,6 +53,11 @@ const NO_ES_SOBRE: ReadonlyArray<{ patron: RegExp; que: string }> = [
   // una comun, asi que ni la aritmetica ni la fecha los cazan. El patron exige
   // las dos palabras para no llevarse por delante al padre (`Crown Zenith`).
   { patron: /\b(Trainer|Galarian) Gallery\b/i, que: 'galeria de un set padre' },
+  // Misma figura: `Hidden Fates Shiny Vault` y `Shining Fates Shiny Vault` son
+  // sets aparte -- con el MISMO codigo que su padre -- cuyas cartas salen en los
+  // sobres del padre. Medido: la boveda de Hidden Fates son 94 impresiones de
+  // las que 80 son shiny, y su techo era del 14,9%.
+  { patron: /\bShiny Vault\b/i, que: 'boveda shiny de un set padre' },
 ];
 
 /**

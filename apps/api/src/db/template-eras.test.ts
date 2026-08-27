@@ -32,6 +32,7 @@ const YGO_ERAS = leer('0010_ygo_era_templates.up.sql');
 const YGO_MODERNA = leer('0011_ygo_modern_gaps.up.sql');
 const PTCG_ERAS = leer('0012_ptcg_era_templates.up.sql');
 const PTCG_SWSH = leer('0014_ptcg_swsh_y_huecos.up.sql');
+const PTCG_HIST = leer('0018_ptcg_eras_historicas.up.sql');
 
 interface Juego {
   id: number;
@@ -57,18 +58,28 @@ const JUEGOS: Juego[] = [
   {
     id: 3,
     nombre: 'Pokemon',
-    ventanasEn: [PTCG_ERAS, PTCG_SWSH],
-    plantillasEn: [PTCG_ERAS, PTCG_SWSH],
+    ventanasEn: [PTCG_ERAS, PTCG_SWSH, PTCG_HIST],
+    plantillasEn: [PTCG_ERAS, PTCG_SWSH, PTCG_HIST],
     siembrasEn: [SEED],
-    ventanasEsperadas: 4,
+    ventanasEsperadas: 9,
   },
 ];
 
 interface Ventana { desde: string | null; hasta: string | null; nombre: string }
 
-/** Filas del INSERT INTO pack_templates de un juego. */
+/**
+ * Las ventanas de un juego, tal como quedan tras aplicar sus migraciones.
+ *
+ * NO BASTA CON LEER LOS `INSERT`. Una migracion posterior puede CORREGIR la
+ * ventana de una anterior, y entonces el fichero que la declaro deja de
+ * describir la realidad: la 0018 le puso su inicio real a `Booster Sword &
+ * Shield`, que la 0014 habia dejado abierto. Leyendo solo los INSERT, este test
+ * veia un solape que en la base no existe -- y fallo, que es justo lo que
+ * tenia que hacer: aviso de que el modelo se le habia quedado corto.
+ */
 function ventanas(juego: Juego): Ventana[] {
   const salida: Ventana[] = [];
+
   for (const sql of juego.ventanasEn) {
     const bloque = /INSERT INTO pack_templates \([^)]*\) VALUES([\s\S]*?);/.exec(sql);
     if (!bloque?.[1]) throw new Error(`No se encontro el INSERT INTO pack_templates de ${juego.nombre}`);
@@ -82,6 +93,19 @@ function ventanas(juego: Juego): Ventana[] {
       salida.push({ desde: val(m[1]!), hasta: val(m[2]!), nombre: m[3]! });
     }
   }
+
+  // Y despues las correcciones, en el orden en que se aplicarian.
+  const correccion = new RegExp(
+    String.raw`UPDATE pack_templates\s+SET valid_from = '([\d-]+)'\s+WHERE game_id = ${juego.id} AND valid_to = '([\d-]+)'`,
+    'g',
+  );
+  for (const sql of juego.ventanasEn) {
+    for (const m of sql.matchAll(correccion)) {
+      const objetivo = salida.find((v) => v.hasta === m[2]);
+      if (objetivo) objetivo.desde = m[1]!;
+    }
+  }
+
   return salida;
 }
 

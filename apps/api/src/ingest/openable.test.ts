@@ -38,6 +38,8 @@ const NO_SON_SOBRES = [
   'Lost Origin Trainer Gallery',
   'Silver Tempest Trainer Gallery',
   'Crown Zenith Galarian Gallery',
+  'Hidden Fates Shiny Vault',
+  'Shining Fates Shiny Vault',
   // Bolsas de promocionales. `Scarlet & Violet Black Star Promos` son 200
   // impresiones de rareza `promo`; `Magic Online Promos`, 3094 cartas.
   'Scarlet & Violet Black Star Promos',
@@ -87,6 +89,11 @@ describe('clasificarSet (T-069)', () => {
     ).toBe(true);
     expect(
       clasificarSet({ game: 'PTCG', name: 'Lost Origin', cardCount: 196, releasedAt: '2022-09-09' }, HOY)
+        .abrible,
+    ).toBe(true);
+    // `Hidden Fates` es un booster; `Hidden Fates Shiny Vault`, su boveda.
+    expect(
+      clasificarSet({ game: 'PTCG', name: 'Hidden Fates', cardCount: 69, releasedAt: '2019-08-23' }, HOY)
         .abrible,
     ).toBe(true);
   });
