@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+
+  // Los specs de Playwright tampoco los comprobaba nadie (T-086): Playwright
+  // los transpila con esbuild, que quita los tipos sin mirarlos, y esta suite
+  // no es un workspace de npm, asi que el `tsc --build` de la raiz no la ve.
+  //
+  // Mismos ajustes que `tsconfig.base.json` de la raiz, copiados en vez de
+  // heredados porque `e2e` tiene su propio `node_modules` a proposito (ADR-009)
+  // y un `extends` que sale del directorio ataria las dos instalaciones.
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "forceConsistentCasingInFileNames": true,
+    "verbatimModuleSyntax": true,
+    "skipLibCheck": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "types": ["node"]
+  },
+  "include": ["src/**/*", "playwright.config.ts"]
+}

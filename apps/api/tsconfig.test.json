@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+
+  // Comprueba de tipos los ficheros de prueba, que `tsconfig.json` excluye.
+  //
+  // POR QUE EXISTE (T-086). Vitest ejecuta los tests quitando los tipos con
+  // esbuild, sin mirarlos, y `tsconfig.json` los excluye para no meterlos en
+  // `dist`. El resultado era que NADIE los comprobaba: un doble de prueba podia
+  // declarar `implements PackRepository` sin implementar la interfaz y pasar.
+  // Ocurrio en S030, con `loadPoolByCode` recien anadida al contrato.
+  //
+  // `noEmit` porque esto solo comprueba; lo que se compila sigue saliendo de
+  // `tsconfig.json`. `composite: false` porque un proyecto que no emite no puede
+  // ser referenciado, y este no lo es: se invoca suelto desde `npm run
+  // typecheck`. Las `references` si se conservan, para leer los `.d.ts` de
+  // `@tcg/shared` en vez de sus fuentes.
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "./src",
+    "types": ["node"],
+    "noEmit": true,
+    "composite": false,
+    "declaration": false,
+    "declarationMap": false
+  },
+  "include": ["src/**/*"],
+  "references": [{ "path": "../../packages/shared" }]
+}
