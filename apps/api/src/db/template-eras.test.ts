@@ -33,6 +33,8 @@ const YGO_MODERNA = leer('0011_ygo_modern_gaps.up.sql');
 const PTCG_ERAS = leer('0012_ptcg_era_templates.up.sql');
 const PTCG_SWSH = leer('0014_ptcg_swsh_y_huecos.up.sql');
 const PTCG_HIST = leer('0018_ptcg_eras_historicas.up.sql');
+const MTG_INSERTOS = leer('0016_mtg_special_y_bonus.up.sql');
+const MTG_ERAS = leer('0025_mtg_epocas_de_sobre.up.sql');
 
 interface Juego {
   id: number;
@@ -47,6 +49,22 @@ interface Juego {
 }
 
 const JUEGOS: Juego[] = [
+  {
+    // Magic no estuvo aqui hasta S029, y no por descuido: no TENIA ventanas.
+    // Una sola plantilla cubria de 1993 a 2026, asi que no habia solape posible
+    // ni epoca que comprobar. En cuanto la 0025 le dio sus tres epocas, la
+    // comprobacion pasa a hacer falta -- que es exactamente cuando se anade.
+    id: 1,
+    nombre: 'Magic',
+    ventanasEn: [MTG_ERAS],
+    // La 0003 NO entra, igual que no entra para los otros dos juegos: siembra
+    // las plantillas de los tres a la vez y el lector de `distribution` no sabe
+    // de quien es cada una, asi que meterla haria que las rarezas de Pokemon
+    // contaran como huerfanas de Magic.
+    plantillasEn: [MTG_ERAS, MTG_INSERTOS],
+    siembrasEn: [SEED],
+    ventanasEsperadas: 3,
+  },
   {
     id: 2,
     nombre: 'Yu-Gi-Oh!',
