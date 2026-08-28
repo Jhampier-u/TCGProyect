@@ -76,6 +76,11 @@ async function main(): Promise<void> {
       // en vez de reescribiendo su consulta a mano, que probaria la copia.
       const reparto = new Map<string, number>();
       const plantillas = new Map<string, TemplateConfig>();
+      // T-085: sets cuya plantilla pide una tierra basica y cuyo pool no tiene
+      // ninguna. No es un fallo -- el motor abre la mano y entrega una comun --
+      // pero es fidelidad perdida, y contarlo a mano es como se pierden los
+      // avisos. 58 de los 135 sets de Magic con slot de tierra, el 2026-08-28.
+      const sinTierra: string[] = [];
 
       for (const set of sets) {
         const plantilla = await repo.findTemplate(Number(set.id));
@@ -89,6 +94,13 @@ async function main(): Promise<void> {
 
         const pool = await repo.loadPool(Number(set.id));
         const total = [...pool.values()].reduce((n, e) => n + e.length, 0);
+
+        if (
+          plantilla.slots.some((s) => s.cardFilter === 'basic_land') &&
+          ![...pool.values()].flat().some((e) => e.basicLand)
+        ) {
+          sinTierra.push(set.code);
+        }
         const fuera = rarezasInalcanzables(plantilla.slots, pool.keys());
         const perdidas = fuera.reduce((n, r) => n + (pool.get(r)?.length ?? 0), 0);
         const techo = total > 0 ? (100 * (total - perdidas)) / total : 100;
@@ -105,6 +117,14 @@ async function main(): Promise<void> {
       console.log('  reparto por plantilla:');
       for (const [nombre, n] of [...reparto].sort((a, b) => b[1] - a[1])) {
         console.log(`    ${String(n).padStart(5)}  ${nombre}`);
+      }
+
+      if (sinTierra.length > 0) {
+        console.log(
+          `  ${sinTierra.length} sets piden una tierra basica y no la tienen en el sobre; ` +
+            'reciben una comun cualquiera (T-085): ' +
+            `${sinTierra.slice(0, 10).join(', ')}${sinTierra.length > 10 ? ', ...' : ''}`,
+        );
       }
 
       if (excluidos.length > 0) {
