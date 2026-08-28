@@ -44,8 +44,18 @@ function poolDe(counts: Record<string, number>): SetPool {
   for (const [rareza, n] of Object.entries(counts)) {
     pool.set(
       rareza,
-      Array.from({ length: n }, () => ({ printId: id, cardId: id++ })),
+      Array.from({ length: n }, () => ({ printId: id, cardId: id++, basicLand: false })),
     );
+  }
+  return pool;
+}
+
+/** Igual, pero marcando cuantas de cada rareza son tierra basica (T-085). */
+function poolConTierras(counts: Record<string, number>, basicas: Record<string, number>): SetPool {
+  const pool = poolDe(counts);
+  for (const [rareza, n] of Object.entries(basicas)) {
+    const lista = pool.get(rareza) ?? [];
+    for (let i = 0; i < Math.min(n, lista.length); i += 1) lista[i]!.basicLand = true;
   }
   return pool;
 }
@@ -65,6 +75,13 @@ class FakeRepo implements PackRepository {
   }
   async loadPool(): Promise<SetPool> {
     return this.pool;
+  }
+  /** Pools de otros sets, por codigo. Vacio = ningun set ajeno existe. */
+  ajenos = new Map<string, SetPool>();
+  pedidos: string[] = [];
+  async loadPoolByCode(_g: GameCode, code: string): Promise<SetPool | null> {
+    this.pedidos.push(code);
+    return this.ajenos.get(code) ?? null;
   }
   async rarityTiers(_g: GameCode): Promise<Map<string, number>> {
     return this.tiers;
