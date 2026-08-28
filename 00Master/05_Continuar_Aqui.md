@@ -1,7 +1,7 @@
 # 05 — Continuar aquí
 
-**Punto de guardado:** 2026-08-27, tras la sesión **S028**
-**Commit:** rama `main` · 395 tests de Vitest + 10 recorridos E2E en verde · `npm audit` limpio
+**Punto de guardado:** 2026-08-28, tras la sesión **S029**
+**Commit:** rama `main` · 399 tests de Vitest + 10 recorridos E2E en verde · `npm audit` limpio
 
 Este documento existe para retomar el proyecto en otra máquina o en otra sesión sin releer las 26
 bitácoras. Si sólo vas a leer un fichero, que sea éste.
@@ -155,13 +155,18 @@ son útiles para la lógica, pero **la fidelidad de sus datos determina lo que e
 ## 5. Lo que está pendiente, por orden de interés
 
 ### El siguiente paso natural
-**Los ocho hitos están cerrados y no queda ninguna tarea abierta.** T-083 fue la última: desde S028 la
-ingesta retira las impresiones que el origen dejó de listar — borra lo que nadie referencia y marca
-`card_prints.withdrawn_at` en lo que una apertura, una colección o un mazo sí referencia, para no
-reescribir un historial (P-005, RN-01). Con ella se cerró P-040.
+**Los ocho hitos están cerrados y no queda ninguna tarea abierta.** Las dos últimas:
 
-Lo siguiente, por tanto, es producto: qué se construye encima de lo que ya funciona. No hay deuda
-esperando turno.
+- **T-083** (S028) — la ingesta retira las impresiones que el origen dejó de listar: borra lo que
+  nadie referencia y marca `card_prints.withdrawn_at` en lo que una apertura, una colección o un mazo
+  sí referencia, para no reescribir un historial (P-005, RN-01). Cerró P-040.
+- **T-084** (S029) — Magic tiene por fin sus cuatro épocas de sobre (0025). Un sobre de 1993 son 15
+  cartas y cero foils; uno de 2024 son 14 con foil garantizado. Cerró el punto 3 de P-008.
+
+Lo siguiente es producto: qué se construye encima de lo que ya funciona. **La única deuda que queda
+son los puntos 1 y 2 de P-008**, y los dos son cambios de motor, no de datos: modelar *The List* —que
+extrae cartas de otros sets— y filtrar el slot de tierra por tipo. El pool sólo indexa
+`(set_id, rarity_id)`, y los dos necesitan que sepa algo más.
 
 **Cómo se ejecuta la suite:**
 

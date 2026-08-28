@@ -1,6 +1,6 @@
 # Registro de Problemas
 
-**Última actualización:** 2026-08-27 (S028) · **Abiertos:** 2 · **Cerrados:** 38 · **Total:** 40
+**Última actualización:** 2026-08-28 (S029) · **Abiertos:** 2 · **Cerrados:** 38 · **Total:** 40
 
 Severidad: 🔴 crítica · 🟠 alta · 🟡 media · ⚪ baja
 
@@ -186,8 +186,8 @@ impresiones, 5 rarezas, **0 avisos**.
 ---
 
 ## P-008 🟡 · Limitaciones estructurales de las plantillas de sobre
-**Estado:** ABIERTO — aceptadas conscientemente para v1. Punto 3 resuelto en S028 para Pokémon
-y Yu-Gi-Oh!; sigue vigente para Magic.
+**Estado:** ABIERTO — aceptadas conscientemente para v1. **Punto 3 cerrado en S029**; siguen
+abiertos el 1 y el 2, que son de más calado.
 **Origen:** T-008. Son el residuo de P-003, no un fallo.
 
 1. **"The List" de MTG (12,5 % del slot 7) no se modela.** Extrae cartas de *otros* sets y el
@@ -205,13 +205,15 @@ y Yu-Gi-Oh!; sigue vigente para Magic.
    - **Yu-Gi-Oh!:** cuatro épocas (0010, 0017) **más seis líneas de producto** de 5 y 9 cartas
      (0020-0023, T-080/T-082), que es justo el "sobre YGO de 5 cartas" que este punto nombraba.
 
-   **Sigue siendo cierto de Magic, y ahora está medido.** Magic tiene **una sola plantilla** —
-   `Play Booster`, 14 cartas, 14 slots, sin ventana de fechas — y **208 sets abribles anteriores a
-   2018** resuelven a ella. Es correcta en el vocabulario de rarezas, que en Magic lleva treinta
-   años estable (0016, T-077), y no en la **estructura**: un sobre de 1995 eran 15 cartas sin slot
-   foil garantizado, y el Play Booster son 14 con él. Se sigue aceptando para v1 por la misma razón
-   que el resto de este problema, y se arreglaría igual que se arreglaron los otros dos juegos: una
-   migración con ventanas de fechas, ningún despliegue.
+   - **Magic:** cuatro épocas (0025, T-084). Era el último que quedaba: una sola plantilla —
+     `Play Booster`, 14 cartas, sin ventana— cubría de 1993 a 2026, y 208 sets abribles anteriores a
+     2018 resolvían a ella. Correcta en rarezas, que en Magic llevan treinta años estables (0016,
+     T-077), y no en **estructura**. Las fronteras salieron de los datos: primer foil del catálogo
+     `ulg` 1999-02-15, primera mítica 2008-10-03. Verificado abriendo sobres: `lea` da 15 cartas y
+     **cero foils**; `blb` da 14 con foil garantizado.
+
+   **Punto 3 cerrado.** Los tres juegos tienen sus épocas y ninguno cae ya en la plantilla de otra
+   era por no tener la suya.
 
 ---
 
