@@ -47,5 +47,6 @@ Los seis ADR están cerrados. Ver `004Arquitectura/00_ADR.md`.
      del pool de raras de un set era inalcanzable en un sobre real.
    Detalle de la mitigación original de S003: Las
    distribuciones se sembraron como datos (T-008) con nivel de confianza declarado por número
-   y se validaron por Monte Carlo contra las tasas publicadas. Quedan 3 limitaciones acotadas
-   y documentadas en P-008.
+   y se validaron por Monte Carlo contra las tasas publicadas. Las 3 limitaciones que quedaron
+   acotadas en P-008 se cerraron en S029 y S030: épocas de sobre para Magic, The List y el filtro
+   por tipo del slot de tierra.

@@ -32,10 +32,13 @@ Motor de reglas (S020), interfaz (S021) e import/export (S022), los tres verific
 | ID | Tarea | Agente | Prio |
 |---|---|---|---|
 
-## Hito H8 — Endurecimiento 🟡 EN CURSO
+## Hito H8 — Endurecimiento ✅ COMPLETADO (S028)
 
-**H8a — Suite E2E ✅ hecho (S023).** Playwright sobre Docker, 6 recorridos en verde. Cerró T-040 y
-T-053. Quedan los otros dos sub-proyectos:
+Los tres sub-proyectos cerrados. Este encabezado decía "EN CURSO" hasta S031, tres sesiones después
+de que el hito se cerrara: corregido al revisar el estado.
+
+**H8a — Suite E2E ✅ hecho (S023).** Playwright sobre Docker. Cerró T-040 y T-053. Eran 6 recorridos
+entonces; hoy son 10, con los de iconos que añadió T-066.
 
 ### H8b — Seguridad ✅ hecho (S024)
 
@@ -64,6 +67,10 @@ hacerlas.
 
 **Ninguna abierta.** T-083 cerrada en S028: la ingesta ya retira lo que el origen dejó de listar,
 sin tocar lo que una apertura referencia. Con ella se cerró **P-040**.
+
+Después, y ya fuera de H8c: **T-084** (S029) dio a Magic sus cuatro épocas de sobre, **T-085** (S030)
+cerró P-008 entero enseñándole al motor a sacar cartas de otro set y a filtrar por tipo, y **T-086**
+(S031) puso comprobación de tipos a los ficheros de prueba, que no la tenían.
 
 ### Además, anotado al hacer T-035
 

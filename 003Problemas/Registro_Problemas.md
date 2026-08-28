@@ -1,6 +1,6 @@
 # Registro de Problemas
 
-**Última actualización:** 2026-08-28 (S030) · **Abiertos:** 1 · **Cerrados:** 39 · **Total:** 40
+**Última actualización:** 2026-08-28 (S031) · **Abiertos:** 1 · **Cerrados:** 39 · **Total:** 40
 
 Severidad: 🔴 crítica · 🟠 alta · 🟡 media · ⚪ baja
 
@@ -69,7 +69,7 @@ Monte Carlo con 200.000 sobres por juego contra las tasas publicadas:
 - MTG: 27,65 % de sobres con ≥2 raras/míticas frente al ~28 % publicado por Wizards.
 - YGO: Ultra 0,1664/sobre (objetivo 1/6) · Secret 0,0841 (objetivo 1/12).
 - PTCG: Double Rare 0,1441 (objetivo 1/7) · Hyper 0,0178 (objetivo 1/54).
-**Residual (baja severidad):** quedan 3 limitaciones estructurales acotadas → **P-008**.
+**Residual (baja severidad):** quedaron 3 limitaciones estructurales acotadas → **P-008**, cerrado a su vez el 2026-08-28 (S030).
 
 ---
 

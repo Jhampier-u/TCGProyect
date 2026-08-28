@@ -1,6 +1,6 @@
 # Tareas Bloqueadas
 
-**Última actualización:** 2026-08-27 (S028) · **Total bloqueadas:** 0
+**Última actualización:** 2026-08-28 (S031) · **Total bloqueadas:** 0
 
 **Nada bloqueado.** Este fichero llevaba **veintiséis sesiones** diciendo que T-013 esperaba una
 credencial que llegó en S028. Corregido el 2026-08-27 al revisar el estado de cierre.

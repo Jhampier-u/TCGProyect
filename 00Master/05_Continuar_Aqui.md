@@ -195,15 +195,20 @@ Las ocho tareas de H8c están cerradas. Lo que queda abierto salió de hacerlas,
 
 ## 6. Problemas abiertos que conviene tener presentes
 
-**Sólo quedan dos, y ninguno es trabajo pendiente:**
+**Sólo queda uno, y no es trabajo pendiente:**
 
 | ID | Severidad | Resumen |
 |---|---|---|
-| **P-008** | 🟡 | "The List" de MTG no se modela; el slot de tierra no filtra por tipo. **Limitaciones aceptadas conscientemente para v1**, residuo de P-003 |
 | **P-016** | 🟠 | La API de Pokémon responde 200 sólo ~30 % de las veces. **Riesgo operativo permanente**, no algo que se arregle: por eso la ingesta se reanuda |
 
-Los 39 problemas —**37 cerrados**, cada uno con su medición— están en
+Los 40 problemas —**39 cerrados**, cada uno con su medición— están en
 `003Problemas/Registro_Problemas.md`.
+
+**P-008 se cerró en S030**, veintisiete sesiones después de abrirse, y deja la lección más útil de las
+tres últimas sesiones: se archivó en S003 como "limitaciones aceptadas conscientemente para v1", y esa
+etiqueta lo mantuvo fuera de la lista de trabajo hasta que alguien preguntó qué quedaba. Ninguno de
+sus tres puntos resultó difícil una vez medido. **Un problema marcado como aceptado no se revisa
+solo**; conviene releerlos cuando el proyecto ya no se parece a cuando se escribieron.
 
 **P-005 se cerró en S028 y merece una nota**, porque el fallo no estaba en el código: llevaba **doce
 sesiones** diciendo "pendiente de que el motor lo respete (H4)" cuando H4 se cerró en S012. El

@@ -76,8 +76,9 @@ La **impresión física** en un set concreto. Es lo que un sobre entrega.
 | `image_source_url` | VARCHAR(512) NULL | Sólo para la descarga inicial |
 | `finishes` | JSON | `["nonfoil","foil"]`, `["normal","reverse"]`, etc. |
 | `in_boosters` | TINYINT(1) DEFAULT 1 | Si la impresión puede salir de un sobre. **El motor de sobres filtra por aquí** (P-014, migración 0004) |
+| `withdrawn_at` | TIMESTAMP NULL | Cuándo el origen dejó de listar esta impresión (migración 0024, T-083). No se borra si una apertura, una colección o un mazo la referencian (P-005): se **retira**, y sale del pool, de la búsqueda y del recuento de completitud |
 | **UNIQUE** | `(set_id, external_id)` | |
-| **ÍNDICE** | `idx_prints_pool (set_id, rarity_id, in_boosters, id)` | Covering para la precarga del pool |
+| **ÍNDICE** | `idx_prints_pool (set_id, rarity_id, in_boosters, withdrawn_at, id)` | Covering para la precarga del pool. La 0024 lo rehízo para meter `withdrawn_at`: es la consulta más caliente del sobre |
 
 ### `rarities`
 Rareza **por juego** — no son intercambiables entre juegos.

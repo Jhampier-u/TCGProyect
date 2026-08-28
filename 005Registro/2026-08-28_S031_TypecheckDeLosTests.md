@@ -149,6 +149,33 @@ cubría el catálogo (P-038), el test de iconos que ganaba la carrera por casual
 modelo se había quedado corto— y ésta es la misma familia, un nivel más abajo: **la comprobación de la
 comprobación**.
 
+
+---
+
+## Y un barrido del Vault, al preguntar "entonces ya está todo"
+
+Comprobado documento a documento en vez de contestar de memoria. Salieron **siete** afirmaciones
+falsas, ninguna en el código:
+
+| Dónde | Qué decía | Qué es verdad |
+|---|---|---|
+| `05_Continuar_Aqui.md` | P-008 abierto, "sólo quedan dos" problemas, "39 problemas, 37 cerrados" | P-008 cerrado en S030; queda uno; son 40 y 39 |
+| `Tareas_Pendientes.md` | "Hito H8 🟡 EN CURSO" | Cerrado en S028, tres sesiones antes |
+| `00_Contexto_Global.md` | "Quedan 3 limitaciones acotadas en P-008" | Cero |
+| `Registro_Problemas.md` (P-003) | "quedan 3 limitaciones estructurales" | Cerradas |
+| `README.md` | "341 tests + 6 recorridos E2E" | 411 y 10 |
+| `04_Diccionario_Datos.md` | `idx_prints_pool (set_id, rarity_id, in_boosters, id)`, y sin `withdrawn_at` | La 0024 rehízo el índice con `withdrawn_at` dentro, y la columna no estaba documentada |
+| `02_Flujo_Datos.md` | "rng = mulberry32", "pool precargado en **Redis**" | `xoshiro128**`, y el pool se lee de MySQL. Redis sólo guarda la cuota de las APIs (T-017) |
+
+Las dos últimas son las que más incomodan. El índice llevaba **mal desde S028**, y se detectó
+comparándolo con `information_schema` en vez de creerse el documento. Y las del diagrama de flujo son
+peores que estar desactualizadas: **son afirmaciones de diseño que el código nunca cumplió**. `prng.ts`
+explica desde H4 por qué se eligió xoshiro128** *frente a* mulberry32, y el documento seguía nombrando
+al perdedor.
+
+Las bitácoras de sesión **no se tocan**: son registro histórico y eran ciertas cuando se escribieron.
+La distinción importa — corregir una bitácora sería falsificarla.
+
 ---
 
 ## Estado
