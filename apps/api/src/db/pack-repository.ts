@@ -6,10 +6,28 @@ import type {
   PackOpening,
   PackRepository,
   PersistOpeningInput,
+  CardFilter,
   SetPool,
   SlotConfig,
   TemplateConfig,
 } from '../packs/types.js';
+
+/**
+ * Una fila del pool. `basic_land` se calcula en SQL y no se trae `type_line`
+ * entera: son 5584 filas en el set mas grande y solo hace falta el si/no.
+ */
+interface PoolRow {
+  id: number;
+  card_id: number;
+  code: string;
+  basic_land: number;
+}
+
+const POOL_SELECT = `SELECT p.id, p.card_id, r.code,
+         (c.type_line LIKE 'Basic Land%') AS basic_land
+    FROM card_prints p
+    JOIN rarities r ON r.id = p.rarity_id
+    JOIN cards c ON c.id = p.card_id`;
 
 /**
  * Acceso a datos del motor de sobres (ADR-006).
@@ -81,8 +99,9 @@ export class PackRepositoryMysql implements PackRepository {
 
     const slots = await this.db.select<{
       slot_index: number; distribution: string | object; foil_chance: string | number;
+      card_filter: string | null;
     }>(
-      `SELECT slot_index, distribution, foil_chance
+      `SELECT slot_index, distribution, foil_chance, card_filter
        FROM pack_slots WHERE pack_template_id = ? ORDER BY slot_index`,
       [Number(row.id)],
     );
@@ -103,6 +122,9 @@ export class PackRepositoryMysql implements PackRepository {
             : (s.distribution as SlotConfig['distribution']),
         // DECIMAL(6,5) llega como cadena para no perder precision.
         foilChance: Number(s.foil_chance),
+        // La columna es una lista cerrada en la base (CHECK), asi que lo que
+        // llegue aqui ya es un valor valido o nulo.
+        ...(s.card_filter ? { cardFilter: s.card_filter as CardFilter } : {}),
       })),
     };
   }
@@ -114,18 +136,41 @@ export class PackRepositoryMysql implements PackRepository {
    * promos y cartas de Secret Lair, que es mas de la mitad del catalogo de Magic.
    */
   async loadPool(setId: number): Promise<SetPool> {
-    const rows = await this.db.select<{ id: number; card_id: number; code: string }>(
-      `SELECT p.id, p.card_id, r.code
-       FROM card_prints p JOIN rarities r ON r.id = p.rarity_id
-       WHERE p.set_id = ? AND p.in_boosters = 1 AND p.withdrawn_at IS NULL
-       ORDER BY p.id`,
-      [setId],
+    return this.#agrupar(
+      await this.db.select<PoolRow>(
+        `${POOL_SELECT} WHERE p.set_id = ? AND p.in_boosters = 1 AND p.withdrawn_at IS NULL
+         ORDER BY p.id`,
+        [setId],
+      ),
     );
+  }
 
+  /**
+   * Pool de otro set, nombrado por su codigo (T-085).
+   *
+   * Se pide `game` ademas del codigo porque `sets.code` NO es unico entre
+   * juegos: `PR` existe en los tres. Sin el filtro, una entrada de The List
+   * podria resolver a un set de Yu-Gi-Oh! segun el orden de las filas.
+   */
+  async loadPoolByCode(game: GameCode, code: string): Promise<SetPool | null> {
+    const filas = await this.db.select<PoolRow>(
+      `${POOL_SELECT} JOIN sets s ON s.id = p.set_id
+        WHERE s.game_id = ? AND s.code = ? AND p.in_boosters = 1 AND p.withdrawn_at IS NULL
+        ORDER BY p.id`,
+      [GAME_IDS[game], code],
+    );
+    return filas.length > 0 ? this.#agrupar(filas) : null;
+  }
+
+  #agrupar(rows: PoolRow[]): SetPool {
     const pool: SetPool = new Map();
     for (const row of rows) {
       const lista = pool.get(row.code) ?? [];
-      lista.push({ printId: Number(row.id), cardId: Number(row.card_id) });
+      lista.push({
+        printId: Number(row.id),
+        cardId: Number(row.card_id),
+        basicLand: Number(row.basic_land) === 1,
+      });
       pool.set(row.code, lista);
     }
     return pool;

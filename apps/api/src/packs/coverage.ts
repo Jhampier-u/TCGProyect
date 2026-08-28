@@ -24,7 +24,9 @@ export function rarezasInalcanzables(
 ): string[] {
   const pedidas = new Set<string>();
   for (const slot of slots) {
-    for (const d of slot.distribution) pedidas.add(d.rarity);
+    // Las entradas de otro set (T-085) no piden ninguna rareza DE ESTE set, asi
+    // que no cuentan para lo que este set puede o no entregar.
+    for (const d of slot.distribution) if (d.rarity) pedidas.add(d.rarity);
   }
 
   const fuera = new Set<string>();
@@ -76,9 +78,12 @@ export function pesoSinDestino(
 
     for (const d of slot.distribution) {
       total += d.weight;
-      if (!rarezasExistentes.has(d.rarity)) {
+      // Una entrada de otro set SI tiene destino: la carta sale del set que
+      // nombra. Contarla como peso perdido diria que The List no existe.
+      if (d.set) continue;
+      if (!d.rarity || !rarezasExistentes.has(d.rarity)) {
         perdido += d.weight;
-        rarezas.add(d.rarity);
+        rarezas.add(d.rarity ?? '(sin rareza)');
       }
     }
 

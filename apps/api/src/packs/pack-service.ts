@@ -1,4 +1,4 @@
-import type { IngestWarningSink } from '@tcg/shared';
+import type { GameCode, IngestWarningSink } from '@tcg/shared';
 import { generateSeed, pickIndex, pickWeighted, rngFromSeed, type Rng } from './prng.js';
 import type {
   OpenedCard,
@@ -63,6 +63,24 @@ export class DuplicateSeedError extends Error {
  * hace falta desalinearia el flujo y haria que dos sobres con la misma semilla
  * divergieran segun la plantilla.
  */
+/**
+ * Una impresion candidata CON la rareza que se registrara si sale elegida.
+ *
+ * Van juntas porque un grupo de candidatos puede mezclar rarezas -- ocurre en
+ * cuanto la carta viene de otro set (T-085) -- y separarlas fue exactamente el
+ * fallo que la prueba de reparto uniforme destapo: se entregaba una carta y se
+ * apuntaba la rareza de otra.
+ */
+interface Candidato {
+  entry: PoolEntry;
+  rarityCode: string;
+}
+
+/** Un grupo de candidatos que comparten rareza, que es el caso de siempre. */
+function conRareza(grupo: { rarityCode: string; entries: PoolEntry[] }): Candidato[] {
+  return grupo.entries.map((entry) => ({ entry, rarityCode: grupo.rarityCode }));
+}
+
 export class PackService {
   readonly #repo: PackRepository;
   readonly #warn: IngestWarningSink;
@@ -93,7 +111,10 @@ export class PackService {
 
     const cards: OpenedCard[] = [];
     for (const slot of [...template.slots].sort((a, b) => a.slotIndex - b.slotIndex)) {
-      const card = this.#resolveSlot(slot, pool, tiers, rng, setId);
+      // Secuencial a proposito: el PRNG es un flujo y paralelizar
+      // los slots entregaria cartas distintas en cada ejecucion.
+      // eslint-disable-next-line no-await-in-loop
+      const card = await this.#resolveSlot(slot, pool, tiers, rng, setId, template.game);
       if (card) cards.push(card);
     }
 
@@ -144,45 +165,146 @@ export class PackService {
 
   // ------------------------------------------------------------------
 
-  #resolveSlot(
+  /**
+   * TRES VALORES DEL PRNG POR SLOT, SIEMPRE: entrada, impresion y acabado.
+   *
+   * Es la invariante que hace reproducible una apertura, y ninguna de las dos
+   * cosas que T-085 anade puede romperla. Una entrada de otro set consume los
+   * mismos tres que una normal, y un filtro de tipo que no deja candidatos
+   * tampoco cambia la cuenta: se elige igual y se descarta despues.
+   */
+  async #resolveSlot(
     slot: SlotConfig,
     pool: SetPool,
     tiers: Map<string, number>,
     rng: Rng,
     setId: number,
-  ): OpenedCard | null {
-    // 1. Rareza PEDIDA por el slot.
-    const pedida = pickWeighted(
-      slot.distribution.map((d) => ({ item: d.rarity, weight: d.weight })),
+    game: GameCode,
+  ): Promise<OpenedCard | null> {
+    // 1. Entrada del slot. Puede pedir una rareza de ESTE set o una carta de
+    //    OTRO, y el peso decide igual en los dos casos.
+    const entrada = pickWeighted(
+      slot.distribution.map((d) => ({ item: d, weight: d.weight })),
       rng,
     );
 
     // La rareza ENTREGADA puede no ser la pedida: si el set no tiene esa rareza,
     // el respaldo entrega otra. Se devuelven ambas porque registrar la pedida
     // seria mentir sobre la carta.
-    const { rarityCode, entries } = this.#poolFor(pedida, slot, pool, tiers, setId);
+    //
+    // CADA CANDIDATO LLEVA SU PROPIA RAREZA, y no es un detalle: dentro de un
+    // set ajeno conviven rarezas distintas -- The List tiene 2112 comunes y 4
+    // `special` -- asi que una sola rareza para todo el grupo registraria una
+    // carta con la rareza de otra, y `replay()`, que la lee de `card_prints`,
+    // diria algo distinto. Es la misma exigencia de RN-01 de siempre.
+    const candidatos = entrada.set
+      ? await this.#poolDeOtroSet(entrada.set, slot, pool, tiers, setId, game)
+      : conRareza(this.#poolFor(entrada.rarity ?? '', slot, pool, tiers, setId));
+
+    // El filtro de tipo se aplica DESPUES de resolver la rareza y ANTES de
+    // elegir: si no deja a nadie, se abre la mano al pool sin filtrar en vez de
+    // devolver un hueco. 58 de los 135 sets de Magic con slot de tierra no traen
+    // tierras basicas en el sobre, y un slot vacio ahi seria un sobre con una
+    // carta menos.
+    const finalistas = this.#filtrar(candidatos, slot, setId);
 
     // 2. Impresion. Se consume el valor SIEMPRE, incluso si no hay candidatos,
     //    para no desalinear el flujo del generador.
-    const indice = pickIndex(Math.max(1, entries.length), rng);
+    const indice = pickIndex(Math.max(1, finalistas.length), rng);
 
     // 3. Acabado.
     const esFoil = rng() < slot.foilChance;
 
-    if (entries.length === 0) return null;
+    if (finalistas.length === 0) return null;
 
-    const entry = entries[Math.min(indice, entries.length - 1)]!;
+    const elegido = finalistas[Math.min(indice, finalistas.length - 1)]!;
     return {
       slotIndex: slot.slotIndex,
-      printId: entry.printId,
+      printId: elegido.entry.printId,
       // La rareza REAL de la impresion entregada, no la que pedia el slot.
       // Si se registrara la pedida, `open()` diria 'rare' para una carta que es
       // 'common', y `replay()` -- que lee la rareza de `card_prints` -- diria
       // 'common'. Las dos vias tienen que coincidir o RN-01 no significa nada.
-      rarityCode,
+      rarityCode: elegido.rarityCode,
       finish: esFoil ? 'foil' : 'nonfoil',
       isNew: false, // se calcula despues, con la coleccion delante
     };
+  }
+
+  /**
+   * Deja solo los candidatos que cumplen el filtro de tipo del slot (T-085).
+   *
+   * SIN FILTRO, DEVUELVE LO QUE LE DAN. Y si el filtro no deja a nadie tambien:
+   * un set sin tierras basicas en el sobre -- 58 de los 135 de Magic que tienen
+   * slot de tierra -- lo tendria vacio, y eso es un sobre con catorce cartas en
+   * vez de quince. Se avisa y se entrega una comun cualquiera, que es
+   * exactamente lo que este slot hacia antes de que el filtro existiera.
+   */
+  #filtrar(candidatos: Candidato[], slot: SlotConfig, setId: number): Candidato[] {
+    if (!slot.cardFilter) return candidatos;
+
+    const cumplen = candidatos.filter((c) => c.entry.basicLand);
+    if (cumplen.length > 0) return cumplen;
+
+    this.#warn({
+      game: 'MTG',
+      subject: `set:${setId}`,
+      code: 'malformed_field',
+      message:
+        `El set no tiene tierras basicas en el sobre; la slot ${slot.slotIndex} ` +
+        'entrega una comun sin filtrar',
+    });
+    return candidatos;
+  }
+
+  /**
+   * Pool de OTRO set, para una entrada que saca la carta de fuera (T-085).
+   *
+   * Es The List de Magic: uno de cada ocho Play Booster trae en su septimo
+   * carton una carta de un set aparte. El motor solo sabia elegir dentro del
+   * pool del set abierto, y por eso este 12,5% no era modelable (P-008.1).
+   *
+   * SE CARGA AQUI Y NO AL ABRIR, y es la razon de que este metodo sea `async`:
+   * traer 5584 filas en CADA apertura para usarlas una de cada ocho veces seria
+   * pagar el coste ocho veces de mas. El PRNG no se entera -- la entrada ya
+   * esta elegida cuando se llega aqui.
+   *
+   * LA RAREZA QUE SE REGISTRA ES LA REAL DE LA CARTA, la del set de origen. Es
+   * lo mismo que ya hacia `#poolFor`, y por el mismo motivo: `replay()` lee la
+   * rareza de `card_prints`, asi que registrar cualquier otra cosa haria que las
+   * dos vias discreparan y RN-01 dejara de significar nada.
+   */
+  async #poolDeOtroSet(
+    code: string,
+    slot: SlotConfig,
+    pool: SetPool,
+    tiers: Map<string, number>,
+    setId: number,
+    game: GameCode,
+  ): Promise<Candidato[]> {
+    const ajeno = await this.#repo.loadPoolByCode(game, code);
+    const todas = ajeno ? [...ajeno.entries()].filter(([, e]) => e.length > 0) : [];
+
+    if (todas.length === 0) {
+      // El set de origen no existe o no tiene pool. Se cae a la entrada de mas
+      // peso del propio slot, igual que hace el respaldo de rareza vacia.
+      this.#warn({
+        game,
+        subject: `set:${setId}`,
+        code: 'malformed_field',
+        message: `La slot ${slot.slotIndex} saca de '${code}', que no tiene impresiones; se entrega del propio set`,
+      });
+      const mayor = [...slot.distribution]
+        .filter((d) => d.rarity)
+        .sort((a, b) => b.weight - a.weight)[0];
+      return conRareza(this.#poolFor(mayor?.rarity ?? '', slot, pool, tiers, setId));
+    }
+
+    // Uniforme sobre TODAS las impresiones del set de origen, no sobre sus
+    // rarezas: The List no publica una distribucion por rareza, y repartir a
+    // partes iguales entre rarezas dispares -- 2112 comunes frente a 4
+    // `special` -- inventaria una escasez que no existe.
+    return todas.flatMap(([rarityCode, es]) => es.map((entry) => ({ entry, rarityCode })));
   }
 
   /**
@@ -209,8 +331,11 @@ export class PackService {
     const directo = pool.get(pedida);
     if (directo && directo.length > 0) return { rarityCode: pedida, entries: directo };
 
+    // Las entradas de OTRO set no valen como alternativa (T-085): la carta que
+    // entregarian no esta en este pool, y el respaldo existe justamente para
+    // rellenar con algo que el set SI tiene.
     const alternativas = [...slot.distribution]
-      .filter((d) => d.rarity !== pedida)
+      .filter((d): d is { rarity: string; weight: number } => !!d.rarity && d.rarity !== pedida)
       .sort((a, b) => b.weight - a.weight);
 
     for (const alt of alternativas) {
