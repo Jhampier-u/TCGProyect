@@ -1,6 +1,6 @@
 # Tareas Realizadas
 
-**Última actualización:** 2026-08-28 (S029)
+**Última actualización:** 2026-08-28 (S030)
 
 | ID | Tarea | Agente | Fecha | Sesión | Evidencia |
 |---|---|---|---|---|---|
@@ -115,3 +115,4 @@
 | T-082 | **La cola larga de Yu-Gi-Oh!** (migración 0023). Casi ninguno de los 20 sets necesitaba plantilla propia: eran las de línea a las que les faltaba una rareza, más cuatro que no son sobres. **Los tres juegos quedan a cero sets con cartas inalcanzables** | Base de Datos / Backend | 2026-08-27 | S028 | `db/migrations/0023_*`, `apps/api/src/ingest/openable.ts` |
 | T-083 | **La ingesta retira lo que el origen dejó de listar** (migración 0024). Lo que sobra y nadie referencia se borra; lo que una apertura, una colección o un mazo referencia se **retira** con `withdrawn_at` y sale del pool sin reescribir el historial (P-005, RN-01). Un origen que devuelve cero impresiones no retira nada. Cierra **P-040** | Backend / Base de Datos | 2026-08-27 | S028 | `db/migrations/0024_*`, `apps/api/src/ingest/ingest-service.ts` |
 | T-084 | **Las tres épocas del sobre de Magic** (migración 0025). Una sola plantilla cubría de 1993 a 2026 y 208 sets abribles anteriores a 2018 resolvían a ella: un sobre de *Tempest* salía con 14 cartas y foil garantizado. Fronteras medidas en los datos —primer foil `ulg` 1999-02-15, primera mítica 2008-10-03—. Cierra el punto 3 de **P-008** | Base de Datos | 2026-08-28 | S029 | `db/migrations/0025_*`, `apps/api/src/db/template-eras.test.ts` |
+| T-085 | **The List y el slot de tierra** (migración 0026). Dos cosas que el pool `(set_id, rarity_id)` no sabía expresar: una entrada `{"set":"plst"}` que saca la carta de otro set, y `pack_slots.card_filter` para exigir un tipo. Los sobres con 4+ raras pasan del 0,00 % —imposible— al 0,04 %. **Cierra P-008** entero | Backend / Base de Datos | 2026-08-28 | S030 | `db/migrations/0026_*`, `apps/api/src/packs/pack-service.ts` |

@@ -1,7 +1,7 @@
 # 05 — Continuar aquí
 
-**Punto de guardado:** 2026-08-28, tras la sesión **S029**
-**Commit:** rama `main` · 399 tests de Vitest + 10 recorridos E2E en verde · `npm audit` limpio
+**Punto de guardado:** 2026-08-28, tras la sesión **S030**
+**Commit:** rama `main` · 409 tests de Vitest + 10 recorridos E2E en verde · `npm audit` limpio
 
 Este documento existe para retomar el proyecto en otra máquina o en otra sesión sin releer las 26
 bitácoras. Si sólo vas a leer un fichero, que sea éste.
@@ -162,11 +162,11 @@ son útiles para la lógica, pero **la fidelidad de sus datos determina lo que e
   sí referencia, para no reescribir un historial (P-005, RN-01). Cerró P-040.
 - **T-084** (S029) — Magic tiene por fin sus cuatro épocas de sobre (0025). Un sobre de 1993 son 15
   cartas y cero foils; uno de 2024 son 14 con foil garantizado. Cerró el punto 3 de P-008.
+- **T-085** (S030) — el motor aprende dos cosas que el pool `(set_id, rarity_id)` no expresaba: una
+  entrada de `distribution` puede sacar la carta de **otro set** (*The List*) y un slot puede exigir
+  un **tipo** de carta (la tierra básica). Cerró P-008 entero, veintisiete sesiones después.
 
-Lo siguiente es producto: qué se construye encima de lo que ya funciona. **La única deuda que queda
-son los puntos 1 y 2 de P-008**, y los dos son cambios de motor, no de datos: modelar *The List* —que
-extrae cartas de otros sets— y filtrar el slot de tierra por tipo. El pool sólo indexa
-`(set_id, rarity_id)`, y los dos necesitan que sepa algo más.
+**No queda deuda.** Lo siguiente es producto: qué se construye encima de lo que ya funciona.
 
 **Cómo se ejecuta la suite:**
 

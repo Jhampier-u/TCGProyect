@@ -2,7 +2,7 @@
 
 > **Rol:** Arquitecto Principal y Orquestador de Proyectos de Software.
 > **Producto:** Simulador de Apertura de Sobres + Constructor de Mazos unificado para MTG, Yu-Gi-Oh! y Pokémon TCG.
-> **Estado del Vault:** ACTIVO — última sesión S029 (2026-08-28)
+> **Estado del Vault:** ACTIVO — última sesión S030 (2026-08-28)
 
 ---
 
@@ -93,7 +93,8 @@ C:\ProyectoTCG\
 │   ├── 2026-08-26_S026_ImagenesFallidas.md
 │   ├── 2026-08-26_S027_IconosDeSet.md
 │   ├── 2026-08-26_S028_PlantillasPorEpoca.md
-│   └── 2026-08-28_S029_EpocasDeMagic.md
+│   ├── 2026-08-28_S029_EpocasDeMagic.md
+│   └── 2026-08-28_S030_TheListYSlotDeTierra.md
 │
 ├── db\                          <- esquema (fuera del Vault documental)
 │   ├── README.md
@@ -122,7 +123,8 @@ C:\ProyectoTCG\
 │       ├── 0022_ygo_collectors_rare.{up,down}.sql
 │       ├── 0023_ygo_cola_larga.{up,down}.sql
 │       ├── 0024_impresiones_retiradas.{up,down}.sql
-│       └── 0025_mtg_epocas_de_sobre.{up,down}.sql
+│       ├── 0025_mtg_epocas_de_sobre.{up,down}.sql
+│       └── 0026_the_list_y_slot_de_tierra.{up,down}.sql
 │
 ├── packages\shared\             <- @tcg/shared: contrato de dominio
 │   └── src\

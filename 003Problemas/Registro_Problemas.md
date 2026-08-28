@@ -1,6 +1,6 @@
 # Registro de Problemas
 
-**Última actualización:** 2026-08-28 (S029) · **Abiertos:** 2 · **Cerrados:** 38 · **Total:** 40
+**Última actualización:** 2026-08-28 (S030) · **Abiertos:** 1 · **Cerrados:** 39 · **Total:** 40
 
 Severidad: 🔴 crítica · 🟠 alta · 🟡 media · ⚪ baja
 
@@ -185,18 +185,33 @@ impresiones, 5 rarezas, **0 avisos**.
 
 ---
 
-## P-008 🟡 · Limitaciones estructurales de las plantillas de sobre
-**Estado:** ABIERTO — aceptadas conscientemente para v1. **Punto 3 cerrado en S029**; siguen
-abiertos el 1 y el 2, que son de más calado.
+## P-008 ✅ CERRADO · Limitaciones estructurales de las plantillas de sobre
+**Estado:** CERRADO el 2026-08-28 (S030). Punto 3 en S029 (T-084), puntos 1 y 2 en S030 (T-085).
+Abierto veintisiete sesiones.
 **Origen:** T-008. Son el residuo de P-003, no un fallo.
 
-1. **"The List" de MTG (12,5 % del slot 7) no se modela.** Extrae cartas de *otros* sets y el
-   motor sólo sabe elegir dentro del pool `(set_id, rarity_id)`. **Consecuencia medida en el
-   Monte Carlo:** los sobres MTG simulados nunca alcanzan 4 raras/míticas, mientras que los
-   reales lo hacen en <1 % de los casos.
-2. **El slot de tierra de MTG no filtra por tipo.** Las tierras básicas son rareza `common` en
-   Scryfall; distinguirlas exige filtrar por `type_line` y el pool sólo indexa `(set, rareza)`.
-   *Solución prevista:* campo opcional de filtro por tipo en `pack_slots.distribution`.
+1. ~~**"The List" de MTG (12,5 % del slot 7) no se modela.**~~ **RESUELTO en S030 (T-085).**
+   `distribution` admite una entrada `{"set":"plst","weight":125}`, excluyente con `rarity`, que
+   saca la carta del pool de otro set. Se carga de forma perezosa: 4654 filas que sólo hacen falta
+   una de cada ocho veces. El reparto dentro del set de origen es **uniforme sobre sus
+   impresiones**, no sobre sus rarezas.
+
+   **El síntoma citado, vuelto a medir:** los sobres con 4 o más raras/míticas pasan de **0,00 %**
+   —estructuralmente imposible— a **0,04 %** sobre 8000 sobres, contra el "<1 % en los reales" que
+   este punto citaba.
+
+   Y costó un error que merece quedar escrito: la primera versión puso The List en el **comodín**,
+   que ya podía dar una rara, así que no añadía una fuente sino que la sustituía —el 4 seguía en
+   0,00 %—. Este punto decía "slot 7" desde el principio.
+2. ~~**El slot de tierra de MTG no filtra por tipo.**~~ **RESUELTO en S030 (T-085).** Nueva columna
+   `pack_slots.card_filter`, hoy con un único valor `basic_land`. Es una **lista cerrada por CHECK**
+   y no un `type_line LIKE` libre: una errata en un filtro libre no casaría con nada, vaciaría el
+   slot y el respaldo lo taparía sin un solo error. Comprobado que el CHECK rechaza `basic_lnd`.
+
+   De los 135 sets de Magic que caen en una plantilla con slot de tierra, **77 ganan su tierra
+   básica y 58 no la tienen en el sobre**: en ésos el motor abre la mano, entrega una común sin
+   filtrar y avisa, porque un slot vacío sería un sobre con una carta menos. Los 58 salen por su
+   nombre en `npm run packs:cobertura`.
 3. **Sets antiguos con estructura distinta.** ~~Draft Boosters de MTG previos a 2024, sobres
    Pokémon de la era WOTC, sobres YGO de 5 cartas.~~ **Resuelto en parte en S028**, y por la vía
    que ADR-005 predijo: con datos, no con código.
@@ -214,6 +229,14 @@ abiertos el 1 y el 2, que son de más calado.
 
    **Punto 3 cerrado.** Los tres juegos tienen sus épocas y ninguno cae ya en la plantilla de otra
    era por no tener la suya.
+
+---
+
+**Los tres cerrados, y la lección que deja el conjunto.** Este problema se abrió en S003 diciendo
+"aceptadas conscientemente para v1", y esa etiqueta lo mantuvo fuera de la lista de trabajo
+veintisiete sesiones. Ninguno de los tres puntos resultó ser difícil una vez medido; lo que faltaba
+no era capacidad, era mirarlo. Un problema marcado como *aceptado* no se revisa solo: conviene
+releerlos cuando el proyecto ya no se parece a cuando se escribieron.
 
 ---
 

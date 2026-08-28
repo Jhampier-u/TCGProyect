@@ -99,12 +99,37 @@ probabilidad sobre rarezas.
 `valid_to DATE NULL`, `name` (`"Play Booster"`, `"Core Booster (hasta Light of Destruction)"`),
 `card_count`, `is_default`.
 
-`pack_slots`: `id`, `pack_template_id`, `slot_index`, `distribution JSON`, `foil_chance DECIMAL(6,5)`.
+`pack_slots`: `id`, `pack_template_id`, `slot_index`, `distribution JSON`, `foil_chance DECIMAL(6,5)`,
+`card_filter VARCHAR(32) NULL`.
 
 `distribution` es un array de pesos:
 ```json
 [{"rarity":"rare","weight":865},{"rarity":"mythic","weight":135}]
 ```
+
+**Una entrada puede sacar la carta de OTRO set** (migración 0026, T-085). En vez de `rarity` lleva
+`set`, con el `sets.code` del set de origen, y las dos claves son excluyentes:
+
+```json
+[{"rarity":"common","weight":875},{"set":"plst","weight":125}]
+```
+
+Existe por *The List* de Magic: uno de cada ocho Play Booster trae en su séptimo cartón una carta de
+un set aparte, y el motor sólo sabía elegir dentro del pool `(set_id, rarity_id)` del set que se abre.
+El reparto dentro del set de origen es **uniforme sobre sus impresiones**, no sobre sus rarezas:
+repartir a partes iguales entre rarezas dispares inventaría una escasez que no existe. La rareza que
+se registra es la real de la carta entregada, como siempre (RN-01).
+
+**`card_filter` restringe los candidatos por tipo de carta** (misma migración). Hoy admite un único
+valor, `basic_land`, y es una **lista cerrada por CHECK** a propósito: un filtro libre con una errata
+no casaría con nada, vaciaría el slot y el respaldo lo taparía entregando otra carta, sin un solo
+error. Con el CHECK, la errata falla al migrar.
+
+Existe por el slot de tierra de Magic: las tierras básicas son rareza `common` en Scryfall, así que un
+slot que pide `common` entregaba cualquier común. Si el set no tiene tierras básicas en el sobre —58
+de los 135 sets de Magic con slot de tierra— el motor **abre la mano**, entrega una común sin filtrar
+y avisa; un slot vacío sería un sobre con una carta menos. Esos 58 salen por su nombre en
+`npm run packs:cobertura`.
 
 **La ventana de vigencia (migración 0009, T-034).** `valid_from` / `valid_to` acotan las
 fechas de salida que una plantilla describe. `findTemplate` resuelve en tres niveles:
