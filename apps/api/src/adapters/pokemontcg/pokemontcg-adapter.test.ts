@@ -3,6 +3,21 @@ import type { DomainSet, IngestWarning } from '@tcg/shared';
 import { PokemonTcgAdapter, buildTypeLine, normalizeDate } from './pokemontcg-adapter.js';
 import type { PokemonHttp, RawCard, RawPaged, RawSet } from './types.js';
 
+/**
+ * Copia de un objeto SIN esas claves -- ausentes de verdad, no puestas a
+ * `undefined`.
+ *
+ * Con `exactOptionalPropertyTypes`, `{...x, campo: undefined}` NO es lo mismo
+ * que un objeto sin `campo`, y la diferencia es justo lo que estas pruebas
+ * quieren ejercitar: el origen OMITE el campo. Escribirlo como `undefined`
+ * probaba un caso que el tipo dice que no puede darse (T-086).
+ */
+function sin<T extends object, K extends keyof T>(obj: T, ...claves: K[]): Omit<T, K> {
+  const copia = { ...obj };
+  for (const k of claves) delete copia[k];
+  return copia;
+}
+
 /** Fixtures copiadas de respuestas reales de la API (2026-08-25). */
 
 const SET_SV1: DomainSet = {
@@ -199,7 +214,7 @@ describe('rarezas y acabados', () => {
 
   it('una carta SIN rareza cae a common y avisa, pero no se pierde', async () => {
     const avisos: IngestWarning[] = [];
-    const sinRareza: RawCard = { ...SCATTERBUG, id: 'promo-1', rarity: undefined };
+    const sinRareza: RawCard = { ...sin(SCATTERBUG, 'rarity'), id: 'promo-1' };
     const adapter = new PokemonTcgAdapter(pagedHttp([onePage([sinRareza])]), {
       onWarning: (w) => avisos.push(w),
     });
@@ -278,6 +293,6 @@ describe('utilidades', () => {
   it('buildTypeLine compone supertype y subtypes', () => {
     expect(buildTypeLine(SCATTERBUG)).toBe('Pokemon - Basic');
     expect(buildTypeLine({ ...SCATTERBUG, subtypes: [] })).toBe('Pokemon');
-    expect(buildTypeLine({ ...SCATTERBUG, supertype: undefined, subtypes: [] })).toBeNull();
+    expect(buildTypeLine({ ...sin(SCATTERBUG, 'supertype'), subtypes: [] })).toBeNull();
   });
 });

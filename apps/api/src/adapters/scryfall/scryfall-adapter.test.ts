@@ -5,6 +5,21 @@ import { ScryfallAdapter, imageOf, oracleKeyOf, rulesTextOf } from './scryfall-a
 import { HttpError } from '../../http/errors.js';
 import type { RawCard, ScryfallHttp } from './types.js';
 
+/**
+ * Copia de un objeto SIN esas claves -- ausentes de verdad, no puestas a
+ * `undefined`.
+ *
+ * Con `exactOptionalPropertyTypes`, `{...x, campo: undefined}` NO es lo mismo
+ * que un objeto sin `campo`, y la diferencia es justo lo que estas pruebas
+ * quieren ejercitar: el origen OMITE el campo. Escribirlo como `undefined`
+ * probaba un caso que el tipo dice que no puede darse (T-086).
+ */
+function sin<T extends object, K extends keyof T>(obj: T, ...claves: K[]): Omit<T, K> {
+  const copia = { ...obj };
+  for (const k of claves) delete copia[k];
+  return copia;
+}
+
 /** Fixtures copiadas de respuestas reales de Scryfall (2026-08-25). */
 
 const BOSQUE: RawCard = {
@@ -202,7 +217,7 @@ describe('cartas de doble cara', () => {
   });
 
   it('oracleKeyOf cae al id solo como ultimo recurso', () => {
-    expect(oracleKeyOf({ ...BOSQUE, oracle_id: undefined, card_faces: undefined })).toBe(BOSQUE.id);
+    expect(oracleKeyOf(sin(BOSQUE, 'oracle_id', 'card_faces'))).toBe(BOSQUE.id);
   });
 });
 
@@ -284,7 +299,7 @@ describe('errores y avisos', () => {
 
   it('avisa si falta la imagen pero no descarta la carta', async () => {
     const avisos: IngestWarning[] = [];
-    const sinImagen: RawCard = { ...BOSQUE, image_uris: undefined };
+    const sinImagen: RawCard = sin(BOSQUE, 'image_uris');
     const adapter = new ScryfallAdapter(
       http({ json: () => ({ data: [sinImagen], has_more: false }) }),
       { onWarning: (w) => avisos.push(w) },
@@ -300,13 +315,13 @@ describe('errores y avisos', () => {
 describe('utilidades', () => {
   it('rulesTextOf une las caras', () => {
     expect(rulesTextOf(TRANSFORM)).toBe('Cara frontal.\n//\nCara trasera.');
-    expect(rulesTextOf({ ...BOSQUE, oracle_text: undefined, card_faces: undefined })).toBeNull();
+    expect(rulesTextOf(sin(BOSQUE, 'oracle_text', 'card_faces'))).toBeNull();
   });
 
   it('imageOf prefiere la de nivel superior', () => {
     expect(imageOf(BOSQUE)).toContain('front/0/0');
     expect(imageOf(TRANSFORM)).toContain('front/a/a');
-    expect(imageOf({ ...BOSQUE, image_uris: undefined, card_faces: undefined })).toBeNull();
+    expect(imageOf(sin(BOSQUE, 'image_uris', 'card_faces'))).toBeNull();
   });
 });
 
@@ -343,7 +358,7 @@ describe('inBoosters (P-014)', () => {
   it('cae a true solo si el origen omite el campo', () => {
     // No ocurre en el volcado real, pero protege ante un cambio del origen:
     // preferimos una carta de mas en el pool que perderla del catalogo.
-    const sinCampo: RawCard = { ...BOSQUE, booster: undefined };
+    const sinCampo: RawCard = sin(BOSQUE, 'booster');
     expect(sinCampo.booster ?? true).toBe(true);
   });
 });

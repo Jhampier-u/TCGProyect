@@ -77,6 +77,32 @@ const catalogoFalso = {
   }),
 };
 
+/**
+ * Repositorio de mazos que ESTALLA si alguien lo usa.
+ *
+ * Estas pruebas son de autenticacion y no tocan ni una ruta de mazos, pero el
+ * servidor las registra igual, asi que la dependencia hay que darsela. Un `{}`
+ * bastaria y seria peor: si un dia una prueba de aqui llegara a una ruta de
+ * mazos, fallaria con un `undefined is not a function` a diez marcos de
+ * distancia en vez de decir lo que pasa.
+ *
+ * Faltaba entero hasta T-086, y no lo dijo nadie porque los ficheros de prueba
+ * no se comprobaban de tipos: `as never` tapaba el hueco.
+ */
+const mazosQueNoSeUsan = new Proxy(
+  {},
+  {
+    get(_t, prop) {
+      return () => {
+        throw new Error(
+          `Una prueba de autenticacion ha llamado a decks.${String(prop)}(). ` +
+            'Estas pruebas no deben tocar rutas de mazos.',
+        );
+      };
+    },
+  },
+);
+
 async function montar(): Promise<{ app: FastifyInstance; users: FakeUsers; packs: FakePacks }> {
   const users = new FakeUsers();
   const packs = new FakePacks();
@@ -86,6 +112,7 @@ async function montar(): Promise<{ app: FastifyInstance; users: FakeUsers; packs
       users: users as never,
       collection: new FakeCollection() as never,
       packs: packs as never,
+      decks: mazosQueNoSeUsan as never,
       jwtSecret: SECRETO,
     },
   });
@@ -125,6 +152,7 @@ describe('el secreto JWT no puede ser debil', () => {
           users: new FakeUsers() as never,
           collection: new FakeCollection() as never,
           packs: new FakePacks() as never,
+          decks: mazosQueNoSeUsan as never,
           jwtSecret: 'cambiame',
         },
       }),
@@ -319,6 +347,7 @@ describe('rutas protegidas', () => {
       auth: {
         users: new FakeUsers() as never, collection: new FakeCollection() as never,
         packs: new FakePacks() as never,
+        decks: mazosQueNoSeUsan as never,
         jwtSecret: 'otro-secreto-igualmente-largo-pero-distinto-2026',
       },
     });

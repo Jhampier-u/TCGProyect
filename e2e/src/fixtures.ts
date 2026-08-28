@@ -45,7 +45,18 @@ export interface Usuario {
  * LO QUE NO SE HACE es subir el limite en el entorno de la suite: bajarle la
  * guardia justo donde se prueba de verdad seria dejar de probar la guardia.
  */
-export const test = base.extend<Record<string, never>, { usuario: Usuario }>({
+/*
+ * `object` y no `Record<string, never>` en el primer parametro (T-086).
+ *
+ * El primero son las fixtures de ambito TEST -- aqui ninguna -- y el segundo las
+ * de worker. `Record<string, never>` dice "cualquier clave vale y su valor es
+ * `never`", y eso envenena la firma: el `use` de la fixture de worker acababa
+ * recibiendo `never` y `use(usuario)` era un error de tipos.
+ *
+ * Playwright no se enteraba porque transpila los specs con esbuild, sin
+ * comprobarlos. Salio al darle un `tsconfig.json` a la suite.
+ */
+export const test = base.extend<object, { usuario: Usuario }>({
   usuario: [
     async ({}, use, workerInfo) => {
       const request = await playwrightRequest.newContext();

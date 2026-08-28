@@ -1,5 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import type { DomainPrint, DomainSet, GameAdapter, IngestWarning, PackTemplateSpec } from '@tcg/shared';
+import type {
+  DomainPrint, DomainSet, GameAdapter, GameCode, IngestWarning, PackTemplateSpec,
+} from '@tcg/shared';
 import { IngestService, type IngestRepository } from './ingest-service.js';
 
 /** Repositorio en memoria que registra el ORDEN de las operaciones. */
@@ -14,10 +16,27 @@ class FakeRepo implements IngestRepository {
     this.sets.push(...sets);
     this.operaciones.push(`upsertSets(${sets.length})`);
   }
-  async findPendingSets(): Promise<Array<{ id: number; externalId: string }>> {
+  /** Cuantas veces se pidio la cola. Aparte de `operaciones`, sobre la que otras
+   *  pruebas afirman por indice. */
+  vecesPendientes = 0;
+  async findPendingSets(_game: GameCode, _limit: number): Promise<Array<{ id: number; externalId: string }>> {
+    this.vecesPendientes += 1;
     return this.pendientes;
   }
-  async savePrints(_game: never, setId: number, prints: DomainPrint[]): Promise<number> {
+  /**
+   * Lo que usa `--set`. Faltaba en este doble y nadie se entero: los tests no se
+   * comprobaban de tipos, asi que `implements IngestRepository` no significaba
+   * nada (T-086). La bandera se usa de verdad -- en S029 sirvio para reingestar
+   * un set concreto -- y aqui no existia.
+   */
+  async findSetsByExternalId(
+    _game: GameCode,
+    externalIds: readonly string[],
+  ): Promise<Array<{ id: number; externalId: string }>> {
+    this.operaciones.push(`findSetsByExternalId(${externalIds.length})`);
+    return this.pendientes.filter((p) => externalIds.includes(p.externalId));
+  }
+  async savePrints(_game: GameCode, setId: number, prints: DomainPrint[]): Promise<number> {
     const previas = this.guardadas.get(setId) ?? [];
     this.guardadas.set(setId, [...previas, ...prints]);
     this.operaciones.push(`savePrints(${setId}, ${prints.length})`);
@@ -231,7 +250,7 @@ describe('acotacion del trabajo', () => {
     const muchos = Array.from({ length: 100 }, (_, i) => set(`s${i}`));
     // El repositorio real aplica el LIMIT; aqui se comprueba que se le pasa.
     let limiteRecibido = -1;
-    repo.findPendingSets = async (_g: never, limit: number) => {
+    repo.findPendingSets = async (_g: GameCode, limit: number) => {
       limiteRecibido = limit;
       return [];
     };
@@ -287,5 +306,43 @@ describe('retirada de impresiones que el origen ya no lista (T-083)', () => {
     // no hubiera mirado el set siquiera, que es como se escribio la primera vez.
     expect(repo.marcados).toEqual([1]);
     expect(repo.retiradas).toEqual([]);
+  });
+});
+
+describe('--set: pedir sets concretos (T-086)', () => {
+  // Esta ruta no tenia ni una prueba, y se descubrio al darle comprobacion de
+  // tipos a los ficheros de test: el doble no implementaba
+  // `findSetsByExternalId`, asi que nada podia ejercitarla. La bandera se usa de
+  // verdad -- en S029 sirvio para recuperar una impresion borrada por error.
+
+  it('pide los sets nombrados y NO la cola de pendientes', async () => {
+    const repo = new FakeRepo();
+    repo.pendientes = [
+      { id: 1, externalId: 'a' },
+      { id: 2, externalId: 'b' },
+    ];
+    const adapter = new FakeAdapter([set('a'), set('b')], {
+      a: [print('a', 'x1')],
+      b: [print('b', 'y1')],
+    });
+
+    await new IngestService({ repository: repo }).ingest(adapter, { soloSets: ['b'] });
+
+    expect(repo.operaciones).toContain('findSetsByExternalId(1)');
+    expect(repo.vecesPendientes).toBe(0);
+    expect(repo.marcados).toEqual([2]);
+  });
+
+  it('sin `--set` usa la cola de pendientes, no la busqueda por id', async () => {
+    // El contraste que hace que la anterior signifique algo.
+    const repo = new FakeRepo();
+    repo.pendientes = [{ id: 1, externalId: 'a' }];
+    const adapter = new FakeAdapter([set('a')], { a: [print('a', 'x1')] });
+
+    await new IngestService({ repository: repo }).ingest(adapter);
+
+    expect(repo.operaciones.some((o) => o.startsWith('findSetsByExternalId'))).toBe(false);
+    expect(repo.vecesPendientes).toBe(1);
+    expect(repo.marcados).toEqual([1]);
   });
 });
