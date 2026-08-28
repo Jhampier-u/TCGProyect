@@ -2,7 +2,7 @@
 
 > **Rol:** Arquitecto Principal y Orquestador de Proyectos de Software.
 > **Producto:** Simulador de Apertura de Sobres + Constructor de Mazos unificado para MTG, Yu-Gi-Oh! y Pokémon TCG.
-> **Estado del Vault:** ACTIVO — última sesión S030 (2026-08-28)
+> **Estado del Vault:** ACTIVO — última sesión S031 (2026-08-28)
 
 ---
 
@@ -94,7 +94,8 @@ C:\ProyectoTCG\
 │   ├── 2026-08-26_S027_IconosDeSet.md
 │   ├── 2026-08-26_S028_PlantillasPorEpoca.md
 │   ├── 2026-08-28_S029_EpocasDeMagic.md
-│   └── 2026-08-28_S030_TheListYSlotDeTierra.md
+│   ├── 2026-08-28_S030_TheListYSlotDeTierra.md
+│   └── 2026-08-28_S031_TypecheckDeLosTests.md
 │
 ├── db\                          <- esquema (fuera del Vault documental)
 │   ├── README.md

@@ -1,7 +1,7 @@
 # 05 — Continuar aquí
 
-**Punto de guardado:** 2026-08-28, tras la sesión **S030**
-**Commit:** rama `main` · 409 tests de Vitest + 10 recorridos E2E en verde · `npm audit` limpio
+**Punto de guardado:** 2026-08-28, tras la sesión **S031**
+**Commit:** rama `main` · 411 tests de Vitest + 10 recorridos E2E en verde · `npm audit` limpio
 
 Este documento existe para retomar el proyecto en otra máquina o en otra sesión sin releer las 26
 bitácoras. Si sólo vas a leer un fichero, que sea éste.
@@ -165,6 +165,10 @@ son útiles para la lógica, pero **la fidelidad de sus datos determina lo que e
 - **T-085** (S030) — el motor aprende dos cosas que el pool `(set_id, rarity_id)` no expresaba: una
   entrada de `distribution` puede sacar la carta de **otro set** (*The List*) y un slot puede exigir
   un **tipo** de carta (la tierra básica). Cerró P-008 entero, veintisiete sesiones después.
+
+- **T-086** (S031) — los ficheros de prueba **se comprueban de tipos**, dentro de `npm test`. Estaban
+  excluidos de `tsc`, así que un doble podía declarar `implements` sin implementar. Al encenderlo
+  salieron 26 errores, y dos familias eran justo ese fallo.
 
 **No queda deuda.** Lo siguiente es producto: qué se construye encima de lo que ya funciona.
 

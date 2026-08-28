@@ -201,8 +201,9 @@ sembrado lleva anotado si es `[OFICIAL]`, `[DERIVADO]` (con el cálculo) o `[EST
 | Comando | Qué hace |
 |---|---|
 | `npm run build` | Compila los tres paquetes (project references) |
-| `npm test` | 341 tests |
-| `npm run typecheck` | `tsc --build` |
+| `npm test` | Comprueba de tipos los ficheros de prueba y ejecuta Vitest |
+| `npm run test:watch` | Vitest en modo continuo, sin el paso de tipos |
+| `npm run typecheck` | Compila y comprueba de tipos todo, ficheros de prueba incluidos |
 | `npm run db:migrate` | Crea la base de datos si falta y migra |
 | `npm run ingest` | Pobla el catálogo y cosecha imágenes |
 | `npm run dev:api` | Arranca la API (migra primero) |
@@ -210,6 +211,12 @@ sembrado lleva anotado si es `[OFICIAL]`, `[DERIVADO]` (con el cálculo) o `[EST
 | `docker compose up --build` | Levanta el entorno completo: mysql, redis, api y web |
 | `docker compose --profile ingest run --rm --build ingest` | Ingesta dentro de Docker |
 | `docker compose --profile e2e run --rm e2e` | Suite E2E con Playwright |
+
+**Por qué `npm test` comprueba tipos antes de correr.** Hasta S031, `tsconfig.json` excluía los
+ficheros de prueba —correcto, no deben acabar en `dist`— y **nadie los comprobaba**: Vitest y
+Playwright los transpilan quitando los tipos sin mirarlos. Un doble podía declarar `implements X` sin
+implementar `X` y pasar en verde. Cuesta unos segundos y evita que un contrato y su doble se separen
+en silencio.
 
 ---
 
