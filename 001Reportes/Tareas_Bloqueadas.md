@@ -1,22 +1,21 @@
 # Tareas Bloqueadas
 
-**Última actualización:** 2026-08-25 (S002) · **Total bloqueadas:** 1
+**Última actualización:** 2026-08-27 (S028) · **Total bloqueadas:** 0
 
-| ID | Tarea | Bloqueada por | Tipo | Desbloquea a | Desde |
-|---|---|---|---|---|---|
-| T-013 | `PokemonTcgAdapter` *en modo producción* | **Falta API key** de Pokémon TCG (T-005) | Credencial externa | Ingesta completa de PTCG | 2026-08-25 |
-
-## Detalle
-
-### T-013 — API key de Pokémon TCG
-*Mitigación temporal:* la API responde 200 sin key (verificado 2026-08-25) con una cuota diaria
-muy inferior (~1.000/día). Es suficiente para **desarrollar y testear** el adaptador, insuficiente
-para la **ingesta completa** (~100 peticiones de cartas + miles de imágenes). No bloquea T-013 en
-desarrollo, sólo su ejecución en producción.
+**Nada bloqueado.** Este fichero llevaba **veintiséis sesiones** diciendo que T-013 esperaba una
+credencial que llegó en S028. Corregido el 2026-08-27 al revisar el estado de cierre.
 
 ---
 
-## Desbloqueadas en esta sesión
+## Desbloqueadas
+
+### ✅ T-013 — API key de Pokémon TCG · resuelta 2026-08-27 (S028)
+La clave está puesta en `.env` y verificada (T-005). Con ella se hizo la **ingesta completa de
+Pokémon**: 174 sets. La mitigación que este fichero describía —la API responde 200 sin clave, con
+~1.000 peticiones al día— sirvió para desarrollar el adaptador en S009 y dejó de hacer falta.
+
+Lo que este documento hizo mal no fue registrar el bloqueo: fue **no volver a mirarlo**. Es la misma
+deriva de P-005 (doce sesiones) y P-032 (tres), y aquí fueron veintiséis.
 
 ### ✅ T-002 — Elección de runtime del backend · resuelta 2026-08-25 (S002)
 El usuario decidió **Node.js + TypeScript**. Desbloqueó T-003, T-006, T-009 y con ellas los

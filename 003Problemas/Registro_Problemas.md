@@ -186,7 +186,8 @@ impresiones, 5 rarezas, **0 avisos**.
 ---
 
 ## P-008 🟡 · Limitaciones estructurales de las plantillas de sobre
-**Estado:** ABIERTO — aceptadas conscientemente para v1
+**Estado:** ABIERTO — aceptadas conscientemente para v1. Punto 3 resuelto en S028 para Pokémon
+y Yu-Gi-Oh!; sigue vigente para Magic.
 **Origen:** T-008. Son el residuo de P-003, no un fallo.
 
 1. **"The List" de MTG (12,5 % del slot 7) no se modela.** Extrae cartas de *otros* sets y el
@@ -196,10 +197,21 @@ impresiones, 5 rarezas, **0 avisos**.
 2. **El slot de tierra de MTG no filtra por tipo.** Las tierras básicas son rareza `common` en
    Scryfall; distinguirlas exige filtrar por `type_line` y el pool sólo indexa `(set, rareza)`.
    *Solución prevista:* campo opcional de filtro por tipo en `pack_slots.distribution`.
-3. **Sets antiguos con estructura distinta** (Draft Boosters de MTG previos a 2024, sobres
-   Pokémon de la era WOTC, sobres YGO de 5 cartas) usarán la plantilla por defecto y serán
-   inexactos hasta que reciban la suya propia. Es exactamente el caso de uso para el que
-   ADR-005 hizo esto configurable por datos: se arregla con un INSERT, no con un despliegue.
+3. **Sets antiguos con estructura distinta.** ~~Draft Boosters de MTG previos a 2024, sobres
+   Pokémon de la era WOTC, sobres YGO de 5 cartas.~~ **Resuelto en parte en S028**, y por la vía
+   que ADR-005 predijo: con datos, no con código.
+
+   - **Pokémon:** seis épocas, del clásico (hasta 2007-04-30) a Sword & Shield (0018, T-079).
+   - **Yu-Gi-Oh!:** cuatro épocas (0010, 0017) **más seis líneas de producto** de 5 y 9 cartas
+     (0020-0023, T-080/T-082), que es justo el "sobre YGO de 5 cartas" que este punto nombraba.
+
+   **Sigue siendo cierto de Magic, y ahora está medido.** Magic tiene **una sola plantilla** —
+   `Play Booster`, 14 cartas, 14 slots, sin ventana de fechas — y **208 sets abribles anteriores a
+   2018** resuelven a ella. Es correcta en el vocabulario de rarezas, que en Magic lleva treinta
+   años estable (0016, T-077), y no en la **estructura**: un sobre de 1995 eran 15 cartas sin slot
+   foil garantizado, y el Play Booster son 14 con él. Se sigue aceptando para v1 por la misma razón
+   que el resto de este problema, y se arreglaría igual que se arreglaron los otros dos juegos: una
+   migración con ventanas de fechas, ningún despliegue.
 
 ---
 
