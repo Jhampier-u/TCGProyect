@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+
+  // La comprobacion del Vault (T-087) no pertenece a ningun workspace: no es
+  // codigo del producto y no se compila a `dist`. Pero se comprueba de tipos
+  // como todo lo demas -- seria absurdo que el test que vigila la coherencia del
+  // proyecto fuese justo el que nadie mira (T-086).
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "types": ["node"],
+    "noEmit": true,
+    "composite": false,
+    "declaration": false,
+    "declarationMap": false
+  },
+  "include": ["**/*.ts"]
+}

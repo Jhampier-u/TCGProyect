@@ -2,7 +2,7 @@
 
 > **Rol:** Arquitecto Principal y Orquestador de Proyectos de Software.
 > **Producto:** Simulador de Apertura de Sobres + Constructor de Mazos unificado para MTG, Yu-Gi-Oh! y Pokémon TCG.
-> **Estado del Vault:** ACTIVO — última sesión S031 (2026-08-28)
+> **Estado del Vault:** ACTIVO — última sesión S032 (2026-08-28)
 
 ---
 
@@ -96,7 +96,12 @@ C:\ProyectoTCG\
 │   ├── 2026-08-26_S028_PlantillasPorEpoca.md
 │   ├── 2026-08-28_S029_EpocasDeMagic.md
 │   ├── 2026-08-28_S030_TheListYSlotDeTierra.md
-│   └── 2026-08-28_S031_TypecheckDeLosTests.md
+│   ├── 2026-08-28_S031_TypecheckDeLosTests.md
+│   └── 2026-08-28_S032_ComprobacionDelVault.md
+│
+├── tools\                       <- comprobacion del propio Vault (T-087)
+│   ├── vault-consistency.test.ts  <- 16 comprobaciones, corren en `npm test`
+│   └── mutar-vault.mjs            <- `npm run vault:mutar`: demuestra que no es vacua
 │
 ├── db\                          <- esquema (fuera del Vault documental)
 │   ├── README.md

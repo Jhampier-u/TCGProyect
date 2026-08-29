@@ -23,7 +23,7 @@ distribuciones de rareza reales** y ver su colección crecer hacia el 100 % de c
 | H7 · Constructor de mazos | ✅ Motor de reglas, 6 endpoints, interfaz e import/export |
 | H8 · Endurecimiento | 🟡 Suite E2E, seguridad y 6 de 8 de deuda técnica |
 
-**411 tests + 10 recorridos E2E · `tsc --build` limpio · `npm audit` limpio.**
+**Suite de Vitest y los 10 recorridos E2E en verde · `tsc --build` limpio · `npm audit` limpio.**
 
 ---
 
@@ -204,6 +204,7 @@ sembrado lleva anotado si es `[OFICIAL]`, `[DERIVADO]` (con el cálculo) o `[EST
 | `npm test` | Comprueba de tipos los ficheros de prueba y ejecuta Vitest |
 | `npm run test:watch` | Vitest en modo continuo, sin el paso de tipos |
 | `npm run typecheck` | Compila y comprueba de tipos todo, ficheros de prueba incluidos |
+| `npm run vault:mutar` | Demuestra que la comprobación del Vault no es vacua. Edita ficheros: exige árbol limpio |
 | `npm run db:migrate` | Crea la base de datos si falta y migra |
 | `npm run ingest` | Pobla el catálogo y cosecha imágenes |
 | `npm run dev:api` | Arranca la API (migra primero) |

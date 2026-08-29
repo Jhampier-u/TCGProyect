@@ -1,6 +1,6 @@
 # Tareas Realizadas
 
-**Última actualización:** 2026-08-28 (S031)
+**Última actualización:** 2026-08-28 (S032)
 
 | ID | Tarea | Agente | Fecha | Sesión | Evidencia |
 |---|---|---|---|---|---|
@@ -117,3 +117,4 @@
 | T-084 | **Las tres épocas del sobre de Magic** (migración 0025). Una sola plantilla cubría de 1993 a 2026 y 208 sets abribles anteriores a 2018 resolvían a ella: un sobre de *Tempest* salía con 14 cartas y foil garantizado. Fronteras medidas en los datos —primer foil `ulg` 1999-02-15, primera mítica 2008-10-03—. Cierra el punto 3 de **P-008** | Base de Datos | 2026-08-28 | S029 | `db/migrations/0025_*`, `apps/api/src/db/template-eras.test.ts` |
 | T-085 | **The List y el slot de tierra** (migración 0026). Dos cosas que el pool `(set_id, rarity_id)` no sabía expresar: una entrada `{"set":"plst"}` que saca la carta de otro set, y `pack_slots.card_filter` para exigir un tipo. Los sobres con 4+ raras pasan del 0,00 % —imposible— al 0,04 %. **Cierra P-008** entero | Backend / Base de Datos | 2026-08-28 | S030 | `db/migrations/0026_*`, `apps/api/src/packs/pack-service.ts` |
 | T-086 | **Los ficheros de prueba se comprueban de tipos** (`tsconfig.test.json` en `apps/api` y `packages/shared`, más `e2e/tsconfig.json`), dentro de `npm test`. Estaban excluidos, así que un doble podía declarar `implements` sin implementar. Destapó 26 errores: un doble sin `findSetsByExternalId` (la bandera `--set`), un repositorio de mazos ausente y una fixture de Playwright mal tipada | Backend / QA | 2026-08-28 | S031 | `apps/api/tsconfig.test.json`, `package.json` |
+| T-087 | **La deriva documental, convertida en test** (`tools/vault-consistency.test.ts`, 16 comprobaciones en `npm test`): recuentos que se contradicen, ficheros citados que no existen, numeraciones duplicadas, índices que ya no son los que crea la migración. Con banco de mutaciones (`npm run vault:mutar`) que reintroduce las 11 derivas reales de S028-S031 y exige que falle | QA / Documentador | 2026-08-28 | S032 | `tools/` |

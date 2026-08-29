@@ -13,10 +13,11 @@
   },
   "scripts": {
     "typecheck": "npm run typecheck:tests",
-    "typecheck:tests": "tsc --build && tsc -p packages/shared/tsconfig.test.json && tsc -p apps/api/tsconfig.test.json && tsc -p e2e/tsconfig.json",
+    "typecheck:tests": "tsc --build && tsc -p packages/shared/tsconfig.test.json && tsc -p apps/api/tsconfig.test.json && tsc -p e2e/tsconfig.json && tsc -p tools/tsconfig.json",
     "build": "tsc --build",
     "clean": "tsc --build --clean",
     "test": "npm run typecheck:tests && vitest run",
+    "vault:mutar": "node tools/mutar-vault.mjs",
     "test:watch": "vitest",
     "dev:web": "npm run dev --workspace @tcg/web",
     "dev:api": "node apps/api/dist/index.js",

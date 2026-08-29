@@ -1,7 +1,8 @@
 # 05 — Continuar aquí
 
-**Punto de guardado:** 2026-08-28, tras la sesión **S031**
-**Commit:** rama `main` · 411 tests de Vitest + 10 recorridos E2E en verde · `npm audit` limpio
+**Punto de guardado:** 2026-08-28, tras la sesión **S032**
+**Commit:** rama `main` · suite de Vitest y los 10 recorridos E2E en verde · `npm audit` limpio
+(el recuento exacto sale de `npm test`; publicarlo aqui solo servia para que se quedara viejo)
 
 Este documento existe para retomar el proyecto en otra máquina o en otra sesión sin releer las 26
 bitácoras. Si sólo vas a leer un fichero, que sea éste.
@@ -169,6 +170,10 @@ son útiles para la lógica, pero **la fidelidad de sus datos determina lo que e
 - **T-086** (S031) — los ficheros de prueba **se comprueban de tipos**, dentro de `npm test`. Estaban
   excluidos de `tsc`, así que un doble podía declarar `implements` sin implementar. Al encenderlo
   salieron 26 errores, y dos familias eran justo ese fallo.
+
+- **T-087** (S032) — la **deriva documental es ahora un test**. `npm test` comprueba los recuentos,
+  las referencias y la numeración del Vault, y `npm run vault:mutar` demuestra que esas comprobaciones
+  fallan cuando deben, reintroduciendo las once derivas reales de S028-S031.
 
 **No queda deuda.** Lo siguiente es producto: qué se construye encima de lo que ya funciona.
 
