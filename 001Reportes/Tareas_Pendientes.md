@@ -1,8 +1,33 @@
 # Tareas Pendientes
 
-**Última actualización:** 2026-08-28 (S031) · **Total abiertas:** 0
+**Última actualización:** 2026-08-28 (S033) · **Total abiertas:** 8 — todas de H9, ninguna bloqueante
 
 Leyenda de prioridad: 🔴 crítica · 🟠 alta · 🟡 media · ⚪ baja
+
+## Hito H9 — Identidad propia por juego 🟡 EN CURSO (S033)
+
+Spec aprobado: `15_Spec_H9ab_Pokemon.md`. Se hace **Pokémon entero primero** y sirve de plantilla
+probada para Magic y Yu-Gi-Oh!. Decidido con el usuario: tokens y primitivas compartidas con layouts
+propios donde el dominio manda, dirección **Carpeta** para la colección y **Consulta** para el
+catálogo.
+
+### H9a — Cimientos de interfaz
+
+| ID | Tarea | Agente | Prio |
+|---|---|---|---|
+| T-088 | **Sistema de diseño y tokens**: escala de color, tipografía y espaciado como propiedades personalizadas, con sobrescritura por juego. Los dos temas completos, contraste AA comprobado | Frontend | 🟠 |
+| T-089 | **Módulo de cadenas**: sacar el texto visible de los `.tsx` a `apps/web/src/i18n/es.ts`. Recupera los acentos que la regla de ASCII puro se llevó por delante, sin tocar la regla | Frontend | 🟡 |
+| T-090 | **Navegación por juego y portada de Pokémon**: la raíz deja de ser un catálogo con filtro y pasa a ser una elección de juego, con ruta y `data-juego` propios | Frontend | 🟠 |
+
+### H9b — Catálogo de Pokémon y ficha de carta
+
+| ID | Tarea | Agente | Prio |
+|---|---|---|---|
+| T-091 | **Migración: columnas generadas e índices** para `supertype`, `types[0]` y `regulation_mark`, siguiendo el patrón de `cmc`/`atk`/`hp`. Sin ella los filtros son un escaneo completo | Base de Datos | 🟠 |
+| T-092 | **API: facetas y ficha**. Ojo con ADR-007: todo campo nuevo hay que declararlo en el esquema o desaparece sin error. La paginación sigue siendo keyset por `card_prints.id` | Backend | 🟠 |
+| T-093 | **Catálogo «Consulta»** con el raíl de estructura del set filtrando al pulsar, chips borrables y estado en la URL | Frontend | 🟠 |
+| T-094 | **Ficha de carta** con toda la información y acciones para añadir a una colección o a un mazo | Frontend | 🟠 |
+| T-095 | **Reescritura de la suite E2E**: 8 recorridos rotos rehechos, 2 de invariante ampliados, y las cuatro garantías portadas (teclado, movimiento reducido, iconos locales, P-030). Selectores por rol, no por clase CSS | QA |  🟠 |
 
 ## Hito H0 — Fundamentos ✅ COMPLETADO (S019)
 

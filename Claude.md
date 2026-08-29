@@ -2,7 +2,7 @@
 
 > **Rol:** Arquitecto Principal y Orquestador de Proyectos de Software.
 > **Producto:** Simulador de Apertura de Sobres + Constructor de Mazos unificado para MTG, Yu-Gi-Oh! y Pokémon TCG.
-> **Estado del Vault:** ACTIVO — última sesión S032 (2026-08-28)
+> **Estado del Vault:** ACTIVO — última sesión S033 (2026-08-28)
 
 ---
 
@@ -64,7 +64,8 @@ C:\ProyectoTCG\
 │   ├── 11_Plan_H8a_SuiteE2E.md      <- plan de implementacion, 7 tareas
 │   ├── 12_Spec_H8b_Seguridad.md     <- spec de la auditoria de seguridad (H8b)
 │   ├── 13_Spec_T034_PlantillasPorEpoca.md <- spec de las plantillas por epoca
-│   └── 14_Plan_T034_PlantillasPorEpoca.md <- plan de implementacion, 7 tareas
+│   ├── 14_Plan_T034_PlantillasPorEpoca.md <- plan de implementacion, 7 tareas
+│   └── 15_Spec_H9ab_Pokemon.md      <- spec de H9a y H9b (identidad por juego, Pokemon primero)
 ├── 005Registro\
 │   ├── 2026-08-25_S001_Inicializacion.md
 │   ├── 2026-08-25_S002_DDL_MySQL.md
@@ -97,7 +98,8 @@ C:\ProyectoTCG\
 │   ├── 2026-08-28_S029_EpocasDeMagic.md
 │   ├── 2026-08-28_S030_TheListYSlotDeTierra.md
 │   ├── 2026-08-28_S031_TypecheckDeLosTests.md
-│   └── 2026-08-28_S032_ComprobacionDelVault.md
+│   ├── 2026-08-28_S032_ComprobacionDelVault.md
+│   └── 2026-08-28_S033_SpecH9ab.md
 │
 ├── tools\                       <- comprobacion del propio Vault (T-087)
 │   ├── vault-consistency.test.ts  <- 16 comprobaciones, corren en `npm test`
