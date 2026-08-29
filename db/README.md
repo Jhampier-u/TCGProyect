@@ -53,6 +53,23 @@ mysql -u root -p < db/migrations/0001_initial_schema.down.sql
 | `0004_add_in_boosters.{up,down}.sql` | `in_boosters` + índice del pool rehecho | ✅ verificada (ciclo up/down/up) |
 | `0005_widen_set_external_id.{up,down}.sql` | `sets.external_id` → VARCHAR(255) (P-017) | ✅ verificada |
 | `0006_ygo_modern_booster.{up,down}.sql` | Plantilla de sobre YGO vigente desde 2020 + QCSR (P-019) | ✅ verificada con 2.000 sobres |
+| `0007_image_failures` | `card_prints.image_failed_at`: una URL rota deja de reintentarse (T-019) | ✅ |
+| `0008_set_icons` | `sets.icon_local_path` (T-035) | ✅ |
+| `0009_template_eras` | `valid_from`/`valid_to`: la ventana de vigencia de una plantilla (T-034) | ✅ |
+| `0010`–`0012` | Las épocas antiguas de Yu-Gi-Oh! y de Pokémon | ✅ |
+| `0013_set_is_openable` | `sets.is_openable`: qué set es de verdad un producto de sobres (T-069) | ✅ |
+| `0014_ptcg_swsh_y_huecos` | Era Sword & Shield y dos huecos de Scarlet & Violet (T-074) | ✅ |
+| `0015_widen_cmc` | `cmc` → DECIMAL(9,1). Los Un-sets tienen coste 1.000.000 (P-039) | ✅ |
+| `0016`–`0019` | Insertos de Magic, paralelas de YGO en las cuatro épocas, épocas históricas de Pokémon, densidad de Black Bolt / White Flare | ✅ |
+| `0020`–`0023` | `product_line` y las seis líneas de Yu-Gi-Oh!, más su cola larga (T-080, T-082) | ✅ |
+| `0024_impresiones_retiradas` | `card_prints.withdrawn_at`: retirar sin borrar lo que una apertura referencia (P-040) | ✅ verificada contra la base real |
+| `0025_mtg_epocas_de_sobre` | Las cuatro épocas del sobre de Magic (T-084) | ✅ rollback probado con aperturas encima |
+| `0026_the_list_y_slot_de_tierra` | `pack_slots.card_filter` y las entradas `{"set":...}` (T-085) | ✅ rollback probado |
+
+> Esta tabla es un índice, no la fuente de verdad. **La cabecera de cada migración lleva su
+> razonamiento completo** —qué se midió, de dónde sale cada peso, qué se descartó y por qué—, y es
+> donde hay que mirar. La tabla se quedó parada en la `0006` durante veinte migraciones justamente
+> porque duplicaba algo que ya estaba escrito en otro sitio.
 
 ## Cómo se aplican (desde S011)
 

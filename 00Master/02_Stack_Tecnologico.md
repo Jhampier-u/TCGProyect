@@ -16,11 +16,11 @@
 | Hash de contraseñas | `@node-rs/argon2` — Argon2id, parámetros OWASP (ADR-008) | ✅ IMPLEMENTADO (T-031) |
 | Sesión | `@fastify/jwt`, token de 1 h (ADR-008) | ✅ IMPLEMENTADO (T-033) |
 | Límite de peticiones | `@fastify/rate-limit` — 10 intentos / 5 min en el login | ✅ IMPLEMENTADO (T-033) |
-| Caché / colas | Redis 7 | PROPUESTO |
+| Cuota diaria de las APIs externas | Redis 7 | ✅ IMPLEMENTADO (T-017). **No cachea el pool de sobres**: eso se lee de MySQL en cada apertura |
 | Cliente HTTP externo | `fetch` de Node + cola con límite de tasa propia | ✅ IMPLEMENTADO (T-009) |
 | Proceso de imágenes | `sharp` (libvips 8.18.3) → WebP | ✅ IMPLEMENTADO (T-014) |
-| Testing unitario | Vitest (front y back) | PROPUESTO |
-| Testing E2E | **Cypress** | CONFIRMADO (requisito del usuario) |
+| Testing unitario | Vitest (front y back) | ✅ IMPLEMENTADO — y desde S031 `npm test` comprueba de tipos los ficheros de prueba antes de ejecutarlos (T-086) |
+| Testing E2E | **Playwright** | ✅ IMPLEMENTADO (S023). **ADR-009 sustituyó a Cypress**, que era el requisito inicial; esta fila siguió diciendo Cypress hasta S031 |
 | Contenedores | Docker Compose (mysql, redis, api, web + perfil `ingest`) | ✅ IMPLEMENTADO (S019, T-004) |
 
 ## Requisitos de versión mínimos

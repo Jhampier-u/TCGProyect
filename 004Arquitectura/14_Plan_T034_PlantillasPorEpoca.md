@@ -1,6 +1,6 @@
 # 13 — Plan de implementación · T-034: plantillas de sobre por época
 
-> **Spec:** `12_Spec_T034_PlantillasPorEpoca.md` · **Sesión:** S028 · **Fecha:** 2026-08-26
+> **Spec:** `13_Spec_T034_PlantillasPorEpoca.md` · **Sesión:** S028 · **Fecha:** 2026-08-26
 
 **Objetivo:** que todo Core Booster de Yu-Gi-Oh! sea completable al 100 %, y que exista una
 comprobación que lo mida — hoy no hay ninguna.

@@ -176,6 +176,26 @@ al perdedor.
 Las bitácoras de sesión **no se tocan**: son registro histórico y eran ciertas cuando se escribieron.
 La distinción importa — corregir una bitácora sería falsificarla.
 
+### Segunda vuelta, al preguntar "queda algo más"
+
+El mismo barrido sobre los documentos que la primera vuelta no había mirado. Cinco más:
+
+| Dónde | Qué decía | Qué es verdad |
+|---|---|---|
+| `Claude.md` | El mapa no listaba `12_Spec_H8b_Seguridad.md`, y **dos ficheros compartían el número 12** | H8b (S024) llegó primero y se queda con el 12; el spec y el plan de T-034 pasan a 13 y 14 |
+| `02_Stack_Tecnologico.md` | "Testing E2E: **Cypress** — CONFIRMADO" | **Playwright** desde ADR-009 (S023). Una fila del stack contradecía un ADR |
+| `02_Stack_Tecnologico.md` | Redis "PROPUESTO", Vitest "PROPUESTO" | Los dos implementados hace sesiones |
+| `db/README.md` | Tabla de migraciones parada en la `0006` | Van veinte más, hasta la `0026` |
+| `05_Continuar_Aqui.md` | "Relevante para los Cypress de H8" | Playwright |
+
+La tabla de `db/README.md` se ha rehecho **como índice y no como copia**: duplicaba lo que ya está en
+la cabecera de cada migración, y por eso se quedó parada veinte migraciones. Lo dice ahora en el
+propio documento.
+
+Y una comprobación que sí salió limpia: ningún fichero citado entre comillas en el Vault ha dejado de
+existir, y los `.md` son todos UTF-8 válido. Un `ten�` que parecía corrupción resultó ser mi propio
+`cut` partiendo un carácter multibyte.
+
 ---
 
 ## Estado

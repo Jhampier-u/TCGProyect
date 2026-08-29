@@ -62,8 +62,9 @@ C:\ProyectoTCG\
 │   ├── 09_Plan_T048_ImportExport.md  <- plan de implementacion, 9 tareas
 │   ├── 10_Spec_H8a_SuiteE2E.md      <- spec de la suite E2E (H8a) + ADR-009
 │   ├── 11_Plan_H8a_SuiteE2E.md      <- plan de implementacion, 7 tareas
-│   ├── 12_Spec_T034_PlantillasPorEpoca.md <- spec de las plantillas por epoca
-│   └── 13_Plan_T034_PlantillasPorEpoca.md <- plan de implementacion, 7 tareas
+│   ├── 12_Spec_H8b_Seguridad.md     <- spec de la auditoria de seguridad (H8b)
+│   ├── 13_Spec_T034_PlantillasPorEpoca.md <- spec de las plantillas por epoca
+│   └── 14_Plan_T034_PlantillasPorEpoca.md <- plan de implementacion, 7 tareas
 ├── 005Registro\
 │   ├── 2026-08-25_S001_Inicializacion.md
 │   ├── 2026-08-25_S002_DDL_MySQL.md

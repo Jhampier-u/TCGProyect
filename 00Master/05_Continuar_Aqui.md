@@ -257,5 +257,5 @@ El contrato está en `Claude.md`. Lo esencial:
   del usuario, las sesiones han levantado instancias temporales con `mysqld --initialize-insecure`
   en un datadir aparte y puerto 3399.
 - Los inputs de React son **controlados**: rellenarlos por automatización exige el *setter* nativo de
-  `HTMLInputElement` más un evento `input`. Escribir en `.value` no lo ve React. Relevante para los
-  Cypress de H8.
+  `HTMLInputElement` más un evento `input`. Escribir en `.value` no lo ve React. Relevante para la
+  suite E2E (Playwright desde ADR-009; esta línea decía "Cypress" hasta S031).
