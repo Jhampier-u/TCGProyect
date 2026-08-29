@@ -1,7 +1,7 @@
 # Spec — H9a y H9b: cimientos de interfaz y la sección de Pokémon
 
 > **Hito:** H9 — Identidad propia por juego · **Sub-proyectos:** H9a (cimientos) y H9b (catálogo y ficha)
-> **Sesión:** S033 · **Fecha:** 2026-08-28 · **Estado:** aprobado en lo esencial, pendiente de plan
+> **Sesión:** S033 · **Fecha:** 2026-08-28 · **Estado:** aprobado · **Plan:** `16_Plan_H9ab_Pokemon.md`
 > **Tareas:** T-088 a T-095
 
 ---
@@ -191,9 +191,12 @@ proyecto, su cabecera explica el porqué, no sólo el qué.
 Extiende `/api/cards` con los filtros nuevos y añade el endpoint de ficha.
 
 > **Trampa declarada: ADR-007.** Fastify **descarta los campos no declarados** en el esquema de
-> respuesta. Todo dato nuevo que la ficha necesite —PS, tipo, subtipos, marca, ataques, debilidades—
-> hay que declararlo en el schema o **desaparece sin un solo error**. Es la primera causa de "el dato
-> está en la base y no llega al front" en este proyecto.
+> respuesta, y es la primera causa de "el dato está en la base y no llega al front".
+>
+> **Corregido al escribir el plan:** el peligro está en `CARD_SUMMARY`, no en `CARD_DETAIL`. El de
+> detalle ya declara `gameData` con `additionalProperties: true`, así que la ficha ya recibe todo. El
+> de resumen —el que usa la búsqueda— no lleva ni un dato de juego, así que la rejilla no puede
+> enseñar PS, tipo ni marca hasta que se declaren ahí.
 
 **Se mantiene la paginación keyset** con desempate por `card_prints.id`. No se convierte en `OFFSET`:
 hay un motivo escrito y es que con `cards.id` desaparecían cartas del catálogo en silencio.

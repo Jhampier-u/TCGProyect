@@ -65,7 +65,8 @@ C:\ProyectoTCG\
 │   ├── 12_Spec_H8b_Seguridad.md     <- spec de la auditoria de seguridad (H8b)
 │   ├── 13_Spec_T034_PlantillasPorEpoca.md <- spec de las plantillas por epoca
 │   ├── 14_Plan_T034_PlantillasPorEpoca.md <- plan de implementacion, 7 tareas
-│   └── 15_Spec_H9ab_Pokemon.md      <- spec de H9a y H9b (identidad por juego, Pokemon primero)
+│   ├── 15_Spec_H9ab_Pokemon.md      <- spec de H9a y H9b (identidad por juego, Pokemon primero)
+│   └── 16_Plan_H9ab_Pokemon.md      <- plan de implementacion, 8 tareas (T-088 a T-095)
 ├── 005Registro\
 │   ├── 2026-08-25_S001_Inicializacion.md
 │   ├── 2026-08-25_S002_DDL_MySQL.md
