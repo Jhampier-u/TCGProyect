@@ -36,6 +36,11 @@
   --fondo-alt: #171a21;
   --superficie: #1e222b;
   --borde: #2b303b;
+  /* El borde de un CONTROL, no el de un separador. WCAG 1.4.11 pide 3:1 para
+   * el limite de un elemento interactivo, y `--borde` no llega: da 1,25:1
+   * contra el fondo en los dos temas. Es el valor mas liviano que cumple
+   * contra las tres superficies -- 3,36:1 en oscuro, 3,50:1 en claro. */
+  --borde-control: #6a7389;
 
   /* ------------------------------------------------------------- contenido */
   --texto: #e6e8ec;
@@ -122,6 +127,7 @@
     --fondo-alt: #fbfaf8;
     --superficie: #ffffff;
     --borde: #dbd8d0;
+    --borde-control: #847f74;
 
     --texto: #1a1c1f;
     --texto-tenue: #5f6369;
@@ -164,6 +170,7 @@
   --fondo-alt: #fbfaf8;
   --superficie: #ffffff;
   --borde: #dbd8d0;
+  --borde-control: #847f74;
 
   --texto: #1a1c1f;
   --texto-tenue: #5f6369;

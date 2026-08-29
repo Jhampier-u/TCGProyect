@@ -167,7 +167,7 @@ input, select, button {
   font: inherit;
   color: var(--texto);
   background: var(--superficie);
-  border: 1px solid var(--borde);
+  border: 1px solid var(--borde-control);
   border-radius: var(--radio);
   padding: 8px 10px;
 }
