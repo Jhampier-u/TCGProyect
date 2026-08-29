@@ -32,10 +32,13 @@ function arbolLimpio() {
 
 /** true si la comprobacion del Vault FALLA, que es lo que se espera al mutar. */
 function detecta() {
-  const r = spawnSync('npx', ['vitest', 'run', 'tools/vault-consistency.test.ts'], {
+  // Sin `shell: true`: Node avisa (DEP0190) de que los argumentos se concatenan
+  // sin escapar. En Windows el ejecutable es `npx.cmd`, y nombrarlo evita a la
+  // vez el shell y el aviso.
+  const npx = process.platform === 'win32' ? 'npx.cmd' : 'npx';
+  const r = spawnSync(npx, ['vitest', 'run', 'tools/vault-consistency.test.ts'], {
     cwd: RAIZ,
     stdio: 'ignore',
-    shell: process.platform === 'win32',
   });
   return r.status !== 0;
 }
