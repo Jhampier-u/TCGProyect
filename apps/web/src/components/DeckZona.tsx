@@ -1,5 +1,6 @@
 import type { DeckZone } from '@tcg/shared';
 import type { Draft } from '../lib/deck-draft.js';
+import { ES } from '../i18n/es.js';
 
 export interface DeckZonaProps {
   etiqueta: string;
@@ -52,7 +53,7 @@ export function DeckZona(props: DeckZonaProps) {
               {fila.setCode} {fila.collectorNumber}
               {/* RN-03: se avisa, no se impide. */}
               {fila.owned < fila.quantity && (
-                <span className="no-poseida"> · tienes {fila.owned}</span>
+                <span className="no-poseida">{ES.simbolo.separador}{ES.buscador.tienes(fila.owned)}</span>
               )}
             </div>
           </div>

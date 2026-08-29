@@ -1,5 +1,6 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { imageUrl } from '../lib/api.js';
+import { ES } from '../i18n/es.js';
 
 export interface OpcionDeSet {
   id: string;
@@ -188,7 +189,7 @@ export function SelectorDeSet({
         <IconoDeSet opcion={elegida} />
         <span className="selector-set-nombre">{elegida.nombre}</span>
         <span className="selector-set-flecha" aria-hidden="true">
-          ▾
+          {ES.simbolo.desplegar}
         </span>
       </button>
 

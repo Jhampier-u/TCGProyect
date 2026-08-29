@@ -4,6 +4,7 @@ import type { GameCode } from '@tcg/shared';
 import { api, imageUrl } from '../lib/api.js';
 import { useAuth } from '../lib/auth.js';
 import { CardTile } from '../components/CardTile.js';
+import { ES } from '../i18n/es.js';
 
 export function Coleccion() {
   const { token } = useAuth();
@@ -40,20 +41,20 @@ export function Coleccion() {
 
   return (
     <>
-      <h1>Mi coleccion</h1>
+      <h1>{ES.navegacion.coleccion}</h1>
       <p className="subtitulo">Todo lo que has obtenido abriendo sobres.</p>
 
       <div className="resumen">
         <div className="dato">
-          <div className="valor">{resumen.data?.entries ?? '—'}</div>
+          <div className="valor">{resumen.data?.entries ?? ES.simbolo.vacio}</div>
           <div className="etiqueta-dato">cartas distintas</div>
         </div>
         <div className="dato">
-          <div className="valor">{resumen.data?.copies ?? '—'}</div>
+          <div className="valor">{resumen.data?.copies ?? ES.simbolo.vacio}</div>
           <div className="etiqueta-dato">copias totales</div>
         </div>
         <div className="dato">
-          <div className="valor">{resumen.data?.openings ?? '—'}</div>
+          <div className="valor">{resumen.data?.openings ?? ES.simbolo.vacio}</div>
           <div className="etiqueta-dato">sobres abiertos</div>
         </div>
       </div>
@@ -69,7 +70,7 @@ export function Coleccion() {
         </select>
       </div>
 
-      <h2>Completitud por set</h2>
+      <h2>{ES.coleccion.completitudPorSet}</h2>
       {conCartas.length === 0 ? (
         <div className="aviso info">
           Aun no tienes ninguna carta de este juego. Abre un sobre para empezar.
@@ -95,14 +96,14 @@ export function Coleccion() {
               {/* El denominador son las cartas OBTENIBLES en sobre, no todas las
                   del set: prometer un 100% inalcanzable seria mentir (P-014). */}
               <div className="cifras">
-                {c.owned}/{c.poolSize} · {(c.ratio * 100).toFixed(1)}%
+                {ES.coleccion.completitud(c.owned, c.poolSize, (c.ratio * 100).toFixed(1))}
               </div>
             </div>
           ))}
         </div>
       )}
 
-      <h2>Cartas</h2>
+      <h2>{ES.coleccion.cartas}</h2>
       {paginas.isPending && <div className="vacio">Cargando...</div>}
       {!paginas.isPending && entradas.length === 0 && (
         <div className="vacio">Nada por aqui todavia.</div>

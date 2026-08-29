@@ -4,6 +4,7 @@ import type { GameCode } from '@tcg/shared';
 import { api } from '../lib/api.js';
 import { SelectorDeSet } from '../components/SelectorDeSet.js';
 import { CardTile } from '../components/CardTile.js';
+import { ES } from '../i18n/es.js';
 
 /**
  * Navegador de catalogo.
@@ -55,7 +56,7 @@ export function Catalogo() {
 
   return (
     <>
-      <h1>Catalogo</h1>
+      <h1>{ES.navegacion.catalogo}</h1>
       <p className="subtitulo">
         Todo sale de nuestra base de datos. El navegador nunca habla con Scryfall,
         YGOPRODeck ni Pokemon TCG.
@@ -84,7 +85,7 @@ export function Catalogo() {
         />
 
         <select value={rarity} onChange={(e) => reiniciar(() => setRarity(e.target.value))}>
-          <option value="">Todas las rarezas</option>
+          <option value="">{ES.catalogo.todasLasRarezas}</option>
           {(rarezas.data ?? []).map((r) => (
             <option key={r.code} value={r.code}>{r.label}</option>
           ))}
@@ -100,9 +101,9 @@ export function Catalogo() {
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Buscar por nombre o texto..."
+            placeholder={ES.catalogo.buscarPlaceholder}
           />
-          <button type="submit">Buscar</button>
+          <button type="submit">{ES.catalogo.buscar}</button>
         </form>
       </div>
 

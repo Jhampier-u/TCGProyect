@@ -29,7 +29,7 @@ export const ARGON2_OPTIONS = {
 } as const;
 
 /**
- * Hash señuelo contra la enumeracion de usuarios.
+ * Hash senuelo contra la enumeracion de usuarios.
  *
  * Cuando el correo no existe, `verifyPassword` se ejecuta igualmente contra este
  * hash. Sin eso, un login con correo inexistente responderia en microsegundos y
@@ -39,7 +39,7 @@ export const ARGON2_OPTIONS = {
  *
  * Se calcula una vez al arrancar sobre un valor sin significado.
  */
-let señuelo: string | null = null;
+let senuelo: string | null = null;
 
 export async function hashPassword(plain: string): Promise<string> {
   return hash(plain, ARGON2_OPTIONS);
@@ -49,13 +49,13 @@ export async function hashPassword(plain: string): Promise<string> {
  * Verifica una contrasena.
  *
  * `stored` a null significa "no hay tal usuario": se gasta el mismo tiempo
- * verificando contra el señuelo y se devuelve false. El llamante no debe
+ * verificando contra el senuelo y se devuelve false. El llamante no debe
  * distinguir ese caso del de contrasena incorrecta.
  */
 export async function verifyPassword(plain: string, stored: string | null): Promise<boolean> {
   if (stored === null) {
-    señuelo ??= await hashPassword('contrasena-señuelo-sin-uso');
-    await verify(señuelo, plain).catch(() => false);
+    senuelo ??= await hashPassword('contrasena-senuelo-sin-uso');
+    await verify(senuelo, plain).catch(() => false);
     return false;
   }
 
@@ -67,9 +67,9 @@ export async function verifyPassword(plain: string, stored: string | null): Prom
   }
 }
 
-/** Precalcula el señuelo para que el primer login no pague su coste. */
+/** Precalcula el senuelo para que el primer login no pague su coste. */
 export async function warmUp(): Promise<void> {
-  señuelo ??= await hashPassword('contrasena-señuelo-sin-uso');
+  senuelo ??= await hashPassword('contrasena-senuelo-sin-uso');
 }
 
 export const MIN_PASSWORD_LENGTH = 10;

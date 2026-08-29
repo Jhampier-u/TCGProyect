@@ -6,6 +6,7 @@ import { Sobres } from './pages/Sobres.js';
 import { Coleccion } from './pages/Coleccion.js';
 import { Mazos } from './pages/Mazos.js';
 import { MazoEditor } from './pages/MazoEditor.js';
+import { ES } from './i18n/es.js';
 
 /** Ruta que exige sesion. Redirige a /acceso conservando la intencion. */
 function Protegida({ children }: { children: React.ReactNode }) {
@@ -23,29 +24,29 @@ export function App() {
   return (
     <>
       <header className="cabecera">
-        <span className="marca">ProyectoTCG</span>
+        <span className="marca">{ES.navegacion.marca}</span>
         <nav className="nav">
           <NavLink to="/" end className={({ isActive }) => (isActive ? 'activo' : '')}>
-            Catalogo
+            {ES.navegacion.catalogo}
           </NavLink>
           <NavLink to="/sobres" className={({ isActive }) => (isActive ? 'activo' : '')}>
-            Abrir sobres
+            {ES.navegacion.sobres}
           </NavLink>
           <NavLink to="/coleccion" className={({ isActive }) => (isActive ? 'activo' : '')}>
-            Mi coleccion
+            {ES.navegacion.coleccion}
           </NavLink>
           <NavLink to="/mazos" className={({ isActive }) => (isActive ? 'activo' : '')}>
-            Mis mazos
+            {ES.navegacion.mazos}
           </NavLink>
         </nav>
         <div className="cabecera-derecha">
           {user ? (
             <>
               <span style={{ color: 'var(--texto-tenue)' }}>{user.displayName}</span>
-              <button onClick={salir}>Salir</button>
+              <button onClick={salir}>{ES.navegacion.salir}</button>
             </>
           ) : (
-            <NavLink to="/acceso">Acceder</NavLink>
+            <NavLink to="/acceso">{ES.navegacion.acceder}</NavLink>
           )}
         </div>
       </header>
@@ -58,7 +59,7 @@ export function App() {
           <Route path="/coleccion" element={<Protegida><Coleccion /></Protegida>} />
           <Route path="/mazos" element={<Protegida><Mazos /></Protegida>} />
           <Route path="/mazos/:id" element={<Protegida><MazoEditor /></Protegida>} />
-          <Route path="*" element={<div className="vacio">Pagina no encontrada.</div>} />
+          <Route path="*" element={<div className="vacio">{ES.error.paginaNoEncontrada}</div>} />
         </Routes>
       </main>
     </>

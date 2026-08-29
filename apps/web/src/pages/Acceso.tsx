@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ApiError } from '../lib/api.js';
 import { useAuth } from '../lib/auth.js';
+import { ES } from '../i18n/es.js';
 
 /** Registro y acceso en una sola pantalla, alternando modo. */
 export function Acceso() {
@@ -26,7 +27,7 @@ export function Acceso() {
       // El servidor devuelve el MISMO mensaje tanto si el correo no existe como
       // si la contrasena es incorrecta (ADR-008). La interfaz no debe inventarse
       // uno mas especifico: seria deshacer esa proteccion desde el cliente.
-      setError(err instanceof ApiError ? err.message : 'No se pudo completar la operacion');
+      setError(err instanceof ApiError ? err.message : ES.acceso.errorGenerico);
     } finally {
       setEnviando(false);
     }
@@ -35,32 +36,32 @@ export function Acceso() {
   return (
     <div className="formulario">
       <div className="tarjeta">
-        <h1>{modo === 'login' ? 'Acceder' : 'Crear cuenta'}</h1>
+        <h1>{modo === 'login' ? ES.acceso.tituloEntrar : ES.acceso.tituloCrear}</h1>
         <p className="subtitulo">
           {modo === 'login'
-            ? 'Entra para abrir sobres y ver tu coleccion.'
-            : 'La contrasena debe tener al menos 10 caracteres.'}
+            ? ES.acceso.invitacionEntrar
+            : ES.acceso.invitacionCrear}
         </p>
 
         {error && <div className="aviso error">{error}</div>}
 
         <form onSubmit={enviar}>
           <div className="campo">
-            <label htmlFor="email">Correo</label>
+            <label htmlFor="email">{ES.acceso.correo}</label>
             <input id="email" type="email" value={email} required
               onChange={(e) => setEmail(e.target.value)} autoComplete="email" />
           </div>
 
           {modo === 'registro' && (
             <div className="campo">
-              <label htmlFor="nombre">Nombre visible</label>
+              <label htmlFor="nombre">{ES.acceso.nombreVisible}</label>
               <input id="nombre" value={displayName} required minLength={2}
                 onChange={(e) => setDisplayName(e.target.value)} autoComplete="nickname" />
             </div>
           )}
 
           <div className="campo">
-            <label htmlFor="password">Contrasena</label>
+            <label htmlFor="password">{ES.acceso.contrasena}</label>
             <input id="password" type="password" value={password} required
               minLength={modo === 'registro' ? 10 : undefined}
               onChange={(e) => setPassword(e.target.value)}
@@ -68,14 +69,14 @@ export function Acceso() {
           </div>
 
           <button type="submit" className="primario" disabled={enviando} style={{ width: '100%' }}>
-            {enviando ? 'Enviando...' : modo === 'login' ? 'Acceder' : 'Crear cuenta'}
+            {enviando ? ES.acceso.enviando : modo === 'login' ? ES.acceso.tituloEntrar : ES.acceso.tituloCrear}
           </button>
         </form>
 
         <p style={{ marginTop: 16, fontSize: 13.5 }}>
-          {modo === 'login' ? '¿No tienes cuenta? ' : '¿Ya tienes cuenta? '}
+          {modo === 'login' ? `${ES.acceso.noTienesCuenta} ` : `${ES.acceso.yaTienesCuenta} `}
           <a href="#" onClick={(e) => { e.preventDefault(); setError(null); setModo(modo === 'login' ? 'registro' : 'login'); }}>
-            {modo === 'login' ? 'Crear una' : 'Acceder'}
+            {modo === 'login' ? ES.acceso.crearUna : ES.acceso.tituloEntrar}
           </a>
         </p>
       </div>

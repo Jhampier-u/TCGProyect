@@ -71,7 +71,11 @@ describe('recuentos del registro de problemas', () => {
   const cerrados = todos.filter((p) => !p.abierto).map((p) => p.id);
 
   it('la cabecera dice los numeros que hay', () => {
-    const m = /\*\*Abiertos:\*\* (\d+) · \*\*Cerrados:\*\* (\d+) · \*\*Total:\*\* (\d+)/.exec(PROBLEMAS);
+    // El separador va como escape Unicode y no como caracter: es lo que la
+    // regla de ASCII puro prescribe para el no-ASCII que el codigo necesita
+    // de verdad, y aqui hace falta porque la cabecera del registro lo lleva.
+    const m = /\*\*Abiertos:\*\* (\d+) \u00b7 \*\*Cerrados:\*\* (\d+) \u00b7 \*\*Total:\*\* (\d+)/
+      .exec(PROBLEMAS);
     expect(m, 'la cabecera del registro no tiene la forma esperada').not.toBeNull();
 
     expect({

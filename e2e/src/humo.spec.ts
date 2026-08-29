@@ -12,9 +12,14 @@ test('la aplicacion carga y navega sin errores de consola', async ({ page, reque
   await iniciarSesion(page, usuario.token);
 
   await page.goto('/');
-  await expect(page.getByRole('heading', { name: 'Catalogo' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Catálogo' })).toBeVisible();
 
-  for (const seccion of ['Abrir sobres', 'Mi coleccion', 'Mis mazos'] as const) {
+  // El texto se escribe aqui con sus acentos y NO se importa del modulo de
+  // cadenas: la imagen de la suite no copia `apps/` (ADR-009) y, sobre todo,
+  // una prueba de extremo a extremo debe afirmar lo que el usuario LEE. Si la
+  // interfaz cambia un texto, esto falla, que es justo lo que se quiere.
+  const SECCIONES = ['Abrir sobres', 'Mi colección', 'Mis mazos'];
+  for (const seccion of SECCIONES) {
     await page.getByRole('link', { name: seccion }).click();
     await expect(page.getByRole('heading', { name: seccion })).toBeVisible();
   }
@@ -26,7 +31,7 @@ test('el HTML renderizado no contiene ninguna URL externa (P-001)', async ({ pag
   await iniciarSesion(page, usuario.token);
 
   await page.goto('/');
-  await expect(page.getByRole('heading', { name: 'Catalogo' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Catálogo' })).toBeVisible();
 
   const externas = await page.evaluate(() =>
     document.documentElement.outerHTML.match(/https?:\/\/(?!localhost)[^"'\s]+/g),

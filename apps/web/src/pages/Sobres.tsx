@@ -5,6 +5,7 @@ import { api, ApiError, type PackOpening } from '../lib/api.js';
 import { useAuth } from '../lib/auth.js';
 import { PackReveal } from '../components/PackReveal.js';
 import { SelectorDeSet } from '../components/SelectorDeSet.js';
+import { ES } from '../i18n/es.js';
 
 /**
  * Apertura de sobres.
@@ -67,7 +68,7 @@ export function Sobres() {
 
   return (
     <>
-      <h1>Abrir sobres</h1>
+      <h1>{ES.navegacion.sobres}</h1>
       <p className="subtitulo">
         Las distribuciones de rareza son las reales del producto. Cada apertura queda
         registrada con su semilla y es reproducible.

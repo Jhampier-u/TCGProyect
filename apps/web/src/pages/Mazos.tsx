@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { GameCode } from '@tcg/shared';
 import { api } from '../lib/api.js';
 import { useAuth } from '../lib/auth.js';
+import { ES } from '../i18n/es.js';
 
 export function Mazos() {
   const { token } = useAuth();
@@ -32,7 +33,7 @@ export function Mazos() {
 
   return (
     <>
-      <h1>Mis mazos</h1>
+      <h1>{ES.navegacion.mazos}</h1>
       <p className="subtitulo">
         Un mazo referencia cartas del catalogo, no de tu coleccion: puedes construir lo que quieras
         y ver que te falta.
@@ -40,7 +41,7 @@ export function Mazos() {
 
       <div className="filtros">
         <input
-          placeholder="Nombre del mazo"
+          placeholder={ES.mazos.nombrePlaceholder}
           value={nombre}
           onChange={(e) => setNombre(e.target.value)}
         />
@@ -67,9 +68,9 @@ export function Mazos() {
                 <Link to={`/mazos/${mazo.id}`}>{mazo.name}</Link>
               </div>
               <div className="meta">
-                {mazo.game} · main {mazo.counts.main}
-                {mazo.counts.extra > 0 && ` · extra ${mazo.counts.extra}`}
-                {mazo.counts.side > 0 && ` · side ${mazo.counts.side}`}
+                {mazo.game}{ES.simbolo.separador}{ES.mazos.principal(mazo.counts.main)}
+                {mazo.counts.extra > 0 && `${ES.simbolo.separador}${ES.mazos.extra(mazo.counts.extra)}`}
+                {mazo.counts.side > 0 && `${ES.simbolo.separador}${ES.mazos.lateral(mazo.counts.side)}`}
               </div>
             </div>
             <Link to={`/mazos/${mazo.id}`}>Editar</Link>

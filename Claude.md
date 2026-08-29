@@ -104,6 +104,8 @@ C:\ProyectoTCG\
 │
 ├── tools\                       <- comprobacion del propio Vault (T-087)
 │   ├── vault-consistency.test.ts  <- 16 comprobaciones, corren en `npm test`
+│   ├── contraste-tokens.test.ts   <- WCAG AA de la paleta, leyendo tokens.css (T-088)
+│   ├── ascii-fuente.test.ts       <- hace cumplir la regla de ASCII puro (T-089)
 │   └── mutar-vault.mjs            <- `npm run vault:mutar`: demuestra que no es vacua
 │
 ├── db\                          <- esquema (fuera del Vault documental)
@@ -183,6 +185,7 @@ C:\ProyectoTCG\
 │           └── pokemontcg\     PokemonTcgAdapter (T-013)
 ├── apps\web\                    <- @tcg/web (Vite + React)
 │   └── src│       ├── lib\   api.ts (cliente) · auth.tsx (sesion)
+│       ├── i18n\  es.ts: el texto visible, unica excepcion a la regla de ASCII (T-089)
 │       ├── lib\   api · auth · deck-draft (borrador puro) · use-deck-editor
 │       ├── pages\ Catalogo · Acceso · Sobres · Coleccion · Mazos · MazoEditor
 │       └── components\ CardTile · PackReveal · DeckBuscador · DeckZona ·
@@ -201,7 +204,15 @@ C:\ProyectoTCG\
   `String.fromCharCode` o propiedades Unicode (`\p{M}`), nunca como literales. Motivo: un
   combinante suelto en el fuente se pega visualmente al carácter anterior y cualquier herramienta
   que reescriba el fichero puede destruirlo sin que se note. Los comentarios en español sí llevan
-  acentos con normalidad.
+  acentos con normalidad, y las **cadenas** también: lo que la regla protege son los identificadores
+  y los caracteres invisibles o frágiles, no el texto.
+  **Se comprueba** desde S033 en `tools/ascii-fuente.test.ts`, que verifica tres cosas: ningún
+  carácter de control en ningún sitio (fue lo que destapó el byte 0x08 de S032), ningún combinante
+  suelto, y nada no-ASCII en el código propiamente dicho —identificadores, operadores— fuera de
+  cadenas y comentarios.
+  **Única excepción declarada:** `apps/web/src/i18n/`, el módulo de cadenas de la interfaz (T-089).
+  Es un módulo de datos, no de código, y existe para que el texto que lee el usuario lleve sus
+  acentos. El test lo exime por ruta.
 - **`npm audit` limpio** es criterio de aceptación de toda tarea que toque dependencias (P-011).
 - **Las migraciones publicadas son inmutables** (desde S008). Un cambio de esquema es siempre una
   migración nueva, nunca una edición de una anterior. En S003 sí se editó la `0001`, cuando el

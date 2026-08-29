@@ -4,6 +4,7 @@ import type { GameCode } from '@tcg/shared';
 import { api, imageUrl, type CardSummary } from '../lib/api.js';
 import type { DraftCard } from '../lib/deck-draft.js';
 import { SelectorDeSet } from './SelectorDeSet.js';
+import { ES } from '../i18n/es.js';
 
 export interface DeckBuscadorProps {
   /** Lo fija el mazo, no el usuario: es lo que evita un game_mismatch. */
@@ -112,7 +113,7 @@ export function DeckBuscador({ game, onAnadir }: DeckBuscadorProps) {
             <div>
               <div className="nombre">{carta.name}</div>
               <div className="tipo">
-                {carta.typeLine ?? 'sin tipo'} · {carta.setCode} {carta.collectorNumber} ·{' '}
+                {carta.typeLine ?? ES.buscador.sinTipo}{ES.simbolo.separador}{carta.setCode} {carta.collectorNumber}{ES.simbolo.separador}
                 {/* T-061. Sin la rareza, tres impresiones de la misma carta en el
                     mismo set se ven IDENTICAS y no hay forma de elegir. Salio de
                     mirar las capturas de S023. */}

@@ -7,6 +7,7 @@ import { DeckBuscador } from '../components/DeckBuscador.js';
 import { DeckZona } from '../components/DeckZona.js';
 import { DeckValidacion, zonasDe } from '../components/DeckValidacion.js';
 import { DeckTransferencia } from '../components/DeckTransferencia.js';
+import { ES } from '../i18n/es.js';
 
 export function MazoEditor() {
   const { id } = useParams();
@@ -43,7 +44,7 @@ function Editor({ deck, token }: { deck: DeckDetail; token: string }) {
     <>
       <h1>{deck.name}</h1>
       <p className="subtitulo">
-        {deck.game} · la validacion se recalcula en tu navegador, sin consultar al servidor.
+        {deck.game}{ES.simbolo.separador}{ES.mazos.validacionLocal}.
       </p>
 
       <DeckValidacion
