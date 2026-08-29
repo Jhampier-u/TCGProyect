@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from './lib/auth.js';
 import { App } from './App.js';
+import './styles/tokens.css';
 import './styles.css';
 
 const container = document.getElementById('root');

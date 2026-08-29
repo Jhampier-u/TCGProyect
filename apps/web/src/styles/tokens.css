@@ -1,0 +1,250 @@
+/*
+ * Sistema de diseno de ProyectoTCG (T-088).
+ *
+ * TODO color, espaciado, radio y sombra del producto sale de aqui. Fuera de
+ * este fichero no debe quedar ni un literal de color: si aparece uno, es un
+ * valor que no responde al tema y que se vera mal en uno de los dos.
+ *
+ * OSCURO PRIMERO, y es una decision, no una omision. La aplicacion nacio oscura
+ * y le sienta bien: las ilustraciones de carta -- que son el contenido -- se
+ * leen mejor sobre fondo oscuro, y es lo que hace un simulador de sobres. El
+ * claro se anade porque un catalogo tambien se consulta de dia, no porque
+ * "haya que tener los dos".
+ *
+ * LOS TRES ESTADOS DEL VISOR, no dos:
+ *
+ *   :root                                  -> oscuro completo. Es la base.
+ *   @media (prefers-color-scheme: light)   -> claro, y guardado con
+ *     :root:not([data-tema="oscuro"])         `:not` para que una eleccion
+ *                                             explicita del usuario gane al
+ *                                             ajuste del sistema.
+ *   :root[data-tema="claro"]               -> claro otra vez, para que el
+ *                                             conmutador gane en el otro
+ *                                             sentido.
+ *
+ * NINGUN COLOR SE DEFINE SOLO DENTRO DE UN MEDIA QUERY. Si un token existe
+ * unicamente en el bloque claro, en oscuro queda sin valor y la pagina pinta el
+ * texto de un tema sobre el fondo del otro. Los bloques de tema REDEFINEN
+ * tokens que ya existen arriba; no los inventan.
+ *
+ * Los comentarios van sin acentos como todo el fuente del proyecto.
+ */
+
+:root {
+  /* ---------------------------------------------------------- superficies */
+  --fondo: #0f1115;
+  --fondo-alt: #171a21;
+  --superficie: #1e222b;
+  --borde: #2b303b;
+
+  /* ------------------------------------------------------------- contenido */
+  --texto: #e6e8ec;
+  --texto-tenue: #9aa1ae;
+
+  /* ---------------------------------------------------------------- acento */
+  --acento: #e0b450;
+  --acento-tenue: #7a6229;
+  /* Lo que se escribe ENCIMA del acento. Cambia con el tema porque el acento
+   * cambia de claridad: no vale un negro fijo. */
+  --sobre-acento: #1a1508;
+
+  /* ------------------------------------------------------------- semantica
+   * Separada del acento a proposito: "peligro" y "exito" significan estado,
+   * no marca, y no deben moverse cuando un juego cambia su acento. */
+  --peligro: #d9534f;
+  --peligro-texto: #ffb3b1;
+  --peligro-fondo: #2a1414;
+  --exito: #4f9d69;
+
+  /* --------------------------------------------------------------- relieve
+   * Velos y brillos en vez de literales sueltos: en claro, un velo blanco
+   * sobre fondo blanco no hace nada y hay que invertirlo. */
+  --velo-suave: rgba(0, 0, 0, 0.22);
+  --velo-fuerte: rgba(0, 0, 0, 0.45);
+  --brillo-suave: rgba(255, 255, 255, 0.11);
+  --brillo-medio: rgba(255, 255, 255, 0.16);
+  --brillo-fuerte: rgba(255, 255, 255, 0.42);
+  --destello: rgba(180, 220, 255, 0.30);
+  --sombra-1: 0 8px 24px rgb(0 0 0 / 35%);
+
+  /* ------------------------------------------------------------ tipografia */
+  --fuente: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --fuente-datos: ui-monospace, "SFMono-Regular", Consolas, monospace;
+  --paso-00: 12px;
+  --paso-0: 15px;
+  --paso-1: 17px;
+  --paso-2: 21px;
+  --paso-3: 27px;
+  --paso-4: 34px;
+  --linea: 1.5;
+  --linea-apretada: 1.2;
+
+  /* --------------------------------------------------------------- espacio */
+  --e1: 4px;
+  --e2: 8px;
+  --e3: 12px;
+  --e4: 18px;
+  --e5: 24px;
+  --e6: 36px;
+
+  /* ---------------------------------------------------------------- radios */
+  --radio-s: 4px;
+  --radio: 8px;
+  --radio-g: 14px;
+
+  /* ------------------------------------------------------- tipos de Pokemon
+   * Los ONCE que existen de verdad en el catalogo, contados el 2026-08-28:
+   * Water 2436, Grass 2391, Psychic 2337, Colorless 2178, Fighting 1883,
+   * Fire 1575, Lightning 1520, Darkness 1248, Metal 929, Dragon 527,
+   * Fairy 237. No hay ninguno mas y no se inventa ninguno.
+   *
+   * VAN POR TEMA, y eso se decidio MIDIENDO. La primera version definia un
+   * tono canonico por tipo, uno solo, porque el tono "es" el tipo. Al medirlo
+   * fallaban tres sobre fondo oscuro -- psiquico 2,63:1, lucha 2,60:1 y
+   * oscuro 1,71:1 -- y no hay forma de arreglarlo con un valor unico: un tipo
+   * que ES oscuro no puede leerse sobre un fondo oscuro. */
+  --tipo-agua: #4a9fd8;
+  --tipo-planta: #5cb377;
+  --tipo-psiquico: #b07ad0;
+  --tipo-incoloro: #a8a8a1;
+  --tipo-lucha: #d4855f;
+  --tipo-fuego: #e0834e;
+  --tipo-rayo: #d8b43c;
+  --tipo-oscuro: #9b93ad;
+  --tipo-metal: #93a0af;
+  --tipo-dragon: #c99a4e;
+  --tipo-hada: #e07ab4;
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-tema="oscuro"]) {
+    --fondo: #f1f0ec;
+    --fondo-alt: #fbfaf8;
+    --superficie: #ffffff;
+    --borde: #dbd8d0;
+
+    --texto: #1a1c1f;
+    --texto-tenue: #5f6369;
+
+    /* El oro de #e0b450 sobre blanco no llega a AA para texto. En claro el
+     * acento baja de claridad hasta que si llega, conservando el tono. */
+    --acento: #8a6217;
+    --acento-tenue: #c9a75e;
+    --sobre-acento: #fffdf7;
+
+    --peligro: #b3241f;
+    --peligro-texto: #7d1713;
+    --peligro-fondo: #fbe9e8;
+    --exito: #2f6d45;
+
+    --velo-suave: rgba(0, 0, 0, 0.06);
+    --velo-fuerte: rgba(0, 0, 0, 0.14);
+    --brillo-suave: rgba(0, 0, 0, 0.04);
+    --brillo-medio: rgba(0, 0, 0, 0.09);
+    --brillo-fuerte: rgba(255, 255, 255, 0.75);
+    --destello: rgba(120, 170, 220, 0.35);
+    --sombra-1: 0 8px 24px rgb(31 28 22 / 12%);
+
+    --tipo-agua: #1f6592;
+    --tipo-planta: #2f7a46;
+    --tipo-psiquico: #7a3d97;
+    --tipo-incoloro: #6f6f69;
+    --tipo-lucha: #8c4023;
+    --tipo-fuego: #a8480f;
+    --tipo-rayo: #7d6608;
+    --tipo-oscuro: #4a4458;
+    --tipo-metal: #5c6673;
+    --tipo-dragon: #856019;
+    --tipo-hada: #a82f74;
+  }
+}
+
+:root[data-tema="claro"] {
+  --fondo: #f1f0ec;
+  --fondo-alt: #fbfaf8;
+  --superficie: #ffffff;
+  --borde: #dbd8d0;
+
+  --texto: #1a1c1f;
+  --texto-tenue: #5f6369;
+
+  --acento: #8a6217;
+  --acento-tenue: #c9a75e;
+  --sobre-acento: #fffdf7;
+
+  --peligro: #b3241f;
+  --peligro-texto: #7d1713;
+  --peligro-fondo: #fbe9e8;
+  --exito: #2f6d45;
+
+  --velo-suave: rgba(0, 0, 0, 0.06);
+  --velo-fuerte: rgba(0, 0, 0, 0.14);
+  --brillo-suave: rgba(0, 0, 0, 0.04);
+  --brillo-medio: rgba(0, 0, 0, 0.09);
+  --brillo-fuerte: rgba(255, 255, 255, 0.75);
+  --destello: rgba(120, 170, 220, 0.35);
+  --sombra-1: 0 8px 24px rgb(31 28 22 / 12%);
+
+  --tipo-agua: #1f6592;
+  --tipo-planta: #2f7a46;
+  --tipo-psiquico: #7a3d97;
+  --tipo-incoloro: #6f6f69;
+  --tipo-lucha: #8c4023;
+  --tipo-fuego: #a8480f;
+  --tipo-rayo: #7d6608;
+  --tipo-oscuro: #4a4458;
+  --tipo-metal: #5c6673;
+  --tipo-dragon: #856019;
+  --tipo-hada: #a82f74;
+}
+
+/* ====================================================================
+ * CAPA POR JUEGO
+ *
+ * Lo que le da personalidad a cada seccion, y NADA MAS. Un juego cambia su
+ * acento y el dorso de sus cartas; no cambia el significado de "peligro" ni
+ * la escala de espaciado. Eso es lo que hace que las primitivas se puedan
+ * compartir (D-1 del spec).
+ *
+ * Los tres degradados de dorso NO son nuevos: estaban desde H5 escritos a
+ * mano dentro de `.reverso-mtg`, `.reverso-ygo` y `.reverso-ptcg`. Aqui solo
+ * salen a la superficie, que es donde ya eran identidad de juego sin que
+ * nadie lo hubiera dicho.
+ *
+ * CADA REGLA LLEVA DOS SELECTORES A PROPOSITO, y es temporal. `data-juego`
+ * todavia no lo pone nadie -- llega con T-090 -- y sin la clase el dorso de
+ * las cartas se quedaria sin degradado HOY. Cuando T-090 ponga el atributo,
+ * la mitad de la clase se cae y esta nota con ella.
+ * ==================================================================== */
+
+[data-juego="mtg"],
+.reverso-mtg {
+  --juego-acento: #c8922f;
+  --dorso-1: #4a3418;
+  --dorso-2: #241a0d;
+  --dorso-3: #150f07;
+}
+
+[data-juego="ygo"],
+.reverso-ygo {
+  --juego-acento: #b5651d;
+  --dorso-1: #7a4a1c;
+  --dorso-2: #3d250f;
+  --dorso-3: #201305;
+}
+
+[data-juego="ptcg"],
+.reverso-ptcg {
+  --juego-acento: #c0392b;
+  --dorso-1: #1d4f8a;
+  --dorso-2: #12304f;
+  --dorso-3: #0a1c2e;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
