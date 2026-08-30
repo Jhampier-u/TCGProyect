@@ -14,6 +14,7 @@ import {
   GET_CARD,
   LIST_GAMES,
   LIST_ERAS,
+  LIST_FACETS,
   LIST_RARITIES,
   LIST_SETS,
   SEARCH_CARDS,
@@ -122,9 +123,18 @@ function registrarRutasDeCatalogo(app: FastifyInstance, options: ApiOptions): vo
     async (request) => ({ data: await catalog.listRarities(request.params.game) }),
   );
 
+  app.get<{ Params: { game: GameCode }; Querystring: { set?: string } }>(
+    '/api/games/:game/facets',
+    { schema: LIST_FACETS },
+    async (request) => ({
+      data: await catalog.listFacets(request.params.game, request.query.set),
+    }),
+  );
+
   app.get<{
     Querystring: {
       game?: GameCode; set?: string; rarity?: string; q?: string;
+      type?: string; supertype?: string; mark?: string;
       cursor?: string; limit?: number;
     };
   }>('/api/cards', { schema: SEARCH_CARDS }, async (request) => {

@@ -48,6 +48,9 @@ const CARTA: CardDetail = {
   cardId: 7, oracleKey: '89631139', printId: 42, game: 'YGO', name: 'Blue-Eyes White Dragon',
   typeLine: 'Normal Monster', setCode: 'LOB', setName: 'Legend of Blue Eyes',
   collectorNumber: '001', rarity: 'ultra_rare',
+  // Facetas de Pokemon: nulas en una carta de Yu-Gi-Oh!, que es el caso que
+  // esta fixture representa (T-092).
+  hp: null, supertype: null, elemType: null, regMark: null,
   imagePath: 'ygo/lob/lob-en001-ultra_rare.245.webp',
   rulesText: 'Legendary dragon.', gameData: { atk: 3000, def: 2500 },
   releasedAt: '2002-03-08', finishes: ['foil'], inBoosters: true,
@@ -190,6 +193,10 @@ describe('rutas', () => {
       type_line: 'Normal Monster',
       set_code: 'LOB',
       set_name: 'Legend of Blue Eyes',
+      hp: null,
+      supertype: null,
+      elem_type: null,
+      reg_mark: null,
       print_id: 42,
       collector_number: '001',
       image_local_path: 'ygo/lob/x.245.webp',

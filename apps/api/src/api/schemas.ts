@@ -10,6 +10,12 @@
  * (P-001). Aqui no aparece, luego no puede salir.
  */
 
+/** Un valor de faceta con su recuento. */
+const RECUENTO = {
+  type: 'object',
+  properties: { value: { type: 'string' }, count: { type: 'integer' } },
+} as const;
+
 export const CARD_SUMMARY = {
   type: 'object',
   properties: {
@@ -26,6 +32,17 @@ export const CARD_SUMMARY = {
     rarity: { type: 'string' },
     // Ruta LOCAL, servida por nosotros. Jamas un dominio externo.
     imagePath: { type: ['string', 'null'] },
+    // Facetas de Pokemon (T-092), nulas en los otros dos juegos.
+    //
+    // AQUI ES DONDE MUERDE ADR-007. El repositorio ya las devuelve; si no se
+    // declaran, Fastify las descarta al serializar y la rejilla se queda sin
+    // PS, sin tipo y sin marca **sin un solo error**. Es exactamente como se
+    // perdio `cardId` durante tres hitos (P-024). Lo unico que lo impide es la
+    // prueba que ejecuta `toSummary` y compara sus claves con estas.
+    hp: { type: ['integer', 'null'] },
+    supertype: { type: ['string', 'null'] },
+    elemType: { type: ['string', 'null'] },
+    regMark: { type: ['string', 'null'] },
   },
 } as const;
 
@@ -162,6 +179,37 @@ export const LIST_RARITIES = {
   },
 } as const;
 
+/** Recuentos por faceta para el rail del catalogo (T-092). */
+export const LIST_FACETS = {
+  params: {
+    type: 'object',
+    required: ['game'],
+    properties: { game: { type: 'string', enum: ['MTG', 'YGO', 'PTCG'] } },
+  },
+  querystring: {
+    type: 'object',
+    properties: { set: { type: 'string', maxLength: 255 } },
+    additionalProperties: false,
+  },
+  response: {
+    200: {
+      type: 'object',
+      properties: {
+        data: {
+          type: 'object',
+          properties: {
+            types: { type: 'array', items: RECUENTO },
+            supertypes: { type: 'array', items: RECUENTO },
+            marks: { type: 'array', items: RECUENTO },
+            withoutMark: { type: 'integer' },
+            rarities: { type: 'array', items: RECUENTO },
+          },
+        },
+      },
+    },
+  },
+} as const;
+
 export const SEARCH_CARDS = {
   querystring: {
     type: 'object',
@@ -169,6 +217,12 @@ export const SEARCH_CARDS = {
       game: { type: 'string', enum: ['MTG', 'YGO', 'PTCG'] },
       set: { type: 'string', maxLength: 255 },
       rarity: { type: 'string', maxLength: 48 },
+      // Facetas de Pokemon (T-092). `additionalProperties: false` de abajo hace
+      // que una query no declarada sea un 400, no un filtro que se ignora en
+      // silencio: la superficie es exactamente la que se declara.
+      type: { type: 'string', maxLength: 24 },
+      supertype: { type: 'string', maxLength: 24 },
+      mark: { type: 'string', maxLength: 16 },
       q: { type: 'string', maxLength: 120 },
       cursor: { type: 'string', maxLength: 512 },
       // El tope de 100 no es cosmetico: sin el, un cliente podria pedir 100.000

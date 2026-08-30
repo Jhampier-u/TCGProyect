@@ -12,6 +12,15 @@ import type { Database } from './connection.js';
  */
 export const MIN_FULLTEXT_LENGTH = 3;
 
+/**
+ * Valor de `mark` que pide las cartas SIN marca de regulacion.
+ *
+ * No es un hueco de datos: la marca no existia antes de Sword & Shield (2019),
+ * asi que 12.250 de las 20.434 cartas de Pokemon no la tienen y nunca la
+ * tendran. Poder pedirlas es tan legitimo como pedir las de la marca I.
+ */
+export const SIN_MARCA = 'ninguna';
+
 export const MAX_PAGE_SIZE = 100;
 export const DEFAULT_PAGE_SIZE = 40;
 
@@ -39,6 +48,19 @@ export interface CardSummary {
   /** Ruta LOCAL. Nunca una URL externa (P-001). */
   imagePath: string | null;
   printId: number;
+  /**
+   * Facetas del juego, para que la rejilla no tenga que pedir la ficha de cada
+   * carta (T-092). Hoy son las de Pokemon y llegan nulas en Magic y Yu-Gi-Oh!.
+   *
+   * PLANAS Y NO ANIDADAS, a sabiendas. Cuando le toque a Magic querra `cmc`,
+   * `colors` y `legalities`, y con cuatro campos por juego esto se convierte en
+   * una lista de nulos. Ese sera el momento de moverlo a un objeto `facetas`
+   * por juego; hacerlo hoy seria disenar para un juego que aun no existe.
+   */
+  hp: number | null;
+  supertype: string | null;
+  elemType: string | null;
+  regMark: string | null;
 }
 
 export interface CardDetail extends CardSummary {
@@ -54,6 +76,14 @@ export interface CardQuery {
   set?: string;
   rarity?: string;
   q?: string;
+  /**
+   * Facetas de Pokemon (T-092). Las tres se apoyan en las columnas generadas de
+   * la 0027, asi que filtrar por ellas usa indice en vez de escanear el JSON.
+   */
+  type?: string;
+  supertype?: string;
+  /** `sinMarca` pide las que NO tienen marca, que es un caso distinto de no filtrar. */
+  mark?: string;
   /** Cursor opaco de paginacion keyset. */
   cursor?: string;
   limit?: number;
@@ -63,6 +93,21 @@ export interface CardPage {
   items: CardSummary[];
   /** Cursor para la siguiente pagina, o null si no hay mas. */
   nextCursor: string | null;
+}
+
+/** Un valor de faceta y cuantas cartas lo tienen, para el rail (T-092). */
+export interface FacetCount {
+  value: string;
+  count: number;
+}
+
+export interface FacetCounts {
+  types: FacetCount[];
+  supertypes: FacetCount[];
+  marks: FacetCount[];
+  /** Cuantas NO tienen marca. Anteriores a 2019: no es un hueco. */
+  withoutMark: number;
+  rarities: FacetCount[];
 }
 
 /** Una epoca de sobre, tal como la describe su plantilla (T-090). */
@@ -179,6 +224,24 @@ export class CatalogQueryRepository {
       where.push('r.code = ?');
       params.push(query.rarity);
     }
+    if (query.type) {
+      where.push('c.elem_type = ?');
+      params.push(query.type);
+    }
+    if (query.supertype) {
+      where.push('c.supertype = ?');
+      params.push(query.supertype);
+    }
+    if (query.mark) {
+      // `sinMarca` no es una marca: es preguntar por las anteriores a 2019, que
+      // legitimamente no la tienen. Sin este caso no habria forma de pedirlas,
+      // porque omitir el filtro devuelve TODAS.
+      if (query.mark === SIN_MARCA) where.push('c.reg_mark IS NULL');
+      else {
+        where.push('c.reg_mark = ?');
+        params.push(query.mark);
+      }
+    }
 
     const texto = (query.q ?? '').trim();
     if (texto.length >= MIN_FULLTEXT_LENGTH) {
@@ -204,7 +267,8 @@ export class CatalogQueryRepository {
       `SELECT c.id, c.oracle_key, c.game_id, c.name, c.type_line,
               s.code AS set_code, s.name AS set_name,
               p.id AS print_id, p.collector_number, p.image_local_path,
-              r.code AS rarity
+              r.code AS rarity,
+              c.hp, c.supertype, c.elem_type, c.reg_mark
        FROM cards c
        JOIN card_prints p ON p.card_id = c.id AND p.withdrawn_at IS NULL
        JOIN sets s ON s.id = p.set_id
@@ -245,7 +309,12 @@ export class CatalogQueryRepository {
               s.code AS set_code, s.name AS set_name, s.released_at,
               p.id AS print_id, p.collector_number, p.image_local_path,
               p.finishes, p.in_boosters,
-              r.code AS rarity
+              r.code AS rarity,
+              -- Las mismas facetas que la busqueda: las dos consultas comparten
+              -- el mismo mapeador, asi que omitirlas aqui no da un campo vacio
+              -- sino NaN, que el esquema rechaza y convierte la ficha en un 500.
+              -- Paso exactamente eso al declararlas en T-092.
+              c.hp, c.supertype, c.elem_type, c.reg_mark
        FROM card_prints p
        JOIN cards c ON c.id = p.card_id
        JOIN sets s ON s.id = p.set_id
@@ -309,6 +378,63 @@ export class CatalogQueryRepository {
     }));
   }
 
+  /**
+   * Cuantas cartas hay de cada faceta, para el rail del catalogo (T-092/T-093).
+   *
+   * ES LO QUE HACE QUE EL FILTRO NO HAYA QUE EXPLICARLO. Un desplegable con
+   * once tipos obliga a probar uno a uno para descubrir cuales tienen algo; una
+   * lista que dice "Planta 11, Fuego 3, Agua 0" ya ha contestado antes de que
+   * nadie pulse. Un filtro que informa se entiende solo, que es el requisito de
+   * usabilidad del spec.
+   *
+   * SE RESPETA EL SET SI SE PIDE: los recuentos son del contexto que se esta
+   * mirando, no del catalogo entero. Enseniar "Agua 2436" mientras se navega un
+   * set que tiene cuatro seria mentir con un numero.
+   */
+  async listFacets(game: GameCode, set?: string): Promise<FacetCounts> {
+    const where = ['c.game_id = ?', 'p.withdrawn_at IS NULL'];
+    const params: unknown[] = [GAME_IDS[game]];
+    if (set) {
+      where.push('s.external_id = ?');
+      params.push(set);
+    }
+    const filtro = where.join(' AND ');
+
+    const contar = async (columna: string) =>
+      this.db.select<{ valor: string | null; n: number }>(
+        `SELECT ${columna} AS valor, COUNT(*) AS n
+           FROM cards c
+           JOIN card_prints p ON p.card_id = c.id
+           JOIN sets s ON s.id = p.set_id
+          WHERE ${filtro}
+          GROUP BY valor
+          ORDER BY n DESC`,
+        params,
+      );
+
+    const [tipos, supertipos, marcas, rarezas] = await Promise.all([
+      contar('c.elem_type'),
+      contar('c.supertype'),
+      contar('c.reg_mark'),
+      contar('(SELECT r.code FROM rarities r WHERE r.id = p.rarity_id)'),
+    ]);
+
+    const limpiar = (filas: Array<{ valor: string | null; n: number }>) =>
+      filas
+        .filter((f) => f.valor !== null)
+        .map((f) => ({ value: f.valor as string, count: Number(f.n) }));
+
+    return {
+      types: limpiar(tipos),
+      supertypes: limpiar(supertipos),
+      // Las SIN marca se cuentan aparte y con su nombre: son 12.250 cartas
+      // anteriores a 2019, no un hueco.
+      marks: limpiar(marcas),
+      withoutMark: Number(marcas.find((f) => f.valor === null)?.n ?? 0),
+      rarities: limpiar(rarezas),
+    };
+  }
+
   async listRarities(game: GameCode): Promise<Array<{ code: string; label: string; tier: number }>> {
     const rows = await this.db.select<{ code: string; label: string; tier: number }>(
       `SELECT code, label, tier FROM rarities WHERE game_id = ? ORDER BY tier, code`,
@@ -322,6 +448,8 @@ export interface CardRow {
   id: number; oracle_key: string; game_id: number; name: string; type_line: string | null;
   set_code: string; set_name: string; print_id: number;
   collector_number: string; image_local_path: string | null; rarity: string;
+  /** Facetas de Pokemon (T-091). Nulas en los otros dos juegos. */
+  hp: number | null; supertype: string | null; elem_type: string | null; reg_mark: string | null;
 }
 
 /**
@@ -348,6 +476,12 @@ export function toSummary(row: CardRow): CardSummary {
     // SOLO la ruta local. `image_source_url` ni se selecciona (P-001).
     imagePath: row.image_local_path,
     printId: Number(row.print_id),
+    // Facetas. Son de Pokemon y llegan nulas en los otros dos juegos: la
+    // rejilla las pinta si estan y las ignora si no.
+    hp: row.hp === null ? null : Number(row.hp),
+    supertype: row.supertype,
+    elemType: row.elem_type,
+    regMark: row.reg_mark,
   };
 }
 

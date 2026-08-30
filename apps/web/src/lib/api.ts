@@ -39,7 +39,34 @@ export interface CardSummary {
   rarity: string;
   /** Ruta relativa dentro de nuestro almacen. Se sirve en `/images/...`. */
   imagePath: string | null;
+  /**
+   * Facetas del juego (T-092). Hoy las de Pokemon; nulas en Magic y Yu-Gi-Oh!.
+   * Llegan en el resumen para que la rejilla no tenga que pedir la ficha de
+   * cada carta para pintar un chip.
+   */
+  hp: number | null;
+  supertype: string | null;
+  elemType: string | null;
+  regMark: string | null;
 }
+
+/** Un valor de faceta y cuantas cartas lo tienen (T-092). */
+export interface FacetCount {
+  value: string;
+  count: number;
+}
+
+export interface FacetCounts {
+  types: FacetCount[];
+  supertypes: FacetCount[];
+  marks: FacetCount[];
+  /** Cuantas NO tienen marca. Anteriores a 2019: no es un hueco. */
+  withoutMark: number;
+  rarities: FacetCount[];
+}
+
+/** Valor de `mark` que pide las cartas SIN marca de regulacion. */
+export const SIN_MARCA = 'ninguna';
 
 export interface CardPage {
   data: CardSummary[];
@@ -240,6 +267,11 @@ export const api = {
 
   eras: (game: GameCode) => request<{ data: EraSummary[] }>(`/games/${game}/eras`),
 
+  facets: (game: GameCode, set?: string) =>
+    request<{ data: FacetCounts }>(
+      `/games/${game}/facets${set ? `?set=${encodeURIComponent(set)}` : ''}`,
+    ),
+
   rarities: (game: GameCode) =>
     request<{ data: Array<{ code: string; label: string; tier: number }> }>(
       `/games/${game}/rarities`,
@@ -252,6 +284,9 @@ export const api = {
     game?: GameCode | undefined;
     set?: string | undefined;
     rarity?: string | undefined;
+    type?: string | undefined;
+    supertype?: string | undefined;
+    mark?: string | undefined;
     q?: string | undefined;
     cursor?: string | undefined;
     limit?: number | undefined;
