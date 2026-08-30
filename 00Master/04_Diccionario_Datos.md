@@ -193,7 +193,33 @@ atk INT GENERATED ALWAYS AS (
        THEN CAST(JSON_EXTRACT(game_data,'$.atk') AS SIGNED) END) STORED
 ```
 
-Generadas expuestas: `cmc` (MTG) · `atk`, `def`, `lvl` (YGO) · `hp` (PTCG).
+Generadas expuestas: `cmc` (MTG) · `atk`, `def`, `lvl` (YGO) · `hp`, `supertype`, `elem_type`,
+`reg_mark` (PTCG).
+
+**Las tres de Pokémon llegaron con la 0027 (T-091)** y son las facetas por las que se navega su
+catálogo. Mismo patrón que las cinco anteriores, con el guardián cambiado: donde las numéricas
+comprueban `JSON_TYPE(...) IN ('INTEGER','DOUBLE','DECIMAL')`, éstas comprueban `= 'STRING'`.
+
+| Columna | De dónde sale | Cuántas la tienen |
+|---|---|---|
+| `supertype` | `$.supertype` | 20.434 de 20.434 |
+| `elem_type` | `$.types[0]` | 17.261 — el resto son Entrenador y Energía, que no tienen tipo elemental |
+| `reg_mark` | `$.regulation_mark` | 8.184 — el concepto no existía antes de 2019, así que `NULL` es legítimo |
+
+`elem_type` toma el **primer** tipo. De las 17.261 cartas con tipo, **103 tienen dos** (0,6 %): esas
+se filtran por el principal y no por el segundo. Se acepta para v1 porque cubrirlo exige un índice
+multivaluado, la misma decisión que `subtypes` tiene pendiente.
+
+`supertype` **no es** `type_line`: aquélla es la línea completa que enseña la carta, ésta la categoría
+de tres valores —Pokémon, Entrenador, Energía— por la que se separa el catálogo.
+
+Sus índices llevan `name, id` al final porque son las columnas del desempate keyset. **Medido con
+`EXPLAIN`:** filtrar por tipo recorre 2.391 filas con `Using index` y sin `filesort`; la misma
+consulta sobre `subtypes[0]`, que no está materializada, recorre 34.200 y no cubre.
+
+| **ÍNDICE** | `idx_cards_elem_type (game_id, elem_type, name, id)` | Filtro principal del catálogo de Pokémon |
+| **ÍNDICE** | `idx_cards_supertype (game_id, supertype, name, id)` | Pokémon / Entrenador / Energía |
+| **ÍNDICE** | `idx_cards_reg_mark (game_id, reg_mark, name, id)` | Marca de regulación, desde 2019 |
 
 **Índice multivaluado** para los colores de MTG (verificado: el optimizador lo usa):
 ```sql

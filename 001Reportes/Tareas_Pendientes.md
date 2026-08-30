@@ -1,6 +1,6 @@
 # Tareas Pendientes
 
-**Última actualización:** 2026-08-28 (S034) · **Total abiertas:** 5 — las de H9b
+**Última actualización:** 2026-08-28 (S035) · **Total abiertas:** 4 — las de H9b
 
 Leyenda de prioridad: 🔴 crítica · 🟠 alta · 🟡 media · ⚪ baja
 
@@ -20,7 +20,6 @@ ASCII por fin comprobada, y la raíz convertida en elección de juego con la por
 
 | ID | Tarea | Agente | Prio |
 |---|---|---|---|
-| T-091 | **Migración: columnas generadas e índices** para `supertype`, `types[0]` y `regulation_mark`, siguiendo el patrón de `cmc`/`atk`/`hp`. Sin ella los filtros son un escaneo completo | Base de Datos | 🟠 |
 | T-092 | **API: facetas y ficha**. Ojo con ADR-007: todo campo nuevo hay que declararlo en el esquema o desaparece sin error. La paginación sigue siendo keyset por `card_prints.id` | Backend | 🟠 |
 | T-093 | **Catálogo «Consulta»** con el raíl de estructura del set filtrando al pulsar, chips borrables y estado en la URL | Frontend | 🟠 |
 | T-094 | **Ficha de carta** con toda la información y acciones para añadir a una colección o a un mazo | Frontend | 🟠 |

@@ -1,6 +1,6 @@
 # Tareas Realizadas
 
-**Última actualización:** 2026-08-28 (S034)
+**Última actualización:** 2026-08-28 (S035)
 
 | ID | Tarea | Agente | Fecha | Sesión | Evidencia |
 |---|---|---|---|---|---|
@@ -121,3 +121,4 @@
 | T-088 | **Sistema de diseño y tokens**: paleta, tipografía, espaciado y capa por juego, con los dos temas completos. Contraste AA **medido** (peor caso 4,77:1 oscuro, 4,80:1 claro) y vigilado por un test que lee `tokens.css`. Los once tonos de tipo van por tema porque tres fallaban en oscuro | Frontend | 2026-08-28 | S034 | `apps/web/src/styles/tokens.css`, `tools/contraste-tokens.test.ts` |
 | T-089 | **Cadenas fuera del código y acentos recuperados** (`i18n/es.ts`), y la **regla de ASCII puro por fin comprobada** — desde S008 no la miraba nadie. Escrita en estricto marcaba 19 ficheros y sólo uno era infracción real (`let señuelo`): el test comprueba control, combinantes e identificadores, que es lo que la regla dice proteger | Frontend / QA | 2026-08-28 | S034 | `apps/web/src/i18n/es.ts`, `tools/ascii-fuente.test.ts` |
 | T-090 | **Navegación por juego y portada de Pokémon**: la raíz deja de ser un catálogo con filtro. Nuevo `/api/games/:game/eras`, agrupación de los 174 sets en sus 10 épocas reales, redirección desde la ruta vieja y anillo de foco global que hereda el acento del juego | Frontend / Backend | 2026-08-28 | S034 | `apps/web/src/pages/Inicio.tsx`, `apps/web/src/pages/ptcg/Portada.tsx` |
+| T-091 | **Facetas de Pokémon indexadas** (migración 0027): `supertype`, `elem_type` y `reg_mark` como columnas generadas, con el mismo patrón que `cmc`/`atk`/`hp` y el guardián cambiado a `= 'STRING'`. Medido con `EXPLAIN`: **2.391 filas con índice frente a 34.200 sin él**, y ningún `filesort` | Base de Datos | 2026-08-28 | S035 | `db/migrations/0027_*` |
