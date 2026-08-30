@@ -6,6 +6,9 @@ import { Sobres } from './pages/Sobres.js';
 import { Coleccion } from './pages/Coleccion.js';
 import { Mazos } from './pages/Mazos.js';
 import { MazoEditor } from './pages/MazoEditor.js';
+import { Inicio } from './pages/Inicio.js';
+import { Portada } from './pages/ptcg/Portada.js';
+import { JuegoLayout } from './layouts/JuegoLayout.js';
 import { ES } from './i18n/es.js';
 
 /** Ruta que exige sesion. Redirige a /acceso conservando la intencion. */
@@ -24,9 +27,9 @@ export function App() {
   return (
     <>
       <header className="cabecera">
-        <span className="marca">{ES.navegacion.marca}</span>
+        <NavLink to="/" className="marca">{ES.navegacion.marca}</NavLink>
         <nav className="nav">
-          <NavLink to="/" end className={({ isActive }) => (isActive ? 'activo' : '')}>
+          <NavLink to="/ptcg/catalogo" className={({ isActive }) => (isActive ? 'activo' : '')}>
             {ES.navegacion.catalogo}
           </NavLink>
           <NavLink to="/sobres" className={({ isActive }) => (isActive ? 'activo' : '')}>
@@ -53,12 +56,27 @@ export function App() {
 
       <main>
         <Routes>
-          <Route path="/" element={<Catalogo />} />
+          {/* La raiz es una eleccion de juego, no un catalogo con filtro (T-090).
+              Mientras fuera lo segundo no habia seccion que personalizar. */}
+          <Route path="/" element={<Inicio />} />
           <Route path="/acceso" element={<Acceso />} />
+
+          {/* Lo de cada juego cuelga de su ruta y su `data-juego`. Hoy solo
+              Pokemon: Magic y Yu-Gi-Oh! llegan cuando este valide el diseno. */}
+          <Route path="/ptcg" element={<JuegoLayout juego="PTCG" />}>
+            <Route index element={<Portada />} />
+            <Route path="catalogo" element={<Catalogo />} />
+          </Route>
+
           <Route path="/sobres" element={<Protegida><Sobres /></Protegida>} />
           <Route path="/coleccion" element={<Protegida><Coleccion /></Protegida>} />
           <Route path="/mazos" element={<Protegida><Mazos /></Protegida>} />
           <Route path="/mazos/:id" element={<Protegida><MazoEditor /></Protegida>} />
+
+          {/* El catalogo vivia en la raiz y estara en marcadores. Redirigir
+              cuesta una linea; un 404 en una URL que alguien guardo, no. */}
+          <Route path="/catalogo" element={<Navigate to="/ptcg/catalogo" replace />} />
+
           <Route path="*" element={<div className="vacio">{ES.error.paginaNoEncontrada}</div>} />
         </Routes>
       </main>

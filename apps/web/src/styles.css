@@ -26,6 +26,23 @@ body {
   line-height: 1.5;
 }
 
+/*
+ * Un solo anillo de foco para todo (T-090).
+ *
+ * Hasta ahora solo tres componentes tenian el suyo y el resto se quedaba con el
+ * del navegador, que es de 1px, cambia entre navegadores y no responde al tema.
+ * Sobre fondo oscuro casi no se ve. Una regla global lo arregla para todo lo que
+ * venga en H9b sin que haya que acordarse.
+ *
+ * `:focus-visible` y no `:focus`: el anillo debe salir con el teclado, no al
+ * hacer clic con el raton.
+ */
+:focus-visible {
+  outline: 2px solid var(--juego-acento, var(--acento));
+  outline-offset: 2px;
+  border-radius: var(--radio-s);
+}
+
 a { color: var(--acento); text-decoration: none; }
 a:hover { text-decoration: underline; }
 
@@ -531,3 +548,68 @@ button.primario:hover:not(:disabled) { filter: brightness(1.08); }
   padding: 10px;
   resize: vertical;
 }
+
+/* ------------------------------------------------- inicio y portada (T-090) */
+
+.inicio { max-width: 900px; margin: 0 auto; padding: var(--e6) var(--e5); }
+.inicio h1 { font-size: var(--paso-4); margin: 0 0 var(--e2); letter-spacing: -0.02em; }
+.inicio-entradilla { color: var(--texto-tenue); margin: 0 0 var(--e6); font-size: var(--paso-1); }
+
+.inicio-juegos { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--e4); }
+@media (min-width: 720px) { .inicio-juegos { grid-template-columns: repeat(3, 1fr); } }
+
+.tarjeta-juego {
+  display: flex; flex-direction: column; gap: var(--e2);
+  height: 100%; padding: var(--e5) var(--e4);
+  background: var(--superficie);
+  /* El acento sale de `data-juego`, que la lista pone en cada `li`. Es toda la
+     personalidad por juego que hace falta aqui: un borde y un titulo. */
+  border: 1px solid var(--borde);
+  border-top: 3px solid var(--juego-acento, var(--acento));
+  border-radius: var(--radio);
+  color: var(--texto); text-decoration: none;
+}
+a.tarjeta-juego:hover { border-color: var(--juego-acento, var(--acento)); text-decoration: none; }
+.tarjeta-juego-nombre { font-size: var(--paso-2); font-weight: 600; line-height: var(--linea-apretada); }
+.tarjeta-juego-resumen { color: var(--texto-tenue); font-size: var(--paso-0); }
+.tarjeta-juego-pendiente { opacity: 0.62; }
+.tarjeta-juego-pronto {
+  margin-top: auto; font-size: var(--paso-00); text-transform: uppercase;
+  letter-spacing: 0.08em; color: var(--texto-tenue);
+}
+
+.portada { max-width: 1100px; margin: 0 auto; padding: var(--e5); }
+.portada-cabecera { margin-bottom: var(--e6); }
+.portada-cabecera h1 { font-size: var(--paso-4); margin: 0 0 var(--e2); letter-spacing: -0.02em; }
+.portada-entradilla { color: var(--texto-tenue); margin: 0 0 var(--e4); }
+.portada-accesos { display: flex; gap: var(--e2); flex-wrap: wrap; }
+.acceso-directo {
+  padding: var(--e2) var(--e3); border: 1px solid var(--borde-control);
+  border-radius: var(--radio); font-size: var(--paso-0); color: var(--texto);
+}
+.acceso-directo:hover { border-color: var(--juego-acento, var(--acento)); text-decoration: none; }
+
+.epoca { margin-bottom: var(--e6); }
+.epoca-titulo {
+  display: flex; align-items: baseline; gap: var(--e3);
+  font-size: var(--paso-2); margin: 0 0 var(--e3);
+  padding-bottom: var(--e2); border-bottom: 1px solid var(--borde);
+}
+.epoca-meta { font-size: var(--paso-00); color: var(--texto-tenue); font-variant-numeric: tabular-nums; }
+
+.epoca-sets { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--e2); }
+@media (min-width: 640px) { .epoca-sets { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); } }
+
+.ficha-set {
+  display: grid; grid-template-columns: 22px 1fr; gap: var(--e1) var(--e3);
+  align-items: center; padding: var(--e3);
+  background: var(--superficie); border: 1px solid var(--borde);
+  border-radius: var(--radio); color: var(--texto);
+}
+.ficha-set:hover { border-color: var(--juego-acento, var(--acento)); text-decoration: none; }
+.ficha-set-nombre { font-size: var(--paso-0); line-height: var(--linea-apretada); }
+.ficha-set-meta {
+  grid-column: 2; font-size: var(--paso-00); color: var(--texto-tenue);
+  font-variant-numeric: tabular-nums;
+}
+.icono-set-hueco { display: block; width: 22px; height: 22px; border-radius: 50%; background: var(--borde); }

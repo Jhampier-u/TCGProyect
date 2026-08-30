@@ -13,6 +13,7 @@ import { registerDeckRoutes } from './deck-routes.js';
 import {
   GET_CARD,
   LIST_GAMES,
+  LIST_ERAS,
   LIST_RARITIES,
   LIST_SETS,
   SEARCH_CARDS,
@@ -107,6 +108,12 @@ function registrarRutasDeCatalogo(app: FastifyInstance, options: ApiOptions): vo
     '/api/games/:game/sets',
     { schema: LIST_SETS },
     async (request) => ({ data: await catalog.listSets(request.params.game) }),
+  );
+
+  app.get<{ Params: { game: GameCode } }>(
+    '/api/games/:game/eras',
+    { schema: LIST_ERAS },
+    async (request) => ({ data: await catalog.listEras(request.params.game) }),
   );
 
   app.get<{ Params: { game: GameCode } }>(

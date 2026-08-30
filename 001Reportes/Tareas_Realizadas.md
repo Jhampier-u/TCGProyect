@@ -1,6 +1,6 @@
 # Tareas Realizadas
 
-**Última actualización:** 2026-08-28 (S032)
+**Última actualización:** 2026-08-28 (S034)
 
 | ID | Tarea | Agente | Fecha | Sesión | Evidencia |
 |---|---|---|---|---|---|
@@ -118,3 +118,6 @@
 | T-085 | **The List y el slot de tierra** (migración 0026). Dos cosas que el pool `(set_id, rarity_id)` no sabía expresar: una entrada `{"set":"plst"}` que saca la carta de otro set, y `pack_slots.card_filter` para exigir un tipo. Los sobres con 4+ raras pasan del 0,00 % —imposible— al 0,04 %. **Cierra P-008** entero | Backend / Base de Datos | 2026-08-28 | S030 | `db/migrations/0026_*`, `apps/api/src/packs/pack-service.ts` |
 | T-086 | **Los ficheros de prueba se comprueban de tipos** (`tsconfig.test.json` en `apps/api` y `packages/shared`, más `e2e/tsconfig.json`), dentro de `npm test`. Estaban excluidos, así que un doble podía declarar `implements` sin implementar. Destapó 26 errores: un doble sin `findSetsByExternalId` (la bandera `--set`), un repositorio de mazos ausente y una fixture de Playwright mal tipada | Backend / QA | 2026-08-28 | S031 | `apps/api/tsconfig.test.json`, `package.json` |
 | T-087 | **La deriva documental, convertida en test** (`tools/vault-consistency.test.ts`, 16 comprobaciones en `npm test`): recuentos que se contradicen, ficheros citados que no existen, numeraciones duplicadas, índices que ya no son los que crea la migración. Con banco de mutaciones (`npm run vault:mutar`) que reintroduce las 11 derivas reales de S028-S031 y exige que falle | QA / Documentador | 2026-08-28 | S032 | `tools/` |
+| T-088 | **Sistema de diseño y tokens**: paleta, tipografía, espaciado y capa por juego, con los dos temas completos. Contraste AA **medido** (peor caso 4,77:1 oscuro, 4,80:1 claro) y vigilado por un test que lee `tokens.css`. Los once tonos de tipo van por tema porque tres fallaban en oscuro | Frontend | 2026-08-28 | S034 | `apps/web/src/styles/tokens.css`, `tools/contraste-tokens.test.ts` |
+| T-089 | **Cadenas fuera del código y acentos recuperados** (`i18n/es.ts`), y la **regla de ASCII puro por fin comprobada** — desde S008 no la miraba nadie. Escrita en estricto marcaba 19 ficheros y sólo uno era infracción real (`let señuelo`): el test comprueba control, combinantes e identificadores, que es lo que la regla dice proteger | Frontend / QA | 2026-08-28 | S034 | `apps/web/src/i18n/es.ts`, `tools/ascii-fuente.test.ts` |
+| T-090 | **Navegación por juego y portada de Pokémon**: la raíz deja de ser un catálogo con filtro. Nuevo `/api/games/:game/eras`, agrupación de los 174 sets en sus 10 épocas reales, redirección desde la ruta vieja y anillo de foco global que hereda el acento del juego | Frontend / Backend | 2026-08-28 | S034 | `apps/web/src/pages/Inicio.tsx`, `apps/web/src/pages/ptcg/Portada.tsx` |

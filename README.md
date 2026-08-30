@@ -23,7 +23,7 @@ distribuciones de rareza reales** y ver su colección crecer hacia el 100 % de c
 | H7 · Constructor de mazos | ✅ Motor de reglas, 6 endpoints, interfaz e import/export |
 | H8 · Endurecimiento | 🟡 Suite E2E, seguridad y 6 de 8 de deuda técnica |
 
-**Suite de Vitest y los 10 recorridos E2E en verde · `tsc --build` limpio · `npm audit` limpio.**
+**Suite de Vitest y los 11 recorridos E2E en verde · `tsc --build` limpio · `npm audit` limpio.**
 
 ---
 

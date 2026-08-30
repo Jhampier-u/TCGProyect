@@ -72,8 +72,15 @@ const NO_ASCII = /[^\t\n\r\x20-\x7e]/;
  * comentario de bloque -- porque quitar comentarios con una expresion regular
  * se traga la mitad de una URL en cuanto aparece un `//` dentro de una cadena.
  *
- * EL TEXTO SUELTO DE JSX CUENTA COMO CODIGO, y no es un defecto del lexer que
- * se tolere: es el comportamiento que se quiere. `<span>3 . 4</span>` no esta
+ * LAS EXPRESIONES REGULARES TAMBIEN CUENTAN COMO CODIGO, y esto SI es un limite
+ * del lexer: distinguir `/` de division de `/` de expresion regular necesita un
+ * analizador de verdad. Ha saltado dos veces, y las dos el arreglo mejoro el
+ * codigo -- un escape `·` en la comprobacion del Vault, y un
+ * `{ exact: false }` en vez de una regex en la suite E2E -- asi que el falso
+ * positivo se deja a proposito en vez de complicar el lexer.
+ *
+ * EL TEXTO SUELTO DE JSX CUENTA COMO CODIGO, y eso no es un limite sino el
+ * comportamiento que se quiere. `<span>3 . 4</span>` no esta
  * dentro de comillas, asi que cae aqui -- y esta bien que caiga, porque el
  * texto que lee el usuario no debe estar incrustado en un componente. Su sitio
  * es `i18n/`, que es exactamente lo que hace T-089.

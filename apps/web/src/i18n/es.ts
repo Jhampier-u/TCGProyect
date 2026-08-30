@@ -61,6 +61,57 @@ export const ES = {
     errorGenerico: 'No se pudo completar la operación',
   },
 
+  inicio: {
+    titulo: 'Elige tu juego',
+    entradilla: 'Cada juego tiene su propia sección: su catálogo, sus mazos y su colección.',
+    enCamino: 'En camino',
+  },
+
+  juegos: {
+    ptcg: {
+      nombre: 'Pokémon TCG',
+      resumen: 'Álbum por bloques, del Base Set a Mega Evolution.',
+    },
+    mtg: {
+      nombre: 'Magic: The Gathering',
+      resumen: 'Treinta años de sobres, de Alpha al Play Booster.',
+    },
+    ygo: {
+      nombre: 'Yu-Gi-Oh!',
+      resumen: 'Core Boosters y seis líneas de producto paralelas.',
+    },
+  },
+
+  portada: {
+    cargando: 'Cargando el catálogo…',
+    error: 'No se pudo cargar el catálogo.',
+    entradilla: (sets: number, epocas: number) =>
+      `${sets} sets repartidos en ${epocas} épocas.`,
+    cuantosSets: (n: number) => (n === 1 ? '1 set' : `${n} sets`),
+
+    /**
+     * Como se PRESENTA una época cuyo nombre en la base no vale como título.
+     *
+     * Los nombres de `pack_templates` se escribieron para el motor de sobres y
+     * viven en migraciones, que son ASCII puro y no llevan acentos. La mayoría
+     * son nombres propios y salen tal cual —«Diamond & Pearl», «Sword &
+     * Shield»—; los que son palabras españolas necesitan su tilde y su
+     * mayúscula antes de encabezar una sección.
+     *
+     * Traducir aquí y no renombrar en la base es deliberado: el nombre de la
+     * plantilla es un dato del motor y hay pruebas que lo usan para
+     * identificarla. Presentarlo es trabajo de la interfaz.
+     */
+    nombreDeEpoca: (nombreEnBase: string): string => {
+      const sinPrefijo = nombreEnBase.replace(/^Booster /, '');
+      const PRESENTACION: Record<string, string> = {
+        'clasico (hasta la era EX)': 'Clásico (hasta la era EX)',
+        'Mega Evolution en adelante': 'Mega Evolution en adelante',
+      };
+      return PRESENTACION[sinPrefijo] ?? sinPrefijo;
+    },
+  },
+
   catalogo: {
     todasLasRarezas: 'Todas las rarezas',
     buscarPlaceholder: 'Buscar por nombre o texto…',

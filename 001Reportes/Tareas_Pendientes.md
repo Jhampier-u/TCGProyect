@@ -1,6 +1,6 @@
 # Tareas Pendientes
 
-**Última actualización:** 2026-08-28 (S033) · **Total abiertas:** 8 — todas de H9, ninguna bloqueante
+**Última actualización:** 2026-08-28 (S034) · **Total abiertas:** 5 — las de H9b
 
 Leyenda de prioridad: 🔴 crítica · 🟠 alta · 🟡 media · ⚪ baja
 
@@ -11,13 +11,10 @@ probada para Magic y Yu-Gi-Oh!. Decidido con el usuario: tokens y primitivas com
 propios donde el dominio manda, dirección **Carpeta** para la colección y **Consulta** para el
 catálogo.
 
-### H9a — Cimientos de interfaz
+### H9a — Cimientos de interfaz ✅ COMPLETADO (S034)
 
-| ID | Tarea | Agente | Prio |
-|---|---|---|---|
-| T-088 | **Sistema de diseño y tokens**: escala de color, tipografía y espaciado como propiedades personalizadas, con sobrescritura por juego. Los dos temas completos, contraste AA comprobado | Frontend | 🟠 |
-| T-089 | **Módulo de cadenas**: sacar el texto visible de los `.tsx` a `apps/web/src/i18n/es.ts`. Recupera los acentos que la regla de ASCII puro se llevó por delante, sin tocar la regla | Frontend | 🟡 |
-| T-090 | **Navegación por juego y portada de Pokémon**: la raíz deja de ser un catálogo con filtro y pasa a ser una elección de juego, con ruta y `data-juego` propios | Frontend | 🟠 |
+T-088, T-089 y T-090 cerradas: sistema de tokens con los dos temas, módulo de cadenas con la regla de
+ASCII por fin comprobada, y la raíz convertida en elección de juego con la portada de Pokémon.
 
 ### H9b — Catálogo de Pokémon y ficha de carta
 

@@ -1,7 +1,7 @@
 # 05 — Continuar aquí
 
 **Punto de guardado:** 2026-08-28, tras la sesión **S032**
-**Commit:** rama `main` · suite de Vitest y los 10 recorridos E2E en verde · `npm audit` limpio
+**Commit:** rama `main` · suite de Vitest y los 11 recorridos E2E en verde · `npm audit` limpio
 (el recuento exacto sale de `npm test`; publicarlo aqui solo servia para que se quedara viejo)
 
 Este documento existe para retomar el proyecto en otra máquina o en otra sesión sin releer las 26
@@ -175,7 +175,12 @@ son útiles para la lógica, pero **la fidelidad de sus datos determina lo que e
   las referencias y la numeración del Vault, y `npm run vault:mutar` demuestra que esas comprobaciones
   fallan cuando deben, reintroduciendo las once derivas reales de S028-S031.
 
-**No queda deuda.** Lo siguiente es producto: qué se construye encima de lo que ya funciona.
+- **H9a completo** (S034) — sistema de tokens con los dos temas y contraste medido, texto fuera del
+  código con sus acentos, y la raíz convertida en elección de juego con la portada de Pokémon
+  agrupada por sus diez épocas reales.
+
+**Lo siguiente es H9b**: la migración de columnas generadas (T-091), las facetas en la API (T-092), el
+catálogo denso con su raíl (T-093), la ficha de carta (T-094) y la reescritura del E2E (T-095).
 
 **Cómo se ejecuta la suite:**
 

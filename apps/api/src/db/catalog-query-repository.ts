@@ -65,6 +65,16 @@ export interface CardPage {
   nextCursor: string | null;
 }
 
+/** Una epoca de sobre, tal como la describe su plantilla (T-090). */
+export interface EraSummary {
+  name: string;
+  /** `YYYY-MM-DD`, o null si no tiene limite por ese lado. */
+  from: string | null;
+  to: string | null;
+  /** La epoca vigente: la que recoge lo que ninguna ventana cubre. */
+  isDefault: boolean;
+}
+
 export interface SetSummary {
   /**
    * Id numerico. Se expone porque `POST /api/packs/open` lo necesita y es lo
@@ -257,6 +267,48 @@ export class CatalogQueryRepository {
   }
 
   /** Rarezas de un juego, para poblar el filtro del frontend. */
+  /**
+   * Las epocas de sobre del juego, que es como se navega un catalogo (T-090).
+   *
+   * Salen de `pack_templates`, que es donde ya estaban: se modelaron para el
+   * motor de sobres y resulta que en Pokemon coinciden con los bloques reales
+   * -- Diamond & Pearl, Black & White / XY, Sun & Moon, Sword & Shield,
+   * Scarlet & Violet -- que es exactamente como piensa el catalogo un jugador.
+   *
+   * SE EXCLUYEN las de linea de producto (`product_line`): son otro eje. Gold
+   * Series no es una epoca, es una coleccion paralela, y mezclarlas daria una
+   * lista sin sentido cronologico.
+   *
+   * LA POR DEFECTO ENTRA, con sus dos fechas nulas. No es un caso raro: es la
+   * epoca vigente, la que recoge lo que todavia no tiene ventana propia.
+   *
+   * EL ORDEN NO PUEDE SER `valid_from` A SECAS. Un `NULL` en `valid_from`
+   * significa dos cosas opuestas segun la fila: en la epoca clasica es "desde
+   * siempre" -- la mas ANTIGUA -- y en la por defecto es "sin ventana" -- la
+   * VIGENTE. Ordenando por la columna cruda las dos caian juntas al final, y la
+   * portada pintaba el Base Set justo detras de Scarlet & Violet. Por eso la
+   * por defecto se aparta primero y el resto se ordena con `NULL` como la fecha
+   * mas temprana posible.
+   */
+  async listEras(game: GameCode): Promise<EraSummary[]> {
+    const rows = await this.db.select<{
+      name: string; valid_from: string | null; valid_to: string | null; is_default: number;
+    }>(
+      `SELECT name, valid_from, valid_to, is_default
+         FROM pack_templates
+        WHERE game_id = ? AND product_line IS NULL AND set_id IS NULL
+          AND name NOT LIKE '%(retirada)'
+        ORDER BY is_default, COALESCE(valid_from, '0001-01-01')`,
+      [GAME_IDS[game]],
+    );
+    return rows.map((r) => ({
+      name: r.name,
+      from: r.valid_from,
+      to: r.valid_to,
+      isDefault: Number(r.is_default) === 1,
+    }));
+  }
+
   async listRarities(game: GameCode): Promise<Array<{ code: string; label: string; tier: number }>> {
     const rows = await this.db.select<{ code: string; label: string; tier: number }>(
       `SELECT code, label, tier FROM rarities WHERE game_id = ? ORDER BY tier, code`,

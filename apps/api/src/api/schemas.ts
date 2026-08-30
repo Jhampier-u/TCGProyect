@@ -103,6 +103,39 @@ export const LIST_SETS = {
   },
 } as const;
 
+/**
+ * Las epocas del juego (T-090).
+ *
+ * ADR-007: todo campo que el front necesite tiene que estar declarado AQUI o
+ * Fastify lo descarta sin un solo error. Son cuatro; los cuatro salen.
+ */
+export const LIST_ERAS = {
+  params: {
+    type: 'object',
+    required: ['game'],
+    properties: { game: { type: 'string', enum: ['MTG', 'YGO', 'PTCG'] } },
+  },
+  response: {
+    200: {
+      type: 'object',
+      properties: {
+        data: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              name: { type: 'string' },
+              from: { type: ['string', 'null'] },
+              to: { type: ['string', 'null'] },
+              isDefault: { type: 'boolean' },
+            },
+          },
+        },
+      },
+    },
+  },
+} as const;
+
 export const LIST_RARITIES = {
   params: {
     type: 'object',

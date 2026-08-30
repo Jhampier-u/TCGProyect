@@ -139,6 +139,16 @@ export interface SetSummary {
   poolSize: number;
 }
 
+/** Una epoca de sobre. Las ventanas salen de `pack_templates` (T-090). */
+export interface EraSummary {
+  name: string;
+  /** `YYYY-MM-DD`, o null si no tiene limite por ese lado. */
+  from: string | null;
+  to: string | null;
+  /** La vigente: recoge lo que ninguna ventana cubre. */
+  isDefault: boolean;
+}
+
 export interface OpenedCard {
   slotIndex: number;
   printId: number;
@@ -227,6 +237,8 @@ export const api = {
   games: () => request<{ data: Array<{ code: GameCode; name: string }> }>('/games'),
 
   sets: (game: GameCode) => request<{ data: SetSummary[] }>(`/games/${game}/sets`),
+
+  eras: (game: GameCode) => request<{ data: EraSummary[] }>(`/games/${game}/eras`),
 
   rarities: (game: GameCode) =>
     request<{ data: Array<{ code: string; label: string; tier: number }> }>(
