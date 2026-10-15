@@ -14,16 +14,17 @@ distribuciones de rareza reales** y ver su colección crecer hacia el 100 % de c
 | Hito | Estado |
 |---|---|
 | H0 · Fundamentos | ✅ Docker Compose |
-| H1 · Esquema de datos | ✅ 7 migraciones |
+| H1 · Esquema de datos | ✅ MySQL 8, migraciones versionadas e inmutables |
 | H2 · Ingesta | ✅ 3 conectores + cosecha de imágenes |
 | H3 · API de catálogo | ✅ Fastify, búsqueda y paginación keyset |
 | H4 · Motor de sobres | ✅ Determinista y auditable |
 | H5 · Frontend | ✅ Catálogo, sobres animados y colección |
 | H6 · Cuentas y colección | ✅ Argon2id + JWT |
 | H7 · Constructor de mazos | ✅ Motor de reglas, 6 endpoints, interfaz e import/export |
-| H8 · Endurecimiento | 🟡 Suite E2E, seguridad y 6 de 8 de deuda técnica |
+| H8 · Endurecimiento | ✅ Suite E2E, seguridad y las 8 de deuda técnica |
+| H9 · Identidad por juego | 🟡 H9a hecho; H9b (catálogo de Pokémon y ficha) en curso |
 
-**Suite de Vitest y los 11 recorridos E2E en verde · `tsc --build` limpio · `npm audit` limpio.**
+**Suite de Vitest y los 11 recorridos E2E en verde · `tsc --build` limpio · `npm audit` limpio (comprobado el 2026-10-15; ver P-041).**
 
 ---
 

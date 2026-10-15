@@ -1,6 +1,6 @@
 # Tareas Realizadas
 
-**Última actualización:** 2026-08-28 (S036)
+**Última actualización:** 2026-10-15 (S037)
 
 | ID | Tarea | Agente | Fecha | Sesión | Evidencia |
 |---|---|---|---|---|---|
@@ -123,3 +123,4 @@
 | T-090 | **Navegación por juego y portada de Pokémon**: la raíz deja de ser un catálogo con filtro. Nuevo `/api/games/:game/eras`, agrupación de los 174 sets en sus 10 épocas reales, redirección desde la ruta vieja y anillo de foco global que hereda el acento del juego | Frontend / Backend | 2026-08-28 | S034 | `apps/web/src/pages/Inicio.tsx`, `apps/web/src/pages/ptcg/Portada.tsx` |
 | T-091 | **Facetas de Pokémon indexadas** (migración 0027): `supertype`, `elem_type` y `reg_mark` como columnas generadas, con el mismo patrón que `cmc`/`atk`/`hp` y el guardián cambiado a `= 'STRING'`. Medido con `EXPLAIN`: **2.391 filas con índice frente a 34.200 sin él**, y ningún `filesort` | Base de Datos | 2026-08-28 | S035 | `db/migrations/0027_*` |
 | T-092 | **Facetas en la API**: `hp`, `supertype`, `elemType` y `regMark` declaradas en `CARD_SUMMARY`, filtros `type`/`supertype`/`mark` sobre las columnas indexadas, y `/api/games/:game/facets` con los recuentos que alimentan el raíl. La paginación sigue siendo keyset. **ADR-007 mordió de verdad**: declarar los campos rompió la ficha con un 500 porque su `SELECT` no los traía, y lo cazó la suite E2E | Backend | 2026-08-28 | S036 | `apps/api/src/api/schemas.ts`, `apps/api/src/db/facetas.test.ts` |
+| T-096 | **`npm audit` limpio otra vez** (P-041): siete avisos publicados después del 2026-08-28 contra versiones ya fijadas —`fastify` con un *bypass* de autenticación, `fast-jwt` aceptando tokens caducados, `sharp`—. `npm audit fix` sin `--force`, sólo cambia el lockfile; 481/481 en verde | Backend / Seguridad | 2026-10-15 | S037 | `package-lock.json` |

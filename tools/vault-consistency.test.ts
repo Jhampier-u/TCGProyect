@@ -174,6 +174,26 @@ describe('lo que el Vault cita, existe', () => {
     ];
     expect(faltan.sort()).toEqual([]);
   });
+
+  it('toda sesion que cierra una tarea tiene su bitacora, y al reves en el mapa', () => {
+    // El caso real: S035 y S036 cerraron T-091 y T-092, movieron sus filas en
+    // `Tareas_Realizadas.md` y no escribieron bitacora. La comprobacion de
+    // arriba no lo veia porque solo mira en una direccion -- lo que HAY en
+    // 005Registro esta en el mapa -- y de una bitacora que no existe no hay
+    // nada que mirar. Se encontro en S037, a mano.
+    const conBitacora = new Set(BITACORAS.map((f) => /_(S\d{3})_/.exec(f)?.[1]).filter(Boolean));
+    const citadas = new Set(
+      [...REALIZADAS.matchAll(/^\| T-[^|]+\|(?:[^|\n]*\|){3} (S\d{3}) \|/gm)].map((m) => m[1]!),
+    );
+    expect(citadas.size, 'no encuentro la columna de sesion: el patron esta mal').toBeGreaterThan(20);
+
+    const huerfanas = [...citadas].filter((s) => !conBitacora.has(s));
+    expect(huerfanas.sort()).toEqual([]);
+
+    // Y el mapa no puede nombrar una bitacora que no esta en disco.
+    const enMapa = [...ORQUESTADOR.matchAll(/(\d{4}-\d{2}-\d{2}_S\d{3}_[A-Za-z0-9]+\.md)/g)].map((m) => m[1]!);
+    expect(enMapa.filter((f) => !BITACORAS.includes(f))).toEqual([]);
+  });
 });
 
 describe('numeracion sin colisiones', () => {

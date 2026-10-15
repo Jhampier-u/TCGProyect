@@ -1,6 +1,6 @@
 # Registro de Problemas
 
-**Última actualización:** 2026-08-28 (S031) · **Abiertos:** 1 · **Cerrados:** 39 · **Total:** 40
+**Última actualización:** 2026-10-15 (S037) · **Abiertos:** 1 · **Cerrados:** 40 · **Total:** 41
 
 Severidad: 🔴 crítica · 🟠 alta · 🟡 media · ⚪ baja
 
@@ -1513,3 +1513,28 @@ de cobertura sigue diciendo "todos los sets son completables" con los filtros nu
 **Leccion.** Meter un atributo en la clave natural resuelve un problema y crea otro: el atributo deja
 de poder cambiar. En S009 se eligio bien -- la alternativa era perder cartas -- pero el precio no se
 habia pagado hasta hoy.
+
+---
+
+## P-041 ✅ CERRADO · `npm audit` dejó de estar limpio sin que nada del proyecto cambiara
+**Estado:** CERRADO el 2026-10-15 (S037) — `npm audit fix`, sólo `package-lock.json`
+**Severidad:** 🟠
+**Origen:** instalar las dependencias en una máquina sin `node_modules` para retomar el proyecto.
+
+**Detalle.** El README, `05_Continuar_Aqui.md` y la bitácora de S034 decían *«`npm audit` limpio»*. Lo
+era el 2026-08-28. El 2026-10-15, con el mismo `package-lock.json`, `npm ci` informó de **7
+vulnerabilidades (2 moderadas, 5 altas)**: `fastify` ≤ 5.12.4 —entre ellas un *bypass* de
+autenticación por URLs mal formadas que llegan a manejadores 404 encapsulados—, `fast-jwt` ≤ 6.3.3
+(acepta JWT caducados sin `iat` desde la caché del verificador), `sharp` (libheif y librsvg),
+`fast-uri`, `ip-address`, `brace-expansion` y `source-map-js`.
+
+**Nadie rompió nada.** Las versiones fijadas siguen siendo las mismas; lo que cambió fue el mundo: se
+publicaron avisos nuevos contra ellas. Y la regla de P-011 sólo se comprueba **al cerrar una tarea que
+toca dependencias**, así que un proyecto parado acumula avisos sin que ningún test lo diga.
+
+**Arreglo.** `npm audit fix` sin `--force`: todo dentro de los rangos semver ya declarados, sólo cambia
+el lockfile. `fastify` 5.12.7, `fast-jwt` 6.3.5, `sharp` 0.35.5. `npm test` sigue verde (481/481) y
+`npm audit` da 0.
+
+**Lección.** *«Limpio»* es una afirmación con fecha, no una propiedad del código. Al retomar el
+proyecto, `npm audit` va con `npm test`, no detrás de la primera tarea que toque dependencias.

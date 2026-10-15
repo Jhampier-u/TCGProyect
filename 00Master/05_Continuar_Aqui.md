@@ -1,10 +1,10 @@
 # 05 — Continuar aquí
 
-**Punto de guardado:** 2026-08-28, tras la sesión **S032**
+**Punto de guardado:** 2026-10-15, en la sesión **S037**
 **Commit:** rama `main` · suite de Vitest y los 11 recorridos E2E en verde · `npm audit` limpio
 (el recuento exacto sale de `npm test`; publicarlo aqui solo servia para que se quedara viejo)
 
-Este documento existe para retomar el proyecto en otra máquina o en otra sesión sin releer las 26
+Este documento existe para retomar el proyecto en otra máquina o en otra sesión sin releer todas las
 bitácoras. Si sólo vas a leer un fichero, que sea éste.
 
 ---
@@ -23,6 +23,7 @@ crecer con completitud por set.
 | H1 Esquema · H2 Ingesta · H3 API · H4 Sobres · H5 Frontend · H6 Cuentas | ✅ |
 | **H7 Constructor de mazos** | ✅ **cerrado en S022** — motor, API, interfaz e import/export |
 | **H8 Endurecimiento** | ✅ **cerrado en S028** — suite E2E, seguridad y las ocho de deuda técnica |
+| **H9 Identidad por juego** | 🟡 **en curso** — H9a cerrado (S034); H9b a medias: T-091 y T-092 hechas |
 
 ---
 
@@ -43,6 +44,8 @@ El camino local sigue existiendo y es el que conviene para desarrollar con el de
 
 ```bash
 npm install && npm run build
+(cd e2e && npm ci)        # e2e/ no es workspace: sin esto `npm test` no compila sus tipos
+npm audit                 # "limpio" caduca: ver P-041
 mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS proyecto_tcg CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci"
 cp .env.example .env
 npm run ingest -- --game YGO --sets 2
@@ -179,8 +182,16 @@ son útiles para la lógica, pero **la fidelidad de sus datos determina lo que e
   código con sus acentos, y la raíz convertida en elección de juego con la portada de Pokémon
   agrupada por sus diez épocas reales.
 
-**Lo siguiente es H9b**: la migración de columnas generadas (T-091), las facetas en la API (T-092), el
-catálogo denso con su raíl (T-093), la ficha de carta (T-094) y la reescritura del E2E (T-095).
+- **T-091** (S035) y **T-092** (S036) — las facetas de Pokémon como columnas generadas e indexadas
+  (0027) y declaradas en la API, con `/api/games/:game/facets` para el raíl. T-092 dejó la lección de
+  que **una misma forma de respuesta alimentada por dos `SELECT` distintos** puede romperse en uno solo.
+- **T-096** (S037) — `npm audit` volvió a estar limpio. Había dejado de estarlo **sin que el proyecto
+  cambiara**: se publicaron avisos nuevos contra las versiones fijadas (P-041).
+
+**Lo siguiente sigue siendo H9b**: el catálogo denso con su raíl (T-093), la ficha de carta (T-094) y
+la reescritura del E2E (T-095). Después, el usuario pidió en S037 un **rediseño visual ambicioso**
+—apertura de sobres con motion graphics, sobres recreados por juego, tratamientos por rareza— y una
+lluvia de ideas; eso necesita su propio spec, como cada pasada de H9.
 
 **Cómo se ejecuta la suite:**
 
@@ -211,7 +222,7 @@ Las ocho tareas de H8c están cerradas. Lo que queda abierto salió de hacerlas,
 |---|---|---|
 | **P-016** | 🟠 | La API de Pokémon responde 200 sólo ~30 % de las veces. **Riesgo operativo permanente**, no algo que se arregle: por eso la ingesta se reanuda |
 
-Los 40 problemas —**39 cerrados**, cada uno con su medición— están en
+Los 41 problemas —**40 cerrados**, cada uno con su medición— están en
 `003Problemas/Registro_Problemas.md`.
 
 **P-008 se cerró en S030**, veintisiete sesiones después de abrirse, y deja la lección más útil de las

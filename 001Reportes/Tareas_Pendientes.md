@@ -1,6 +1,6 @@
 # Tareas Pendientes
 
-**Última actualización:** 2026-08-28 (S036) · **Total abiertas:** 3 — las de H9b
+**Última actualización:** 2026-10-15 (S037) · **Total abiertas:** 3 — las de H9b
 
 Leyenda de prioridad: 🔴 crítica · 🟠 alta · 🟡 media · ⚪ baja
 
