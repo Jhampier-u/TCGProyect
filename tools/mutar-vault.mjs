@@ -43,16 +43,27 @@ function detecta() {
   return r.status !== 0;
 }
 
-/** Cada entrada es una deriva que de verdad ocurrio, con la sesion que la sufrio. */
+/** Suma `d` al numero que captura el primer grupo: la mutacion vale con cualquier recuento. */
+const desplazar = (d) => (todo, n) => todo.replace(n, String(Number(n) + d));
+
+/**
+ * Cada entrada es una deriva que de verdad ocurrio, con la sesion que la sufrio.
+ *
+ * Las que tocan un RECUENTO buscan con expresion regular y desplazan el numero
+ * que haya. Hasta S037 buscaban el literal de S031 -- "Cerrados:** 39", "Total
+ * abiertas:** 0", "los 10 recorridos" -- y en cuanto el recuento cambio dejaron
+ * de aplicarse: tres llevaban sesiones muertas. Una mutacion atada al valor de
+ * un dia caduca con el.
+ */
 const MUTACIONES = [
   ['recuento de problemas (S031)', '003Problemas/Registro_Problemas.md',
-    '**Abiertos:** 1 · **Cerrados:** 39', '**Abiertos:** 2 · **Cerrados:** 38'],
+    /\*\*Cerrados:\*\* (\d+)/, desplazar(-1)],
 
   ['P-008 vuelve a la lista de abiertos (S031)', '00Master/05_Continuar_Aqui.md',
     '| **P-016** | ', '| **P-008** | limitaciones aceptadas |\n| **P-016** | '],
 
   ['cabecera de pendientes (S031)', '001Reportes/Tareas_Pendientes.md',
-    '**Total abiertas:** 0', '**Total abiertas:** 3'],
+    /\*\*Total abiertas:\*\* (\d+)/, desplazar(+1)],
 
   ['un hito COMPLETADO que sigue EN CURSO (S031)', '001Reportes/Tareas_Pendientes.md',
     '## Hito H8 — Endurecimiento ✅ COMPLETADO (S028)', '## Hito H8 — Endurecimiento 🟡 EN CURSO'],
@@ -71,10 +82,13 @@ const MUTACIONES = [
     '0026_the_list_y_slot_de_tierra', '0006_ygo_modern_booster'],
 
   ['recorridos E2E desfasados (S031)', 'README.md',
-    'los 10 recorridos E2E', 'los 6 recorridos E2E'],
+    /los (\d+) recorridos E2E/, desplazar(-4)],
 
   ['un documento vivo publica un recuento de tests (S031)', 'README.md',
-    'Suite de Vitest y los 10', '411 tests y los 10'],
+    /Suite de Vitest y los (\d+)/, (_todo, n) => `411 tests y los ${n}`],
+
+  ['una tarea cita una sesion sin bitacora (S035, S036)', '001Reportes/Tareas_Realizadas.md',
+    /(\| T-092 \|[^\n]*\| )S036( \|)/, (_todo, a, b) => `${a}S099${b}`],
 ];
 
 if (!arbolLimpio()) {
@@ -87,7 +101,8 @@ const noDetectadas = [];
 
 for (const [nombre, fichero, viejo, nuevo] of MUTACIONES) {
   const original = leer(fichero);
-  if (!original.includes(viejo)) {
+  const aplica = typeof viejo === 'string' ? original.includes(viejo) : viejo.test(original);
+  if (!aplica) {
     console.log(`  ??    ${nombre}  -- el texto ya no esta en ${fichero}`);
     noDetectadas.push(`${nombre} (la mutacion no se pudo aplicar)`);
     continue;
