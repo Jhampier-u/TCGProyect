@@ -48,12 +48,16 @@ export interface CardSummary {
   supertype: string | null;
   elemType: string | null;
   regMark: string | null;
+  /** Si quien mira la tiene (T-093). `null` sin sesion: no se sabe, no es un no. */
+  owned: boolean | null;
 }
 
 /** Un valor de faceta y cuantas cartas lo tienen (T-092). */
 export interface FacetCount {
   value: string;
   count: number;
+  /** Cuantas de esas tiene el usuario. `null` sin sesion (T-093). */
+  owned: number | null;
 }
 
 export interface FacetCounts {
@@ -63,6 +67,9 @@ export interface FacetCounts {
   /** Cuantas NO tienen marca. Anteriores a 2019: no es un hueco. */
   withoutMark: number;
   rarities: FacetCount[];
+  /** Impresiones del contexto -- el set o el juego -- y cuantas tiene el usuario. */
+  total: number;
+  ownedTotal: number | null;
 }
 
 /** Valor de `mark` que pide las cartas SIN marca de regulacion. */
@@ -267,9 +274,13 @@ export const api = {
 
   eras: (game: GameCode) => request<{ data: EraSummary[] }>(`/games/${game}/eras`),
 
-  facets: (game: GameCode, set?: string) =>
+  // El token es OPCIONAL en el catalogo (T-093): sin el, los recuentos y la
+  // busqueda son los publicos; con el, dicen ademas que tienes.
+  facets: (game: GameCode, set?: string, token?: string | null) =>
     request<{ data: FacetCounts }>(
       `/games/${game}/facets${set ? `?set=${encodeURIComponent(set)}` : ''}`,
+      {},
+      token,
     ),
 
   rarities: (game: GameCode) =>
@@ -287,15 +298,17 @@ export const api = {
     type?: string | undefined;
     supertype?: string | undefined;
     mark?: string | undefined;
+    /** Exige sesion: sin token la API contesta 401 (T-093). */
+    owned?: 'yes' | 'no' | '' | undefined;
     q?: string | undefined;
     cursor?: string | undefined;
     limit?: number | undefined;
-  }) => {
+  }, token?: string | null) => {
     const search = new URLSearchParams();
     for (const [k, v] of Object.entries(params)) {
       if (v !== undefined && v !== '') search.set(k, String(v));
     }
-    return request<CardPage>(`/cards?${search.toString()}`);
+    return request<CardPage>(`/cards?${search.toString()}`, {}, token);
   },
 
   /**

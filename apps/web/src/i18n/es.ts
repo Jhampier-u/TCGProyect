@@ -14,11 +14,10 @@
  * catalogo en otro idioma.
  *
  * MIGRACION EN CURSO. Aqui esta lo que se lee en TODAS las pantallas -- la
- * navegacion, el acceso y los simbolos -- mas los simbolos que usan las paginas
- * de coleccion y mazos. La prosa de Catalogo, Sobres y Coleccion NO se ha
- * movido a proposito: H9b y H9c las reescriben enteras, y traducir dos veces el
- * mismo parrafo es trabajo tirado. Cada pagina trae sus cadenas aqui cuando le
- * toque el rediseno.
+ * navegacion, el acceso y los simbolos --, los simbolos de coleccion y mazos, y
+ * desde T-093 el catalogo entero. La prosa de Sobres y Coleccion NO se ha
+ * movido a proposito: H9c las reescribe, y traducir dos veces el mismo parrafo
+ * es trabajo tirado. Cada pagina trae sus cadenas aqui cuando le toque.
  */
 
 export const ES = {
@@ -34,6 +33,10 @@ export const ES = {
     vacio: '—',
     /** La punta del desplegable. */
     desplegar: '▾',
+    /** "La tienes", en una columna donde una palabra no cabe. */
+    check: '✓',
+    /** Quitar un filtro. Va con su nombre accesible: la cruz sola no dice qué quita. */
+    cerrar: '×',
   },
 
   navegacion: {
@@ -116,6 +119,87 @@ export const ES = {
     todasLasRarezas: 'Todas las rarezas',
     buscarPlaceholder: 'Buscar por nombre o texto…',
     buscar: 'Buscar',
+    etiquetaSet: 'Set',
+    todosLosSets: 'Todos los sets',
+    todoElJuego: 'Todo el catálogo',
+    cartasDelContexto: (n: number) => (n === 1 ? '1 carta' : `${n} cartas`),
+    progreso: (tengo: number, total: number) => `Llevas ${tengo} de ${total}`,
+    cargando: 'Cargando cartas…',
+    error: 'No se pudo cargar el catálogo.',
+    sinResultados: 'Ninguna carta cumple todos estos filtros.',
+    sinResultadosAyuda: 'Quita alguno con su ×, o todos a la vez.',
+    cargarMas: 'Cargar más',
+    cargandoMas: 'Cargando…',
+    mostrando: (n: number, hayMas: boolean) => `${n}${hayMas ? '+' : ''} ${n === 1 ? 'carta' : 'cartas'}`,
+    filtrosActivos: 'Filtros activos',
+    filtros: (n: number) => (n > 0 ? `Filtros (${n})` : 'Filtros'),
+    quitarFiltro: (etiqueta: string) => `Quitar el filtro ${etiqueta}`,
+    quitarTodos: 'Quitar todos',
+    busqueda: (q: string) => `«${q}»`,
+    entraParaFaltan: 'Inicia sesión para filtrar las que te faltan.',
+    entrar: 'Iniciar sesión',
+    columnas: {
+      numero: 'Nº',
+      carta: 'Carta',
+      tipo: 'Tipo',
+      ps: 'PS',
+      rareza: 'Rareza',
+      marca: 'Marca',
+      tienes: 'Tienes',
+    },
+    laTienes: 'La tienes',
+    teFalta: 'Te falta',
+    sinImagen: 'Sin imagen',
+    ps: (n: number) => `${n} PS`,
+  },
+
+  /**
+   * El raíl de estructura (T-093, D-5 del spec): navegación, información y
+   * filtro a la vez. Cada fila dice cuántas hay —y cuántas tienes— antes de
+   * pulsarla, que es lo que hace que no haya que explicarlo.
+   */
+  rail: {
+    titulo: 'Estructura',
+    tenencia: 'Tu colección',
+    todas: 'Todas',
+    meFaltan: 'Me faltan',
+    lasTengo: 'Las tengo',
+    categoria: 'Categoría',
+    tipo: 'Tipo',
+    rareza: 'Rareza',
+    marca: 'Marca de regulación',
+    sinMarca: 'Sin marca',
+    /** La ausencia se explica, no se pinta como hueco (spec §2). */
+    sinMarcaNota: 'Anteriores a 2019: la marca aún no existía.',
+    deTotal: (tengo: number, total: number) => `${tengo} de ${total}`,
+  },
+
+  /**
+   * Los valores de Pokémon tal como llegan del origen, en inglés, y cómo se
+   * leen aquí. La clave es el dato; el valor es lo que se pinta.
+   */
+  pokemon: {
+    tipo: {
+      Grass: 'Planta',
+      Fire: 'Fuego',
+      Water: 'Agua',
+      Lightning: 'Rayo',
+      Psychic: 'Psíquico',
+      Fighting: 'Lucha',
+      Darkness: 'Oscuro',
+      Metal: 'Metal',
+      Dragon: 'Dragón',
+      Fairy: 'Hada',
+      Colorless: 'Incoloro',
+    } as Record<string, string>,
+    supertipo: {
+      'Pokémon': 'Pokémon',
+      Trainer: 'Entrenador',
+      Energy: 'Energía',
+    } as Record<string, string>,
+    /** Orden fijo de las categorías: que no bailen cuando cambian los recuentos. */
+    ordenSupertipo: ['Pokémon', 'Trainer', 'Energy'],
+    marca: (m: string) => `Marca ${m}`,
   },
 
   coleccion: {

@@ -10,6 +10,7 @@ import type { UserRepository } from '../auth/user-repository.js';
 import type { PackService } from '../packs/index.js';
 import { registerAuthRoutes } from './auth-routes.js';
 import { registerDeckRoutes } from './deck-routes.js';
+import { identificarSiHay } from './require-user.js';
 import {
   GET_CARD,
   LIST_GAMES,
@@ -125,20 +126,35 @@ function registrarRutasDeCatalogo(app: FastifyInstance, options: ApiOptions): vo
 
   app.get<{ Params: { game: GameCode }; Querystring: { set?: string } }>(
     '/api/games/:game/facets',
-    { schema: LIST_FACETS },
+    { schema: LIST_FACETS, preValidation: identificarSiHay },
     async (request) => ({
-      data: await catalog.listFacets(request.params.game, request.query.set),
+      data: await catalog.listFacets(request.params.game, request.query.set, request.usuario?.id),
     }),
   );
 
   app.get<{
     Querystring: {
       game?: GameCode; set?: string; rarity?: string; q?: string;
-      type?: string; supertype?: string; mark?: string;
+      type?: string; supertype?: string; mark?: string; owned?: 'yes' | 'no';
       cursor?: string; limit?: number;
     };
-  }>('/api/cards', { schema: SEARCH_CARDS }, async (request) => {
-    const page = await catalog.searchCards(request.query);
+  }>('/api/cards', { schema: SEARCH_CARDS, preValidation: identificarSiHay }, async (request, reply) => {
+    const { owned, ...filtros } = request.query;
+    if (owned && !request.usuario) {
+      // Sin usuario no hay coleccion contra la que comparar. Devolver el
+      // catalogo entero como "lo que te falta" seria contestar otra pregunta
+      // sin decirlo.
+      return reply.code(401).send({
+        error: 'unauthorized',
+        message: 'Filtrar por lo que tienes exige iniciar sesion',
+      });
+    }
+    const usuario = request.usuario;
+    const page = await catalog.searchCards({
+      ...filtros,
+      ...(usuario ? { viewerId: usuario.id } : {}),
+      ...(owned && usuario ? { owner: { userId: usuario.id, owned: owned === 'yes' } } : {}),
+    });
     return { data: page.items, nextCursor: page.nextCursor };
   });
 
@@ -232,6 +248,11 @@ export async function buildFullServer(options: ApiOptions & { auth: NonNullable<
     });
   }
 
+  // Las rutas del catalogo, declaradas ARRIBA, tambien usan este plugin para
+  // identificar al usuario si lo hay (T-093). No necesitan ir despues: un
+  // decorador de peticion vale en tiempo de ejecucion para todas las rutas de
+  // la instancia. Comprobado moviendolo -- a diferencia de P-038, donde el
+  // limitador SI dependia del orden porque es un hook, no un decorador.
   await app.register(fastifyJwt, {
     secret: options.auth.jwtSecret,
     sign: { expiresIn: options.auth.tokenTtl ?? '1h' },

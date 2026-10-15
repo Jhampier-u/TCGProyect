@@ -34,6 +34,35 @@ export async function exigirUsuario(request: FastifyRequest, reply: FastifyReply
 }
 
 /**
+ * Hook de `preValidation` para rutas PUBLICAS que se enriquecen con sesion (T-093).
+ *
+ * El catalogo es de todos, pero "las que me faltan" es de alguien. Si llega un
+ * token valido se identifica al usuario; si no llega, o no vale, la peticion
+ * sigue como anonima y NO se corta. Es lo contrario de `exigirUsuario` a
+ * proposito: un token caduca en una hora (ADR-008), y que el catalogo publico
+ * devolviera 401 a quien solo lo tenia guardado seria romper lo que funciona
+ * para proteger lo que no lo necesita.
+ *
+ * Quien NECESITE usuario -- el filtro `owned` -- lo comprueba despues y
+ * contesta 401 si falta. Asi la regla dura vive en un solo sitio y el hook no
+ * tiene que saber que rutas la tienen.
+ *
+ * En el servidor de solo catalogo (`buildServer`, sin cuentas) no hay plugin
+ * JWT y `jwtVerify` no existe: todo es anonimo, que es la verdad.
+ */
+export async function identificarSiHay(request: FastifyRequest): Promise<void> {
+  if (!request.headers.authorization) return;
+  if (typeof request.jwtVerify !== 'function') return;
+  try {
+    await request.jwtVerify();
+    const id = Number((request.user as { sub?: unknown })?.sub);
+    if (Number.isInteger(id) && id > 0) request.usuario = { id };
+  } catch {
+    // Caducado o manipulado: se sigue como anonimo. Ver arriba por que no 401.
+  }
+}
+
+/**
  * El usuario de una peticion ya autenticada.
  *
  * Lanza si falta, en vez de devolver `undefined`: no puede faltar despues del

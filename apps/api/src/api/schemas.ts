@@ -13,7 +13,12 @@
 /** Un valor de faceta con su recuento. */
 const RECUENTO = {
   type: 'object',
-  properties: { value: { type: 'string' }, count: { type: 'integer' } },
+  properties: {
+    value: { type: 'string' },
+    count: { type: 'integer' },
+    // Cuantas tiene el usuario (T-093). Nulo sin sesion, que no es un cero.
+    owned: { type: ['integer', 'null'] },
+  },
 } as const;
 
 export const CARD_SUMMARY = {
@@ -43,6 +48,8 @@ export const CARD_SUMMARY = {
     supertype: { type: ['string', 'null'] },
     elemType: { type: ['string', 'null'] },
     regMark: { type: ['string', 'null'] },
+    // Si quien mira la tiene (T-093). Nulo sin sesion y en la ficha.
+    owned: { type: ['boolean', 'null'] },
   },
 } as const;
 
@@ -203,6 +210,8 @@ export const LIST_FACETS = {
             marks: { type: 'array', items: RECUENTO },
             withoutMark: { type: 'integer' },
             rarities: { type: 'array', items: RECUENTO },
+            total: { type: 'integer' },
+            ownedTotal: { type: ['integer', 'null'] },
           },
         },
       },
@@ -223,6 +232,9 @@ export const SEARCH_CARDS = {
       type: { type: 'string', maxLength: 24 },
       supertype: { type: 'string', maxLength: 24 },
       mark: { type: 'string', maxLength: 16 },
+      // Las que tengo o las que me faltan (T-093). Exige sesion: el usuario
+      // sale del token, y por eso aqui no hay ningun `userId` que declarar.
+      owned: { type: 'string', enum: ['yes', 'no'] },
       q: { type: 'string', maxLength: 120 },
       cursor: { type: 'string', maxLength: 512 },
       // El tope de 100 no es cosmetico: sin el, un cliente podria pedir 100.000

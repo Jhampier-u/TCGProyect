@@ -1,140 +1,293 @@
-import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useEffect, useId, useMemo, useState } from 'react';
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
+import { useOutletContext, useSearchParams } from 'react-router-dom';
 import type { GameCode } from '@tcg/shared';
-import { api } from '../lib/api.js';
+import { api, imageUrl, SIN_MARCA } from '../lib/api.js';
+import { useAuth } from '../lib/auth.js';
+import {
+  alternar, escribirFiltros, filtrosActivos, leerFiltros, limpiar, quitar,
+  type ClaveFiltro, type FiltrosCatalogo,
+} from '../lib/filtros-url.js';
 import { SelectorDeSet } from '../components/SelectorDeSet.js';
-import { CardTile } from '../components/CardTile.js';
+import { RailDeSet } from '../components/RailDeSet.js';
+import { FilaDeCarta } from '../components/FilaDeCarta.js';
 import { ES } from '../i18n/es.js';
 
 /**
- * Navegador de catalogo.
+ * Filas por peticion. 60 llena una pantalla alta con margen y deja el set mas
+ * grande de Pokemon (304 impresiones) en cinco peticiones.
+ */
+const POR_PAGINA = 60;
+
+/**
+ * Catalogo «Consulta» (T-093, D-3 del spec).
  *
- * La paginacion es por CURSOR, no por numero de pagina: la API usa keyset
- * (H3). Por eso la interfaz ofrece "cargar mas" y no una paginacion numerada —
- * con keyset no existe el concepto de "pagina 7".
+ * Filas densas, el rail de estructura a la izquierda filtrando al pulsar y los
+ * filtros activos como chips borrables de uno en uno. TODO el estado vive en la
+ * URL (`filtros-url.ts`): se comparte con un enlace y el boton de atras deshace
+ * el ultimo filtro.
+ *
+ * La paginacion sigue siendo keyset, asi que se ofrece "cargar mas" y no
+ * paginas numeradas: con keyset no existe "la pagina 7".
  */
 export function Catalogo() {
-  const [game, setGame] = useState<GameCode>('YGO');
-  const [set, setSet] = useState('');
-  const [rarity, setRarity] = useState('');
-  const [q, setQ] = useState('');
-  const [busqueda, setBusqueda] = useState('');
-  const [cursores, setCursores] = useState<Array<string | undefined>>([undefined]);
+  const { juego } = useOutletContext<{ juego: GameCode }>();
+  const { user, token, cargando } = useAuth();
+  const [params, setParams] = useSearchParams();
+  const filtros = leerFiltros(params);
+  const conSesion = user !== null && token !== null;
 
-  const filtros = { game, set, rarity, q: busqueda };
+  // "Me faltan" sin sesion no tiene coleccion contra la que comparar: la API
+  // contestaria 401. Se ignora en la consulta y el rail invita a entrar.
+  const efectivos: FiltrosCatalogo = conSesion ? filtros : { ...filtros, owned: '' };
 
-  const sets = useQuery({
-    queryKey: ['sets', game],
-    queryFn: () => api.sets(game).then((r) => r.data),
+  const idRail = useId();
+  const [railAbierto, setRailAbierto] = useState(false);
+
+  const fijar = (siguientes: FiltrosCatalogo) => setParams(escribirFiltros(siguientes));
+  const alternarFiltro = (clave: ClaveFiltro, valor: string) => fijar(alternar(filtros, clave, valor));
+
+  const sets = useQuery({ queryKey: ['sets', juego], queryFn: () => api.sets(juego).then((r) => r.data) });
+  const rarezas = useQuery({ queryKey: ['rarezas', juego], queryFn: () => api.rarities(juego).then((r) => r.data) });
+
+  // La clave lleva el usuario: los recuentos con tenencia son de alguien, y al
+  // cambiar de sesion no puede servirse la cache del anterior.
+  //
+  // Y ESPERAN A QUE LA SESION ESTE VALIDADA. Sin eso, al cargar la pagina se
+  // pedia todo dos veces -- una como anonimo y otra con usuario -- y durante
+  // medio segundo el rail invitaba a iniciar sesion a quien ya la tenia.
+  const facetas = useQuery({
+    queryKey: ['facetas', juego, filtros.set, user?.id ?? null],
+    queryFn: () => api.facets(juego, filtros.set || undefined, token).then((r) => r.data),
+    enabled: !cargando,
   });
 
-  const rarezas = useQuery({
-    queryKey: ['rarezas', game],
-    queryFn: () => api.rarities(game).then((r) => r.data),
+  const { set, q, type, supertype, rarity, mark, owned } = efectivos;
+  const cartas = useInfiniteQuery({
+    queryKey: ['cartas', juego, set, q, type, supertype, rarity, mark, owned, user?.id ?? null],
+    queryFn: ({ pageParam }) =>
+      api.cards(
+        { game: juego, set, q, type, supertype, rarity, mark, owned, cursor: pageParam, limit: POR_PAGINA },
+        token,
+      ),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (ultima) => ultima.nextCursor ?? undefined,
+    enabled: !cargando,
   });
 
-  // Una consulta por cursor acumulado: React Query cachea cada pagina, asi que
-  // volver atras no vuelve a pedir nada al servidor.
-  const paginas = useQuery({
-    queryKey: ['cards', filtros, cursores],
-    queryFn: async () => {
-      const resultados = [];
-      for (const cursor of cursores) {
-        resultados.push(await api.cards({ ...filtros, cursor, limit: 40 }));
-      }
-      return resultados;
-    },
-  });
+  const filas = cartas.data?.pages.flatMap((p) => p.data) ?? [];
+  const setActual = sets.data?.find((s) => s.externalId === filtros.set) ?? null;
+  const nombreDeRareza = useMemo(
+    () => new Map((rarezas.data ?? []).map((r) => [r.code, r.label])),
+    [rarezas.data],
+  );
 
-  const cartas = paginas.data?.flatMap((p) => p.data) ?? [];
-  const siguiente = paginas.data?.[paginas.data.length - 1]?.nextCursor ?? null;
+  return (
+    <div className="consulta">
+      <header className="consulta-cabecera">
+        <div className="consulta-contexto">
+          {setActual?.iconPath && (
+            <img className="consulta-icono" src={imageUrl(setActual.iconPath) ?? ''} alt="" width={36} height={36} />
+          )}
+          <div>
+            {/* Con un set en la URL y la lista aun en camino no se dice "todo el
+                catalogo": seria verdad medio segundo y mentira despues. */}
+            <h1>{setActual?.name ?? (filtros.set ? ES.simbolo.vacio : ES.catalogo.todoElJuego)}</h1>
+            <p className="consulta-meta">
+              {setActual && <>{setActual.code}{ES.simbolo.separador}{setActual.releasedAt ?? ES.simbolo.vacio}{ES.simbolo.separador}</>}
+              {facetas.data && ES.catalogo.cartasDelContexto(facetas.data.total)}
+            </p>
+          </div>
+          {facetas.data && facetas.data.ownedTotal !== null && facetas.data.total > 0 && (
+            <Progreso tengo={facetas.data.ownedTotal} total={facetas.data.total} />
+          )}
+        </div>
 
-  const reiniciar = (cambio: () => void) => {
-    cambio();
-    setCursores([undefined]);
+        <div className="consulta-controles">
+          <SelectorDeSet
+            etiqueta={ES.catalogo.etiquetaSet}
+            vacio={ES.catalogo.todosLosSets}
+            valor={filtros.set}
+            onCambio={(v) => fijar({ ...filtros, set: v })}
+            opciones={(sets.data ?? [])
+              .filter((s) => s.cardCount > 0)
+              .map((s) => ({ id: s.externalId, nombre: s.name, iconPath: s.iconPath, detalle: s.code }))}
+          />
+          <Buscador
+            inicial={filtros.q}
+            onBuscar={(texto) => fijar({ ...filtros, q: texto })}
+          />
+          {/* Solo se ve en estrecho, donde el rail entero empujaria la tabla
+              una pantalla y media hacia abajo. En ancho el rail siempre esta. */}
+          <button
+            type="button"
+            className="alternar-rail"
+            aria-expanded={railAbierto}
+            aria-controls={idRail}
+            onClick={() => setRailAbierto((a) => !a)}
+          >
+            {ES.catalogo.filtros(filtrosActivos(efectivos).length)}
+          </button>
+        </div>
+      </header>
+
+      <div className="consulta-cuerpo">
+        <RailDeSet
+          id={idRail}
+          abierto={railAbierto}
+          facetas={facetas.data}
+          filtros={efectivos}
+          rarezas={rarezas.data ?? []}
+          conSesion={conSesion}
+          onAlternar={alternarFiltro}
+        />
+
+        <section className="consulta-resultados" aria-live="polite" aria-busy={cartas.isFetching && !cartas.isFetchingNextPage}>
+          <Chips
+            filtros={efectivos}
+            nombreDeRareza={nombreDeRareza}
+            onQuitar={(c) => fijar(quitar(filtros, c))}
+            onLimpiar={() => fijar(limpiar(filtros))}
+          />
+
+          {cartas.isError && <p className="aviso error">{ES.catalogo.error}</p>}
+          {cartas.isPending && <p className="vacio">{ES.catalogo.cargando}</p>}
+
+          {!cartas.isPending && filas.length === 0 && !cartas.isError && (
+            <div className="vacio">
+              <p>{ES.catalogo.sinResultados}</p>
+              {filtrosActivos(efectivos).length > 0 && <p className="tenue">{ES.catalogo.sinResultadosAyuda}</p>}
+            </div>
+          )}
+
+          {filas.length > 0 && (
+            <>
+              <p className="consulta-recuento">{ES.catalogo.mostrando(filas.length, cartas.hasNextPage)}</p>
+              <table className="tabla-consulta">
+                <thead>
+                  <tr>
+                    <th scope="col" className="col-numero">{ES.catalogo.columnas.numero}</th>
+                    <th scope="col" className="col-carta">{ES.catalogo.columnas.carta}</th>
+                    <th scope="col" className="col-tipo">{ES.catalogo.columnas.tipo}</th>
+                    <th scope="col" className="col-ps">{ES.catalogo.columnas.ps}</th>
+                    <th scope="col" className="col-rareza">{ES.catalogo.columnas.rareza}</th>
+                    <th scope="col" className="col-marca">{ES.catalogo.columnas.marca}</th>
+                    {conSesion && <th scope="col" className="col-tienes">{ES.catalogo.columnas.tienes}</th>}
+                  </tr>
+                </thead>
+                <tbody>
+                  {filas.map((c) => (
+                    <FilaDeCarta
+                      key={c.printId}
+                      carta={c}
+                      rareza={nombreDeRareza.get(c.rarity) ?? c.rarity}
+                      conSesion={conSesion}
+                    />
+                  ))}
+                </tbody>
+              </table>
+            </>
+          )}
+
+          {cartas.hasNextPage && (
+            <div className="centrado">
+              <button type="button" onClick={() => void cartas.fetchNextPage()} disabled={cartas.isFetchingNextPage}>
+                {cartas.isFetchingNextPage ? ES.catalogo.cargandoMas : ES.catalogo.cargarMas}
+              </button>
+            </div>
+          )}
+        </section>
+      </div>
+    </div>
+  );
+}
+
+function Progreso({ tengo, total }: { tengo: number; total: number }) {
+  const pct = Math.round((tengo / total) * 100);
+  return (
+    <div className="consulta-progreso">
+      <span>{ES.catalogo.progreso(tengo, total)}</span>
+      <progress value={tengo} max={total} aria-label={ES.catalogo.progreso(tengo, total)} />
+      <span className="tenue">{pct}%</span>
+    </div>
+  );
+}
+
+/**
+ * El campo de busqueda tiene estado propio mientras se escribe y solo toca la
+ * URL al enviar: escribir "pikachu" no debe dejar siete entradas en el
+ * historial. Si la URL cambia por fuera -- atras, un chip quitado -- el campo
+ * la sigue.
+ */
+function Buscador({ inicial, onBuscar }: { inicial: string; onBuscar: (q: string) => void }) {
+  const [texto, setTexto] = useState(inicial);
+  useEffect(() => setTexto(inicial), [inicial]);
+
+  return (
+    <form
+      className="buscador"
+      role="search"
+      onSubmit={(e) => {
+        e.preventDefault();
+        onBuscar(texto.trim());
+      }}
+    >
+      <input
+        type="search"
+        value={texto}
+        onChange={(e) => setTexto(e.target.value)}
+        placeholder={ES.catalogo.buscarPlaceholder}
+        aria-label={ES.catalogo.buscarPlaceholder}
+      />
+      <button type="submit">{ES.catalogo.buscar}</button>
+    </form>
+  );
+}
+
+function Chips({
+  filtros, nombreDeRareza, onQuitar, onLimpiar,
+}: {
+  filtros: FiltrosCatalogo;
+  nombreDeRareza: Map<string, string>;
+  onQuitar: (clave: ClaveFiltro) => void;
+  onLimpiar: () => void;
+}) {
+  const activos = filtrosActivos(filtros);
+  if (activos.length === 0) return null;
+
+  const etiqueta = (clave: ClaveFiltro, valor: string): string => {
+    switch (clave) {
+      case 'type': return ES.pokemon.tipo[valor] ?? valor;
+      case 'supertype': return ES.pokemon.supertipo[valor] ?? valor;
+      case 'rarity': return nombreDeRareza.get(valor) ?? valor;
+      case 'mark': return valor === SIN_MARCA ? ES.rail.sinMarca : ES.pokemon.marca(valor);
+      case 'owned': return valor === 'no' ? ES.rail.meFaltan : ES.rail.lasTengo;
+      case 'q': return ES.catalogo.busqueda(valor);
+      default: return valor;
+    }
   };
 
   return (
-    <>
-      <h1>{ES.navegacion.catalogo}</h1>
-      <p className="subtitulo">
-        Todo sale de nuestra base de datos. El navegador nunca habla con Scryfall,
-        YGOPRODeck ni Pokemon TCG.
-      </p>
-
-      <div className="filtros">
-        <select value={game} onChange={(e) => reiniciar(() => { setGame(e.target.value as GameCode); setSet(''); setRarity(''); })}>
-          <option value="MTG">Magic: The Gathering</option>
-          <option value="YGO">Yu-Gi-Oh!</option>
-          <option value="PTCG">Pokemon TCG</option>
-        </select>
-
-        <SelectorDeSet
-          etiqueta="Set"
-          vacio="Todos los sets"
-          valor={set}
-          onCambio={(v) => reiniciar(() => setSet(v))}
-          opciones={(sets.data ?? [])
-            .filter((s) => s.poolSize > 0)
-            .map((s) => ({
-              id: s.externalId,
-              nombre: s.name,
-              iconPath: s.iconPath,
-              detalle: String(s.poolSize),
-            }))}
-        />
-
-        <select value={rarity} onChange={(e) => reiniciar(() => setRarity(e.target.value))}>
-          <option value="">{ES.catalogo.todasLasRarezas}</option>
-          {(rarezas.data ?? []).map((r) => (
-            <option key={r.code} value={r.code}>{r.label}</option>
-          ))}
-        </select>
-
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            reiniciar(() => setBusqueda(q));
-          }}
-          style={{ display: 'flex', gap: 8 }}
-        >
-          <input
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder={ES.catalogo.buscarPlaceholder}
-          />
-          <button type="submit">{ES.catalogo.buscar}</button>
-        </form>
-      </div>
-
-      {paginas.isError && <div className="aviso error">No se pudo cargar el catalogo.</div>}
-      {paginas.isPending && <div className="vacio">Cargando...</div>}
-      {!paginas.isPending && cartas.length === 0 && (
-        <div className="vacio">
-          Ninguna carta coincide. Puede que el set no este ingestado todavia.
-        </div>
-      )}
-
-      <div className="rejilla">
-        {cartas.map((c) => (
-          <CardTile
-            key={c.printId}
-            name={c.name}
-            rarity={c.rarity}
-            imagePath={c.imagePath}
-            setCode={c.setCode}
-            collectorNumber={c.collectorNumber}
-          />
-        ))}
-      </div>
-
-      {siguiente && (
-        <div className="centrado">
-          <button onClick={() => setCursores((c) => [...c, siguiente])} disabled={paginas.isFetching}>
-            {paginas.isFetching ? 'Cargando...' : 'Cargar mas'}
+    <div className="chips" role="group" aria-label={ES.catalogo.filtrosActivos}>
+      {activos.map(({ clave, valor }) => {
+        const texto = etiqueta(clave, valor);
+        return (
+          <button
+            key={clave}
+            type="button"
+            className="chip"
+            onClick={() => onQuitar(clave)}
+            aria-label={ES.catalogo.quitarFiltro(texto)}
+          >
+            {texto} <span aria-hidden="true">{ES.simbolo.cerrar}</span>
           </button>
-        </div>
+        );
+      })}
+      {activos.length > 1 && (
+        <button type="button" className="chip-limpiar" onClick={onLimpiar}>
+          {ES.catalogo.quitarTodos}
+        </button>
       )}
-    </>
+    </div>
   );
 }

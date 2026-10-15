@@ -51,6 +51,8 @@ const CARTA: CardDetail = {
   // Facetas de Pokemon: nulas en una carta de Yu-Gi-Oh!, que es el caso que
   // esta fixture representa (T-092).
   hp: null, supertype: null, elemType: null, regMark: null,
+  // La ficha no tiene usuario: no sabe si la tienes, y lo dice con null (T-093).
+  owned: null,
   imagePath: 'ygo/lob/lob-en001-ultra_rare.245.webp',
   rulesText: 'Legendary dragon.', gameData: { atk: 3000, def: 2500 },
   releasedAt: '2002-03-08', finishes: ['foil'], inBoosters: true,

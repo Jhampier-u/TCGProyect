@@ -61,7 +61,8 @@ a:hover { text-decoration: underline; }
 }
 
 .marca { font-weight: 700; font-size: 17px; color: var(--acento); }
-.nav { display: flex; gap: 18px; }
+.nav { display: flex; gap: 18px; min-width: 0; overflow-x: auto; scrollbar-width: none; }
+.nav a { white-space: nowrap; }
 .nav a { color: var(--texto-tenue); font-size: 14px; }
 .nav a.activo { color: var(--texto); border-bottom: 2px solid var(--acento); padding-bottom: 2px; }
 .cabecera-derecha { margin-left: auto; display: flex; align-items: center; gap: 12px; font-size: 14px; }
@@ -613,3 +614,173 @@ a.tarjeta-juego:hover { border-color: var(--juego-acento, var(--acento)); text-d
   font-variant-numeric: tabular-nums;
 }
 .icono-set-hueco { display: block; width: 22px; height: 22px; border-radius: 50%; background: var(--borde); }
+
+/* ---------------------------------------------- catalogo «Consulta» (T-093)
+ *
+ * Filas densas, cifras alineadas (`tabular-nums`), el tipo como chip de color y
+ * el rail de estructura siempre a la vista. El color de tipo llega como
+ * `--tipo` desde `estiloDeTipo`, asi que aqui no se nombra ninguno: el CSS no
+ * sabe que existen once.
+ * ------------------------------------------------------------------------ */
+
+.consulta-cabecera {
+  display: flex; flex-direction: column; gap: var(--e4);
+  margin-bottom: var(--e5);
+}
+.consulta-contexto { display: flex; align-items: center; gap: var(--e4); flex-wrap: wrap; }
+.consulta-contexto h1 { font-size: var(--paso-3); letter-spacing: -0.01em; margin: 0; }
+.consulta-icono { width: 36px; height: 36px; object-fit: contain; }
+.consulta-meta {
+  margin: var(--e1) 0 0; color: var(--texto-tenue); font-size: var(--paso-00);
+  font-variant-numeric: tabular-nums;
+}
+.consulta-progreso {
+  margin-left: auto; display: flex; align-items: center; gap: var(--e3);
+  font-size: var(--paso-00); font-variant-numeric: tabular-nums;
+}
+.consulta-progreso progress {
+  inline-size: 140px; block-size: 6px; appearance: none; border: 0;
+  border-radius: 999px; background: var(--borde); overflow: hidden;
+}
+.consulta-progreso progress::-webkit-progress-bar { background: var(--borde); }
+.consulta-progreso progress::-webkit-progress-value { background: var(--juego-acento, var(--acento)); }
+.consulta-progreso progress::-moz-progress-bar { background: var(--juego-acento, var(--acento)); }
+
+.consulta-controles { display: flex; gap: var(--e3); flex-wrap: wrap; align-items: stretch; }
+.buscador { display: flex; gap: var(--e2); flex: 1 1 280px; min-width: 0; }
+.buscador input { flex: 1; min-width: 0; }
+
+.consulta-cuerpo {
+  display: grid; gap: var(--e5);
+  grid-template-columns: minmax(0, 1fr);
+}
+@media (min-width: 900px) {
+  .consulta-cuerpo { grid-template-columns: 230px minmax(0, 1fr); }
+}
+
+/* ------------------------------------------------------------------- rail */
+
+.rail {
+  align-self: start;
+  display: flex; flex-direction: column; gap: var(--e4);
+  font-size: var(--paso-00);
+}
+@media (min-width: 900px) {
+  /* Siempre a la vista mientras se recorre el set: es su razon de ser (D-5). */
+  .rail { position: sticky; top: 72px; max-block-size: calc(100vh - 88px); overflow-y: auto; padding-right: var(--e1); }
+}
+.rail-cargando { min-block-size: 240px; }
+.rail { scrollbar-width: thin; scrollbar-color: var(--borde) transparent; }
+.alternar-rail { display: none; }
+@media (max-width: 899px) {
+  .alternar-rail { display: inline-block; }
+  .rail:not(.rail-abierto) { display: none; }
+}
+.rail-seccion { display: flex; flex-direction: column; gap: var(--e1); }
+.rail-titulo {
+  margin: 0 0 var(--e1); font-size: var(--paso-00); font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.08em; color: var(--texto-tenue);
+}
+.rail-lista { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+
+.rail-fila {
+  inline-size: 100%;
+  display: grid; grid-template-columns: auto 1fr auto; align-items: center;
+  column-gap: var(--e2); row-gap: 3px;
+  padding: 5px var(--e2);
+  background: transparent; border: 1px solid transparent; border-radius: var(--radio-s);
+  text-align: left; font-size: var(--paso-00); color: var(--texto);
+}
+.rail-fila:hover:not(:disabled) { background: var(--brillo-suave); border-color: transparent; }
+.rail-fila[aria-pressed="true"] {
+  background: var(--superficie);
+  border-color: var(--juego-acento, var(--acento));
+  font-weight: 600;
+}
+/* Sin punto de color la etiqueta ocupa su hueco: la columna 1 queda vacia. */
+.rail-fila .rail-etiqueta { grid-column: 2; }
+.rail-punto {
+  grid-column: 1; inline-size: 9px; block-size: 9px; border-radius: 50%;
+  background: var(--tipo, var(--texto-tenue));
+}
+.rail-cifra { grid-column: 3; color: var(--texto-tenue); font-variant-numeric: tabular-nums; }
+.rail-barra {
+  grid-column: 2 / 4; block-size: 3px; border-radius: 999px;
+  background: var(--borde); overflow: hidden;
+}
+.rail-barra > span { display: block; block-size: 100%; background: var(--tipo, var(--juego-acento, var(--acento))); }
+.rail-nota { color: var(--texto-tenue); line-height: var(--linea); }
+.rail-nota-fila { margin: 2px var(--e2) 0; color: var(--texto-tenue); font-size: 11.5px; line-height: 1.35; }
+
+/* ------------------------------------------------------------------ chips */
+
+.chips { display: flex; flex-wrap: wrap; gap: var(--e2); margin-bottom: var(--e3); align-items: center; }
+.chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 3px 6px 3px 10px; border-radius: 999px; font-size: var(--paso-00);
+  border: 1px solid var(--juego-acento, var(--acento-tenue));
+  background: var(--superficie);
+}
+.chip span { font-size: 14px; line-height: 1; color: var(--texto-tenue); }
+.chip:hover span { color: var(--texto); }
+.chip-limpiar {
+  background: transparent; border-color: transparent; color: var(--texto-tenue);
+  font-size: var(--paso-00); text-decoration: underline; padding: 3px 6px;
+}
+
+/* ---------------------------------------------------------------- tabla */
+
+/* Mientras llega la consulta nueva se sigue viendo la anterior, atenuada: que
+   no parezca que el filtro no ha hecho nada, sin vaciar la pantalla. */
+.consulta-resultados[aria-busy="true"] .tabla-consulta { opacity: 0.55; transition: opacity 150ms; }
+.consulta-recuento { margin: 0 0 var(--e2); color: var(--texto-tenue); font-size: var(--paso-00); font-variant-numeric: tabular-nums; }
+
+.tabla-consulta {
+  inline-size: 100%; border-collapse: collapse;
+  font-size: var(--paso-00); font-variant-numeric: tabular-nums;
+}
+.tabla-consulta thead th {
+  position: sticky; top: 49px; z-index: 1;
+  background: var(--fondo); text-align: left; font-weight: 600;
+  color: var(--texto-tenue); padding: var(--e2); border-bottom: 1px solid var(--borde-control);
+}
+.tabla-consulta td { padding: 5px var(--e2); border-bottom: 1px solid var(--borde); vertical-align: middle; }
+.fila-carta:hover td { background: var(--brillo-suave); }
+.fila-falta .carta-miniatura img { opacity: 0.55; filter: grayscale(0.5); }
+
+.col-numero { inline-size: 3.5em; color: var(--texto-tenue); }
+.col-ps { inline-size: 120px; }
+.col-marca, .col-tienes { inline-size: 4.5em; text-align: center; }
+.tabla-consulta th.col-marca, .tabla-consulta th.col-tienes { text-align: center; }
+
+.celda-carta { display: flex; align-items: center; gap: var(--e3); min-inline-size: 0; }
+.carta-miniatura { flex: none; inline-size: 34px; block-size: 47px; border-radius: 3px; overflow: hidden; background: var(--superficie); }
+.carta-miniatura img { inline-size: 100%; block-size: 100%; object-fit: cover; display: block; }
+.miniatura-hueco { display: block; inline-size: 100%; block-size: 100%; }
+.carta-textos { display: flex; flex-direction: column; min-inline-size: 0; }
+.carta-nombre-fila { font-weight: 600; font-size: var(--paso-0); line-height: var(--linea-apretada); }
+.carta-linea { color: var(--texto-tenue); font-size: 11.5px; }
+
+.chip-tipo {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 1px 8px 1px 6px; border-radius: 999px;
+  border: 1px solid var(--tipo, var(--borde)); color: var(--tipo, var(--texto));
+  font-size: 11.5px; font-weight: 600; white-space: nowrap;
+}
+.chip-tipo::before {
+  content: ""; inline-size: 7px; block-size: 7px; border-radius: 50%;
+  background: var(--tipo, var(--texto-tenue));
+}
+
+.ps { display: grid; grid-template-columns: 2.6em 1fr; align-items: center; gap: var(--e2); }
+.ps-cifra { text-align: right; }
+.ps-barra { block-size: 4px; border-radius: 999px; background: var(--borde); overflow: hidden; }
+.ps-barra > span { display: block; block-size: 100%; background: var(--texto-tenue); }
+
+.tienes-si { color: var(--exito); font-weight: 700; }
+.tienes-no, .tenue { color: var(--texto-tenue); }
+
+/* En estrecho la tabla se queda en lo esencial: numero, carta, tipo y tienes. */
+@media (max-width: 640px) {
+  .tabla-consulta .col-ps, .tabla-consulta .col-rareza, .tabla-consulta .col-marca { display: none; }
+}

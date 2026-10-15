@@ -21,6 +21,18 @@ export const MIN_FULLTEXT_LENGTH = 3;
  */
 export const SIN_MARCA = 'ninguna';
 
+/**
+ * "Esta impresion la tiene este usuario", con cualquier acabado (T-093).
+ *
+ * Una sola condicion para las dos preguntas -- las que tengo y las que me
+ * faltan -- y para los recuentos del rail, para que no puedan discrepar. Se
+ * apoya en `uq_collection_entry (user_id, card_print_id, finish)`, cuyo prefijo
+ * es exactamente este par. `quantity > 0` porque una fila a cero existe tras
+ * vaciar una entrada y no es tenerla.
+ */
+const TENENCIA =
+  'EXISTS (SELECT 1 FROM user_collection uc WHERE uc.user_id = ? AND uc.card_print_id = p.id AND uc.quantity > 0)';
+
 export const MAX_PAGE_SIZE = 100;
 export const DEFAULT_PAGE_SIZE = 40;
 
@@ -61,6 +73,12 @@ export interface CardSummary {
   supertype: string | null;
   elemType: string | null;
   regMark: string | null;
+  /**
+   * Si quien mira tiene esta impresion (T-093). `null` cuando nadie mira -- sin
+   * sesion, o en la ficha --, que no es lo mismo que `false`: "no lo se" no
+   * puede pintarse como "no la tienes".
+   */
+  owned: boolean | null;
 }
 
 export interface CardDetail extends CardSummary {
@@ -84,6 +102,14 @@ export interface CardQuery {
   supertype?: string;
   /** `sinMarca` pide las que NO tienen marca, que es un caso distinto de no filtrar. */
   mark?: string;
+  /**
+   * Tener o no tener la impresion, contra la coleccion de UN usuario (T-093).
+   * El `userId` lo pone la ruta a partir del token, nunca la query: si viniera
+   * de fuera, cualquiera podria mirar la coleccion de otro.
+   */
+  owner?: { userId: number; owned: boolean };
+  /** Quien mira, si hay sesion: cada fila dira si la tiene (T-093). */
+  viewerId?: number;
   /** Cursor opaco de paginacion keyset. */
   cursor?: string;
   limit?: number;
@@ -99,6 +125,8 @@ export interface CardPage {
 export interface FacetCount {
   value: string;
   count: number;
+  /** Cuantas de esas tiene el usuario. `null` sin sesion: no es un cero. */
+  owned: number | null;
 }
 
 export interface FacetCounts {
@@ -108,6 +136,9 @@ export interface FacetCounts {
   /** Cuantas NO tienen marca. Anteriores a 2019: no es un hueco. */
   withoutMark: number;
   rarities: FacetCount[];
+  /** Impresiones del contexto -- el set, o el juego entero -- y cuantas tiene. */
+  total: number;
+  ownedTotal: number | null;
 }
 
 /** Una epoca de sobre, tal como la describe su plantilla (T-090). */
@@ -242,6 +273,10 @@ export class CatalogQueryRepository {
         params.push(query.mark);
       }
     }
+    if (query.owner) {
+      where.push(query.owner.owned ? TENENCIA : `NOT ${TENENCIA}`);
+      params.push(query.owner.userId);
+    }
 
     const texto = (query.q ?? '').trim();
     if (texto.length >= MIN_FULLTEXT_LENGTH) {
@@ -260,6 +295,13 @@ export class CatalogQueryRepository {
       params.push(cursor.name, cursor.name, cursor.id);
     }
 
+    // La tenencia de cada fila, si alguien mira. Su `?` esta en el SELECT, asi
+    // que su valor va DELANTE de los del WHERE.
+    const mira = query.viewerId !== undefined;
+    const columnaTengo = mira ? `,
+              ${TENENCIA} AS tengo` : '';
+    if (mira) params.unshift(query.viewerId);
+
     // Se piden `limit + 1` filas: si llega la extra, hay pagina siguiente. Evita
     // un COUNT(*) aparte, que sobre un catalogo grande cuesta tanto como la
     // propia consulta.
@@ -268,7 +310,7 @@ export class CatalogQueryRepository {
               s.code AS set_code, s.name AS set_name,
               p.id AS print_id, p.collector_number, p.image_local_path,
               r.code AS rarity,
-              c.hp, c.supertype, c.elem_type, c.reg_mark
+              c.hp, c.supertype, c.elem_type, c.reg_mark${columnaTengo}
        FROM cards c
        JOIN card_prints p ON p.card_id = c.id AND p.withdrawn_at IS NULL
        JOIN sets s ON s.id = p.set_id
@@ -391,7 +433,7 @@ export class CatalogQueryRepository {
    * mirando, no del catalogo entero. Enseniar "Agua 2436" mientras se navega un
    * set que tiene cuatro seria mentir con un numero.
    */
-  async listFacets(game: GameCode, set?: string): Promise<FacetCounts> {
+  async listFacets(game: GameCode, set?: string, userId?: number): Promise<FacetCounts> {
     const where = ['c.game_id = ?', 'p.withdrawn_at IS NULL'];
     const params: unknown[] = [GAME_IDS[game]];
     if (set) {
@@ -400,16 +442,24 @@ export class CatalogQueryRepository {
     }
     const filtro = where.join(' AND ');
 
+    // Con sesion, cada fila dice ademas cuantas tiene (T-093): "Planta 12/23"
+    // contesta la pregunta del criterio de aceptacion antes de pulsar nada. El
+    // parametro del usuario va PRIMERO porque su `?` esta en el SELECT, antes
+    // que los del WHERE.
+    const conTenencia = userId !== undefined;
+    const tengo = conTenencia ? `, SUM(${TENENCIA}) AS tengo` : '';
+    const argumentos = conTenencia ? [userId, ...params] : params;
+
     const contar = async (columna: string) =>
-      this.db.select<{ valor: string | null; n: number }>(
-        `SELECT ${columna} AS valor, COUNT(*) AS n
+      this.db.select<{ valor: string | null; n: number; tengo?: number | string | null }>(
+        `SELECT ${columna} AS valor, COUNT(*) AS n${tengo}
            FROM cards c
            JOIN card_prints p ON p.card_id = c.id
            JOIN sets s ON s.id = p.set_id
           WHERE ${filtro}
           GROUP BY valor
           ORDER BY n DESC`,
-        params,
+        argumentos,
       );
 
     const [tipos, supertipos, marcas, rarezas] = await Promise.all([
@@ -419,10 +469,21 @@ export class CatalogQueryRepository {
       contar('(SELECT r.code FROM rarities r WHERE r.id = p.rarity_id)'),
     ]);
 
-    const limpiar = (filas: Array<{ valor: string | null; n: number }>) =>
+    // `SUM` de MySQL llega como cadena DECIMAL por mysql2; `Number` lo arregla.
+    const tenidas = (f: { tengo?: number | string | null }) =>
+      conTenencia ? Number(f.tengo ?? 0) : null;
+
+    const limpiar = (filas: Array<{ valor: string | null; n: number; tengo?: number | string | null }>) =>
       filas
         .filter((f) => f.valor !== null)
-        .map((f) => ({ value: f.valor as string, count: Number(f.n) }));
+        .map((f) => ({ value: f.valor as string, count: Number(f.n), owned: tenidas(f) }));
+
+    // El total sale de la categoria y no de otra consulta: cada impresion cae
+    // en exactamente una fila del GROUP BY, la NULL incluida.
+    const total = supertipos.reduce((acc, f) => acc + Number(f.n), 0);
+    const ownedTotal = conTenencia
+      ? supertipos.reduce((acc, f) => acc + Number(f.tengo ?? 0), 0)
+      : null;
 
     return {
       types: limpiar(tipos),
@@ -432,6 +493,8 @@ export class CatalogQueryRepository {
       marks: limpiar(marcas),
       withoutMark: Number(marcas.find((f) => f.valor === null)?.n ?? 0),
       rarities: limpiar(rarezas),
+      total,
+      ownedTotal,
     };
   }
 
@@ -450,6 +513,8 @@ export interface CardRow {
   collector_number: string; image_local_path: string | null; rarity: string;
   /** Facetas de Pokemon (T-091). Nulas en los otros dos juegos. */
   hp: number | null; supertype: string | null; elem_type: string | null; reg_mark: string | null;
+  /** Solo si alguien mira (T-093). Ausente en la ficha, que no tiene usuario. */
+  tengo?: number | string | null;
 }
 
 /**
@@ -482,6 +547,9 @@ export function toSummary(row: CardRow): CardSummary {
     supertype: row.supertype,
     elemType: row.elem_type,
     regMark: row.reg_mark,
+    // Ausente -> null, explicitamente. `Number(undefined) === 1` daria `false`,
+    // y una ficha diria "no la tienes" a quien si la tiene.
+    owned: row.tengo === undefined || row.tengo === null ? null : Number(row.tengo) === 1,
   };
 }
 

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
-  CatalogQueryRepository, SIN_MARCA, encodeCursor, type CardQuery,
+  CatalogQueryRepository, SIN_MARCA, encodeCursor, toSummary, type CardQuery,
 } from './catalog-query-repository.js';
 import type { Database } from './connection.js';
 
@@ -150,5 +150,106 @@ describe('las dos consultas que alimentan `toSummary` (T-092)', () => {
     const { repo, consultas } = repoEspia();
     await repo.findCard(42);
     for (const col of COLUMNAS) expect(consultas[0]!.sql).toContain(col);
+  });
+});
+
+describe('"las que me faltan" (T-093)', () => {
+  /*
+   * El criterio de aceptacion de T-093 es literal: alguien que no conoce el
+   * proyecto tiene que poder pedir "las de Planta de este set que me faltan".
+   * La busqueda sabia filtrar por Planta y por set; "me faltan" no existia en
+   * ninguna capa. Es un filtro del SERVIDOR y no del navegador porque la
+   * paginacion es keyset: filtrar en cliente una pagina de 40 deja paginas
+   * medio vacias, o vacias del todo, sin que nadie sepa por que.
+   */
+  const TENENCIA =
+    'FROM user_collection uc WHERE uc.user_id = ? AND uc.card_print_id = p.id AND uc.quantity > 0';
+
+  it('las que faltan son NOT EXISTS sobre la coleccion del usuario', async () => {
+    const { sql, params } = await sqlDe({ game: 'PTCG', set: 'sv1', owner: { userId: 7, owned: false } });
+    expect(sql).toContain(`NOT EXISTS (SELECT 1 ${TENENCIA})`);
+    expect(params).toContain(7);
+  });
+
+  it('las que tengo son EXISTS, sin el NOT', async () => {
+    const { sql, params } = await sqlDe({ game: 'PTCG', owner: { userId: 7, owned: true } });
+    expect(sql).toContain(`EXISTS (SELECT 1 ${TENENCIA})`);
+    expect(sql).not.toContain('NOT EXISTS');
+    expect(params).toContain(7);
+  });
+
+  it('sin usuario la busqueda no mira ninguna coleccion', async () => {
+    const { sql } = await sqlDe({ game: 'PTCG', set: 'sv1' });
+    expect(sql).not.toContain('user_collection');
+  });
+
+  it('con quien mira, cada fila dice si la tiene; el parametro va antes que los del WHERE', async () => {
+    // El `?` de la columna esta en el SELECT, asi que su valor tiene que ser el
+    // PRIMERO. Al reves, MySQL compararia `user_id` con el id del juego y cada
+    // fila diria "no la tienes" sin un solo error.
+    const { sql, params } = await sqlDe({ game: 'PTCG', viewerId: 7 });
+    expect(sql).toContain(`EXISTS (SELECT 1 ${TENENCIA}) AS tengo`);
+    expect(params[0]).toBe(7);
+  });
+
+  it('la tenencia de la fila se traduce a booleano, y a null si nadie mira', () => {
+    const fila = {
+      id: 1, oracle_key: 'sv1-1', game_id: 3, name: 'Sprigatito', type_line: null,
+      set_code: 'SVI', set_name: 'Scarlet & Violet', print_id: 9, collector_number: '13',
+      image_local_path: null, rarity: 'common', hp: 70, supertype: 'Pokemon',
+      elem_type: 'Grass', reg_mark: 'G',
+    };
+    expect(toSummary({ ...fila, tengo: 1 }).owned).toBe(true);
+    expect(toSummary({ ...fila, tengo: 0 }).owned).toBe(false);
+    // `findCard` no tiene usuario y no trae la columna: null, NO false. Un
+    // `Number(undefined)` aqui es exactamente el 500 de T-092.
+    expect(toSummary(fila).owned).toBeNull();
+  });
+
+  it('el filtro de tenencia no rompe la paginacion keyset', async () => {
+    const { sql } = await sqlDe({ game: 'PTCG', owner: { userId: 7, owned: false } });
+    expect(sql).toContain('ORDER BY c.name ASC, p.id ASC');
+    expect(sql).not.toContain('OFFSET');
+  });
+
+  it('con usuario, cada recuento del rail dice tambien cuantas tiene', async () => {
+    // "Planta 23" informa; "Planta 12/23" contesta ya la pregunta del criterio.
+    const { repo, consultas } = repoEspia();
+    await repo.listFacets('PTCG', 'sv1', 7);
+    expect(consultas.length).toBeGreaterThan(0);
+    for (const c of consultas) {
+      expect(c.sql).toContain(`SUM(EXISTS (SELECT 1 ${TENENCIA}))`);
+      expect(c.params[0]).toBe(7);
+    }
+  });
+
+  it('sin usuario los recuentos no tocan la coleccion y la tenencia sale nula', async () => {
+    const { repo, consultas } = repoEspia();
+    const r = await repo.listFacets('PTCG', 'sv1');
+    for (const c of consultas) expect(c.sql).not.toContain('user_collection');
+    expect(r.ownedTotal).toBeNull();
+  });
+
+  it('el total del contexto sale de sumar las categorias, incluida la nula', async () => {
+    // Toda carta de Pokemon tiene `supertype` (20.434 de 20.434, medido en
+    // T-091), pero el total no puede depender de que eso siga siendo verdad:
+    // la fila NULL tambien suma. Asi no hace falta una quinta consulta.
+    const db = {
+      select: async (sql: string) =>
+        sql.includes('c.supertype AS valor')
+          ? [
+              { valor: 'Pokemon', n: 120, tengo: 30 },
+              { valor: 'Trainer', n: 40, tengo: 5 },
+              { valor: null, n: 2, tengo: 1 },
+            ]
+          : [],
+    } as unknown as Database;
+    const r = await new CatalogQueryRepository(db).listFacets('PTCG', 'sv1', 7);
+    expect(r.total).toBe(162);
+    expect(r.ownedTotal).toBe(36);
+    expect(r.supertypes).toEqual([
+      { value: 'Pokemon', count: 120, owned: 30 },
+      { value: 'Trainer', count: 40, owned: 5 },
+    ]);
   });
 });
