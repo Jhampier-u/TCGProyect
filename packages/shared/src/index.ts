@@ -25,6 +25,7 @@ export type {
   YgoGameData,
   YgoBanlistInfo,
   PtcgGameData,
+  PtcgAbility,
   PtcgAttack,
   PtcgWeakness,
   GameData,

@@ -116,3 +116,44 @@ catálogo» con un set en la URL mientras llegaba la lista de sets.
 **Verificado contra la base real** (20.433 impresiones de Pokémon): una cuenta de prueba con dos
 sobres de *Scarlet & Violet* tiene 20 impresiones; `owned=yes` devuelve 20 filas, el raíl dice
 «Planta 2 de 35» y Planta + «Me faltan» da **33**.
+
+---
+
+## T-094 — La ficha de carta, y lo que destapó ponerla junto a la imagen
+
+### Un `<dialog>` nativo
+
+`SelectorDeSet` tuvo que reimplementar en T-066 todo lo que un control nativo trae gratis. Aquí se hizo
+al revés: `<dialog>` con `showModal()` deja inerte el resto de la página, de modo que el foco no se
+escapa por detrás, y además cierra con `Escape` y se anuncia como diálogo. Lo único que no trae es
+**devolver el foco a quien lo abrió**, y eso se hace a mano. Verificado con teclado: tras `Escape`, el
+foco vuelve al nombre de la carta en la tabla.
+
+**Se abre por la URL** (`?carta=6514`). El enlace se comparte con la ficha abierta, y el botón de atrás
+la cierra en vez de sacarte del catálogo. El `Escape` nativo se intercepta para que también cierre por
+la URL; si no, el diálogo se cerraría con la URL diciendo que sigue abierto.
+
+El nombre de la carta en la fila **es** el botón que abre la ficha. Un botón «ver» por fila serían 300
+botones iguales para un lector de pantalla.
+
+### Lo específico de Pokémon
+
+Ataques con su coste como puntos del color de cada tipo, leídos en voz alta como *«Coste: Planta,
+Planta, Incoloro»*. Debilidad, resistencia y retirada sólo en Pokémon: en un Entrenador serían tres
+«Ninguna» de ruido. **La marca de regulación explica su ausencia según la fecha**: el Charizard del Base
+Set dice *«Sin marca: la carta es de 1999 y las marcas empezaron en 2019»*.
+
+### Acciones
+
+**Añadir a un mazo funciona**, y reutiliza el borrador del editor (`addCard`, `fromDeckDetail`,
+`toPayload`) en vez de reescribir dónde va cada carta. Verificado contra la base: dos pulsaciones dejan
+el mazo con `Arboliva x2 main`. **Añadir a la colección no se pinta**: la colección real llega en H9c, y
+un botón que no hace nada es peor que no tener botón.
+
+### P-042: el campo que faltaba desde H2
+
+La ficha es la primera pantalla que pone la carta impresa al lado de lo que la base dice de ella. Y en
+la primera carta que se abrió no cuadraba: la imagen de *Arboliva* muestra la habilidad *Enriching Oil*
+y la ficha no. **El adaptador de Pokémon nunca leyó `abilities`**: `RawCard` no las declara. Queda
+abierto como P-042, con T-097 para arreglarlo; lo caro es la reingesta, no el código.
+`PtcgAbility` ya está declarado y la ficha lo pinta si existe.

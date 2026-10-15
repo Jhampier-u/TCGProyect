@@ -83,12 +83,27 @@ export interface PtcgWeakness {
   value: string;
 }
 
+/**
+ * Habilidad de un Pokemon (Ability, Poke-Power, Poke-Body...).
+ *
+ * DECLARADA PERO AUN NO INGESTADA (P-042). El adaptador la descartaba, asi que
+ * el catalogo de hoy no tiene ninguna. Se declara para que la ficha (T-094) la
+ * pinte en cuanto una reingesta la traiga, sin tocar la interfaz.
+ */
+export interface PtcgAbility {
+  name: string;
+  text?: string;
+  /** "Ability", "Poke-Power", "Poke-Body"... tal como llega del origen. */
+  type?: string;
+}
+
 export interface PtcgGameData {
   supertype?: string;
   subtypes?: string[];
   hp?: number;
   types?: string[];
   evolves_from?: string;
+  abilities?: PtcgAbility[];
   attacks?: PtcgAttack[];
   weaknesses?: PtcgWeakness[];
   resistances?: PtcgWeakness[];

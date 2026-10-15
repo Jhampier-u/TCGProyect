@@ -1,6 +1,6 @@
 # Registro de Problemas
 
-**Última actualización:** 2026-10-15 (S037) · **Abiertos:** 1 · **Cerrados:** 40 · **Total:** 41
+**Última actualización:** 2026-10-15 (S037) · **Abiertos:** 2 · **Cerrados:** 40 · **Total:** 42
 
 Severidad: 🔴 crítica · 🟠 alta · 🟡 media · ⚪ baja
 
@@ -1538,3 +1538,34 @@ el lockfile. `fastify` 5.12.7, `fast-jwt` 6.3.5, `sharp` 0.35.5. `npm test` sigu
 
 **Lección.** *«Limpio»* es una afirmación con fecha, no una propiedad del código. Al retomar el
 proyecto, `npm audit` va con `npm test`, no detrás de la primera tarea que toque dependencias.
+
+---
+
+## P-042 🟠 · Las habilidades de Pokémon no llegan al catálogo: el adaptador las descarta
+**Estado:** ABIERTO desde el 2026-10-15 (S037) — el arreglo es T-097
+**Severidad:** 🟠
+**Origen:** la ficha de carta (T-094), al ponerla al lado de la imagen.
+
+**Detalle.** La ficha de *Arboliva* (sv1-23) enseña su ataque *Solar Beam* y nada más. La imagen de
+la carta, al lado, enseña también su habilidad *Enriching Oil*. Lo mismo el *Charizard* del Base Set
+con su *Pokémon Power* «Energy Burn».
+
+**No es la ficha: el dato no está en la base.** `RawCard` en `adapters/pokemontcg/types.ts` no declara
+`abilities`, así que el adaptador nunca lo lee y `game_data` no lo guarda. `rules_text` sale de
+`raw.rules`, que en un Pokémon son las reglas de mecánica (ex, V, Tera…), no las habilidades. Medido:
+**3.264 de 17.248 Pokémon** tienen `rules_text`; los Entrenadores, 2.792 de 2.792.
+
+**Cuántas cartas afecta, sin medir.** Saberlo exige volver a pedir las cartas al origen, que es
+precisamente el arreglo. Lo que sí se sabe es que no es un caso raro: desde *Sun & Moon* una parte
+grande de los Pokémon lleva habilidad.
+
+**Por qué no se arregló en S037.** El adaptador es una línea y su prueba. Lo caro es la reingesta: unas
+20.000 cartas contra una API que responde 200 el ~30 % de las veces (P-016) y, en esta máquina, sin la
+clave de T-005 en `.env`. Eso es una decisión de cuándo, no de cómo.
+
+**Lo que ya está hecho.** `PtcgAbility` declarado en `@tcg/shared` y la ficha pintándolo si existe: la
+interfaz no habrá que tocarla cuando llegue el dato.
+
+**Lección.** La ficha es la primera pantalla que pone la carta **impresa** al lado de lo que la base
+dice de ella. Hasta hoy ninguna vista comparaba las dos cosas, y por eso un campo entero podía faltar
+desde H2 sin que nada fallara.

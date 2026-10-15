@@ -11,6 +11,7 @@ import {
 import { SelectorDeSet } from '../components/SelectorDeSet.js';
 import { RailDeSet } from '../components/RailDeSet.js';
 import { FilaDeCarta } from '../components/FilaDeCarta.js';
+import { FichaDeCarta } from '../components/FichaDeCarta.js';
 import { ES } from '../i18n/es.js';
 
 /**
@@ -45,6 +46,23 @@ export function Catalogo() {
   const [railAbierto, setRailAbierto] = useState(false);
 
   const fijar = (siguientes: FiltrosCatalogo) => setParams(escribirFiltros(siguientes));
+
+  // La ficha abierta tambien va en la URL (T-094): se comparte con un enlace y
+  // el boton de atras la cierra. Cambiar un filtro la cierra sola, porque
+  // `escribirFiltros` no conoce esta clave.
+  const cartaAbierta = Number(params.get('carta')) || null;
+  const abrirCarta = (printId: number) =>
+    setParams((p) => {
+      const siguiente = new URLSearchParams(p);
+      siguiente.set('carta', String(printId));
+      return siguiente;
+    });
+  const cerrarCarta = () =>
+    setParams((p) => {
+      const siguiente = new URLSearchParams(p);
+      siguiente.delete('carta');
+      return siguiente;
+    });
   const alternarFiltro = (clave: ClaveFiltro, valor: string) => fijar(alternar(filtros, clave, valor));
 
   const sets = useQuery({ queryKey: ['sets', juego], queryFn: () => api.sets(juego).then((r) => r.data) });
@@ -180,6 +198,7 @@ export function Catalogo() {
                     <FilaDeCarta
                       key={c.printId}
                       carta={c}
+                      onAbrir={() => abrirCarta(c.printId)}
                       rareza={nombreDeRareza.get(c.rarity) ?? c.rarity}
                       conSesion={conSesion}
                     />
@@ -187,6 +206,16 @@ export function Catalogo() {
                 </tbody>
               </table>
             </>
+          )}
+
+          {cartaAbierta !== null && (
+            <FichaDeCarta
+              key={cartaAbierta}
+              printId={cartaAbierta}
+              juego={juego}
+              owned={filas.find((f) => f.printId === cartaAbierta)?.owned ?? null}
+              onCerrar={cerrarCarta}
+            />
           )}
 
           {cartas.hasNextPage && (

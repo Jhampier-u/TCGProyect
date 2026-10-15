@@ -1,6 +1,6 @@
 # Tareas Pendientes
 
-**Última actualización:** 2026-10-15 (S037) · **Total abiertas:** 2 — las de H9b
+**Última actualización:** 2026-10-15 (S037) · **Total abiertas:** 2 — T-095 de H9b y T-097 de datos
 
 Leyenda de prioridad: 🔴 crítica · 🟠 alta · 🟡 media · ⚪ baja
 
@@ -20,8 +20,13 @@ ASCII por fin comprobada, y la raíz convertida en elección de juego con la por
 
 | ID | Tarea | Agente | Prio |
 |---|---|---|---|
-| T-094 | **Ficha de carta** con toda la información y acciones para añadir a una colección o a un mazo | Frontend | 🟠 |
 | T-095 | **Reescritura de la suite E2E**: 8 recorridos rotos rehechos, 2 de invariante ampliados, y las cuatro garantías portadas (teclado, movimiento reducido, iconos locales, P-030). Selectores por rol, no por clase CSS | QA |  🟠 |
+
+### Datos de Pokémon que el catálogo no tiene
+
+| ID | Tarea | Agente | Prio |
+|---|---|---|---|
+| T-097 | **Ingestar las habilidades de Pokémon** (P-042): declarar `abilities` en `RawCard`, llevarlas a `game_data` con su prueba, y reingestar Pokémon. El código es pequeño; la reingesta son ~20.000 cartas contra P-016 y necesita la clave de T-005 en `.env`. La ficha ya las pinta en cuanto lleguen | Backend | 🟠 |
 
 ## Hito H0 — Fundamentos ✅ COMPLETADO (S019)
 

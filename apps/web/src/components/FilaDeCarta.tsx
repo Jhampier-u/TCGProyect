@@ -13,6 +13,8 @@ const PS_TOPE = 400;
 
 interface Props {
   carta: CardSummary;
+  /** Abre la ficha (T-094). */
+  onAbrir: () => void;
   rareza: string;
   /** Con sesion se pinta la columna "Tienes". Sin ella, ni la columna. */
   conSesion: boolean;
@@ -25,7 +27,7 @@ interface Props {
  * como chip de color. Es una fila de TABLA, no una tarjeta: son datos tabulares
  * y un lector de pantalla anuncia cada celda con su cabecera.
  */
-export function FilaDeCarta({ carta, rareza, conSesion }: Props) {
+export function FilaDeCarta({ carta, rareza, conSesion, onAbrir }: Props) {
   const src = imageUrl(carta.imagePath);
   const tipo = carta.elemType ? ES.pokemon.tipo[carta.elemType] ?? carta.elemType : null;
 
@@ -44,7 +46,12 @@ export function FilaDeCarta({ carta, rareza, conSesion }: Props) {
             )}
           </span>
           <span className="carta-textos">
-            <span className="carta-nombre-fila">{carta.name}</span>
+            {/* El nombre ES el boton: es lo que se lee primero y lo que se
+                pulsa. Un boton aparte de "ver" en cada fila seria 300 botones
+                identicos para un lector de pantalla. */}
+            <button type="button" className="carta-nombre-fila" onClick={onAbrir}>
+              {carta.name}
+            </button>
             {carta.typeLine && <span className="carta-linea">{carta.typeLine}</span>}
           </span>
         </div>

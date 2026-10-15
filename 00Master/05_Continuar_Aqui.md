@@ -216,13 +216,14 @@ Las ocho tareas de H8c están cerradas. Lo que queda abierto salió de hacerlas,
 
 ## 6. Problemas abiertos que conviene tener presentes
 
-**Sólo queda uno, y no es trabajo pendiente:**
+**Dos.** Uno es riesgo permanente; el otro, trabajo con fecha por decidir:
 
 | ID | Severidad | Resumen |
 |---|---|---|
 | **P-016** | 🟠 | La API de Pokémon responde 200 sólo ~30 % de las veces. **Riesgo operativo permanente**, no algo que se arregle: por eso la ingesta se reanuda |
+| **P-042** | 🟠 | Las **habilidades** de Pokémon no están en el catálogo: el adaptador nunca las leyó. El arreglo es T-097 (una línea más una reingesta de ~20.000 cartas) |
 
-Los 41 problemas —**40 cerrados**, cada uno con su medición— están en
+Los 42 problemas —**40 cerrados**, cada uno con su medición— están en
 `003Problemas/Registro_Problemas.md`.
 
 **P-008 se cerró en S030**, veintisiete sesiones después de abrirse, y deja la lección más útil de las

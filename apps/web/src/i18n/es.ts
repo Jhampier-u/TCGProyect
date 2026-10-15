@@ -174,6 +174,44 @@ export const ES = {
     deTotal: (tengo: number, total: number) => `${tengo} de ${total}`,
   },
 
+  /** La ficha de carta (T-094). */
+  ficha: {
+    cerrar: 'Cerrar',
+    cargando: 'Cargando la carta…',
+    error: 'No se pudo cargar esta carta.',
+    numeroEnSet: (set: string, numero: string) => `${set} · nº ${numero}`,
+    ps: 'PS',
+    evolucionaDe: (nombre: string) => `Evoluciona de ${nombre}`,
+    habilidades: 'Habilidades',
+    ataques: 'Ataques',
+    coste: (tipos: string[]) => (tipos.length === 0 ? 'Sin coste' : `Coste: ${tipos.join(', ')}`),
+    debilidad: 'Debilidad',
+    resistencia: 'Resistencia',
+    retirada: 'Retirada',
+    ninguna: 'Ninguna',
+    reglas: 'Reglas',
+    marca: 'Marca de regulación',
+    /** La ausencia se explica (spec §2): antes de 2019 la marca no existía. */
+    marcaAnterior: (anio: string) => `Sin marca: la carta es de ${anio} y las marcas empezaron en 2019.`,
+    marcaNinguna: 'Esta carta no lleva marca de regulación.',
+    publicadaEtiqueta: 'Publicada',
+    acabados: 'Acabados',
+    enSobres: 'Sale en los sobres de su set.',
+    fueraDeSobres: 'No sale en los sobres de su set.',
+    laTienes: 'La tienes en tu colección.',
+    noLaTienes: 'Aún no la tienes.',
+    anadirAMazo: 'Añadir a un mazo',
+    elegirMazo: 'Mazo',
+    anadir: 'Añadir',
+    anadiendo: 'Añadiendo…',
+    anadida: (mazo: string, copias: number) =>
+      `Añadida a «${mazo}». Ahora lleva ${copias} ${copias === 1 ? 'copia' : 'copias'}.`,
+    errorAnadir: 'No se pudo añadir al mazo.',
+    sinMazos: 'Aún no tienes mazos de este juego.',
+    crearMazo: 'Crear un mazo',
+    entraParaMazos: 'Inicia sesión para añadirla a un mazo.',
+  },
+
   /**
    * Los valores de Pokémon tal como llegan del origen, en inglés, y cómo se
    * leen aquí. La clave es el dato; el valor es lo que se pinta.
