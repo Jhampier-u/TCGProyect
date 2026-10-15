@@ -247,6 +247,24 @@ export const ES = {
       `${poseidas}/${total}${ES.simbolo.separador}${porcentaje}%`,
   },
 
+  /**
+   * Nombres accesibles (T-095). Lo que un lector de pantalla anuncia de una
+   * región o una lista, y por lo que la suite E2E las encuentra: un selector por
+   * rol y nombre sobrevive a un rediseño; uno por clase CSS, no.
+   */
+  semantica: {
+    juego: 'Juego',
+    cantidadDeSobres: 'Cantidad de sobres',
+    buscadorDeCartas: 'Buscador de cartas',
+    buscarPorNombre: 'Buscar por nombre',
+    resultados: 'Resultados',
+    anadirCarta: (nombre: string) => `Añadir ${nombre}`,
+    mazo: 'Tu mazo',
+    problemasDelMazo: 'Problemas del mazo',
+    lineasDeZona: (zona: string) => `Cartas en ${zona}`,
+    tusMazos: 'Tus mazos',
+  },
+
   mazos: {
     nombrePlaceholder: 'Nombre del mazo',
     principal: (n: number) => `main ${n}`,
@@ -262,5 +280,7 @@ export const ES = {
 
   error: {
     paginaNoEncontrada: 'Página no encontrada.',
+    pantallaRota: 'Algo ha fallado en esta pantalla. El resto de la aplicación sigue funcionando.',
+    recargar: 'Recargar',
   },
 } as const;

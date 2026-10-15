@@ -8,6 +8,7 @@ import {
   YGO_MAX_SIDE,
   YGO_MIN_MAIN,
 } from '@tcg/shared';
+import { ES } from '../i18n/es.js';
 
 /**
  * Los textos se construyen a partir del CODIGO del problema, no del `message`
@@ -70,7 +71,7 @@ export function DeckValidacion(props: DeckValidacionProps) {
   return (
     <>
       <div className="barra-guardar">
-        <span className={`estado ${validation.valid ? 'valido' : 'invalido'}`}>
+        <span className={`estado ${validation.valid ? 'valido' : 'invalido'}`} role="status">
           {validation.valid
             ? 'Mazo valido'
             : `${validation.issues.length} ${
@@ -94,7 +95,7 @@ export function DeckValidacion(props: DeckValidacionProps) {
       )}
 
       {validation.issues.length > 0 && (
-        <ul className="problemas">
+        <ul className="problemas" aria-label={ES.semantica.problemasDelMazo}>
           {validation.issues.map((issue, i) => (
             <li key={`${issue.code}-${issue.oracleKey ?? i}`}>{textoDeProblema(issue)}</li>
           ))}

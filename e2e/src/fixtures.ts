@@ -101,6 +101,8 @@ async function registrar(request: APIRequestContext, etiqueta: string): Promise<
 
 export interface SetAbrible {
   id: number;
+  /** Lo que lleva la URL del catalogo (`?set=`). */
+  externalId: string;
   name: string;
   poolSize: number;
   isOpenable: boolean;
@@ -115,7 +117,18 @@ export interface SetAbrible {
  * los rojos. Se comprueba y se falla ruidosamente con el comando exacto.
  */
 export async function setAbribleDeYgo(request: APIRequestContext): Promise<SetAbrible> {
-  const res = await request.get(`${API}/api/games/YGO/sets`);
+  return setAbrible(request, 'YGO');
+}
+
+/**
+ * Lo mismo para cualquier juego. Pokemon lo necesita desde T-095: el catalogo y
+ * la ficha son de Pokemon, y "las que me faltan" exige haber abierto algo.
+ */
+export async function setAbrible(
+  request: APIRequestContext,
+  juego: 'YGO' | 'PTCG' | 'MTG',
+): Promise<SetAbrible> {
+  const res = await request.get(`${API}/api/games/${juego}/sets`);
   if (!res.ok()) {
     throw new Error(`La API no responde en ${API}: ${res.status()}`);
   }
@@ -127,8 +140,8 @@ export async function setAbribleDeYgo(request: APIRequestContext): Promise<SetAb
   const abrible = data.find((s) => s.poolSize > 0 && s.isOpenable);
   if (!abrible) {
     throw new Error(
-      'FALTAN DATOS: no hay ningun set de Yu-Gi-Oh! con cartas abribles.\n' +
-        'Ejecuta:  docker compose --profile ingest run --rm --build ingest --game YGO --sets 4',
+      `FALTAN DATOS: no hay ningun set de ${juego} con cartas abribles.\n` +
+        `Ejecuta:  docker compose --profile ingest run --rm --build ingest --game ${juego} --sets 4`,
     );
   }
   return abrible;
@@ -153,10 +166,11 @@ export async function crearMazo(
   request: APIRequestContext,
   token: string,
   name: string,
+  game: 'YGO' | 'PTCG' | 'MTG' = 'YGO',
 ): Promise<number> {
   const res = await request.post(`${API}/api/decks`, {
     headers: { authorization: `Bearer ${token}` },
-    data: { game: 'YGO', name },
+    data: { game, name },
   });
   if (!res.ok()) {
     throw new Error(`No se pudo crear el mazo: ${res.status()} ${await res.text()}`);

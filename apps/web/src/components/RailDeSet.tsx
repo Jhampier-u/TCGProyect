@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactNode } from 'react';
+import { useId, type CSSProperties, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import type { FacetCount, FacetCounts } from '../lib/api.js';
 import { SIN_MARCA } from '../lib/api.js';
@@ -143,9 +143,12 @@ export function RailDeSet({ id, abierto, facetas, filtros, rarezas, conSesion, o
 }
 
 function Seccion({ titulo, children }: { titulo: string; children: ReactNode }) {
+  // Region con nombre: un lector de pantalla puede saltar a "Tipo", y la suite
+  // E2E la encuentra por lo que es (T-095).
+  const id = useId();
   return (
-    <section className="rail-seccion">
-      <h2 className="rail-titulo">{titulo}</h2>
+    <section className="rail-seccion" aria-labelledby={id}>
+      <h2 className="rail-titulo" id={id}>{titulo}</h2>
       <ul className="rail-lista">{children}</ul>
     </section>
   );

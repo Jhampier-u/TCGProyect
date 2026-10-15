@@ -1,6 +1,6 @@
 # Registro de Problemas
 
-**Última actualización:** 2026-10-15 (S037) · **Abiertos:** 2 · **Cerrados:** 40 · **Total:** 42
+**Última actualización:** 2026-10-15 (S037) · **Abiertos:** 2 · **Cerrados:** 41 · **Total:** 43
 
 Severidad: 🔴 crítica · 🟠 alta · 🟡 media · ⚪ baja
 
@@ -1569,3 +1569,35 @@ interfaz no habrá que tocarla cuando llegue el dato.
 **Lección.** La ficha es la primera pantalla que pone la carta **impresa** al lado de lo que la base
 dice de ella. Hasta hoy ninguna vista comparaba las dos cosas, y por eso un campo entero podía faltar
 desde H2 sin que nada fallara.
+
+---
+
+## P-043 ✅ CERRADO · Dos pantallas guardaban cosas distintas bajo la misma clave de caché y la aplicación se quedaba en blanco
+**Estado:** CERRADO el 2026-10-15 (S037) — `apps/web/src/lib/consultas.ts`
+**Severidad:** 🔴
+**Origen:** la prueba E2E de humo, al reescribirla en T-095: llegaba al catálogo desde la portada y
+encontraba una página vacía.
+
+**Detalle.** React Query identifica una consulta por su **clave**, no por su función. La portada de
+Pokémon (T-090, S034) guardaba en `['sets', 'PTCG']` la respuesta entera, `{ data: [...] }`. El
+catálogo, Sobres y el buscador de mazos guardaban en **esa misma clave** sólo la lista. Quien llegaba
+segundo recibía un objeto donde esperaba un array, `.filter` no existía, y React desmontaba **la
+aplicación entera**: sin cabecera ni un enlace para salir.
+
+**No lo introdujo T-093: lo destapó.** Reproducido con el código anterior a T-093: portada de Pokémon,
+y luego «Abrir sobres» eligiendo Pokémon, deja `#root` vacío. **Llevaba así desde S034**, tres
+sesiones. Nadie hacía ese camino porque el selector de Sobres arranca en Yu-Gi-Oh!, y el catálogo
+viejo también; T-093 hizo del catálogo una página de Pokémon y convirtió un camino raro en el normal.
+
+**Lo cazó la prueba de extremo a extremo y no la unitaria.** Ningún test unitario monta dos pantallas
+seguidas compartiendo caché, y es exactamente lo que el usuario hace.
+
+**Arreglo, estructural.** `lib/consultas.ts` define cada consulta compartida —sets, rarezas, épocas—
+**una vez**, con su clave y su función juntas. Una clave escrita a mano en un componente es como
+empieza otra vez. Además, un límite de error (`LimiteDeError`) envuelve las rutas: si una pantalla
+falla, cae ella y no la aplicación, y el error sigue saliendo en consola, donde la prueba de humo lo
+vigila. La prueba recorre ahora ese camino exacto, y **se vio fallar** reintroduciendo la clave
+divergente.
+
+**Lección.** Una caché compartida es un contrato entre pantallas que no aparece en ningún tipo:
+TypeScript ve dos `useQuery` correctos por separado.

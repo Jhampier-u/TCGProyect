@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useId, useMemo, useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import type { GameCode } from '@tcg/shared';
 import { imageUrl, type OpenedCard } from '../lib/api.js';
@@ -80,11 +80,14 @@ export function PackReveal({ game, cards, tiers, openingId, seed }: PackRevealPr
   const pendientes = orden.length - reveladas.size;
   const destacada = orden[orden.length - 1];
   const nuevas = cards.filter((c) => c.isNew).length;
+  const idTitulo = useId();
 
   return (
-    <section className="sobre">
+    // Region con nombre: la suite (T-095) y un lector de pantalla encuentran
+    // "Sobre #N" por lo que es, no por su clase.
+    <section className="sobre" aria-labelledby={idTitulo}>
       <div className="sobre-cabecera">
-        <h2 style={{ margin: 0 }}>Sobre #{openingId}</h2>
+        <h2 style={{ margin: 0 }} id={idTitulo}>Sobre #{openingId}</h2>
         <span className="semilla" title="Semilla de la apertura: la hace reproducible">
           {seed}
         </span>

@@ -66,7 +66,7 @@ function Editor({ deck, token }: { deck: DeckDetail; token: string }) {
       <div className="editor">
         <DeckBuscador game={deck.game} onAnadir={editor.anadir} />
 
-        <div className="editor-columna">
+        <section className="editor-columna" aria-label={ES.semantica.mazo}>
           {zonas.map((z) => (
             <DeckZona
               key={z.zone}
@@ -79,7 +79,7 @@ function Editor({ deck, token }: { deck: DeckDetail; token: string }) {
               onMover={editor.moverZona}
             />
           ))}
-        </div>
+        </section>
       </div>
     </>
   );

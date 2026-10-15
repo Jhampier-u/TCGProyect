@@ -181,7 +181,10 @@ export function SelectorDeSet({
         disabled={deshabilitado}
         aria-haspopup="listbox"
         aria-expanded={abierto}
-        aria-label={etiqueta}
+        // El nombre lleva el VALOR: con `aria-label={etiqueta}` a secas, la
+        // etiqueta tapaba el contenido y un lector de pantalla decia "Set,
+        // boton" sin decir nunca que set estaba elegido (T-095).
+        aria-label={`${etiqueta}: ${elegida.nombre}`}
         {...(abierto ? { 'aria-activedescendant': `${idBase}-${resaltado}` } : {})}
         onClick={() => (abierto ? setAbierto(false) : abrir())}
         onKeyDown={alTeclear}

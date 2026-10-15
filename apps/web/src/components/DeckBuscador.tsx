@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { GameCode } from '@tcg/shared';
 import { api, imageUrl, type CardSummary } from '../lib/api.js';
 import type { DraftCard } from '../lib/deck-draft.js';
+import { consultaSets } from '../lib/consultas.js';
 import { SelectorDeSet } from './SelectorDeSet.js';
 import { ES } from '../i18n/es.js';
 
@@ -27,8 +28,7 @@ export function DeckBuscador({ game, onAnadir }: DeckBuscadorProps) {
   }, [texto]);
 
   const sets = useQuery({
-    queryKey: ['sets', game],
-    queryFn: () => api.sets(game).then((r) => r.data),
+    ...consultaSets(game),
   });
 
   const resultados = useQuery({
@@ -80,9 +80,10 @@ export function DeckBuscador({ game, onAnadir }: DeckBuscadorProps) {
   };
 
   return (
-    <div className="editor-columna">
+    <section className="editor-columna" aria-label={ES.semantica.buscadorDeCartas}>
       <div className="filtros">
         <input
+          aria-label={ES.semantica.buscarPorNombre}
           placeholder="Buscar por nombre"
           value={texto}
           onChange={(e) => setTexto(e.target.value)}
@@ -105,10 +106,11 @@ export function DeckBuscador({ game, onAnadir }: DeckBuscadorProps) {
       {resultados.isLoading && <div className="vacio">Buscando...</div>}
       {resultados.data?.length === 0 && <div className="vacio">Ninguna carta coincide.</div>}
 
+      <div role="list" aria-label={ES.semantica.resultados}>
       {(resultados.data ?? []).map((carta) => {
         const src = imageUrl(carta.imagePath);
         return (
-          <div className="buscador-fila" key={carta.printId}>
+          <div className="buscador-fila" role="listitem" key={carta.printId}>
             {src ? <img src={src} alt="" loading="lazy" /> : <span className="sin-imagen" />}
             <div>
               <div className="nombre">{carta.name}</div>
@@ -120,12 +122,17 @@ export function DeckBuscador({ game, onAnadir }: DeckBuscadorProps) {
                 {carta.rarity.replace(/_/g, ' ')}
               </div>
             </div>
-            <button onClick={() => void anadir(carta)} disabled={pidiendo === carta.printId}>
+            <button
+              onClick={() => void anadir(carta)}
+              disabled={pidiendo === carta.printId}
+              aria-label={ES.semantica.anadirCarta(carta.name)}
+            >
               {pidiendo === carta.printId ? '...' : 'Anadir'}
             </button>
           </div>
         );
       })}
-    </div>
+      </div>
+    </section>
   );
 }

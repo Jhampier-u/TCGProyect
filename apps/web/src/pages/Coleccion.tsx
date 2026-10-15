@@ -61,6 +61,7 @@ export function Coleccion() {
 
       <div className="filtros">
         <select
+          aria-label={ES.semantica.juego}
           value={game}
           onChange={(e) => { setGame(e.target.value as GameCode); setCursores([undefined]); }}
         >
@@ -76,9 +77,9 @@ export function Coleccion() {
           Aun no tienes ninguna carta de este juego. Abre un sobre para empezar.
         </div>
       ) : (
-        <div className="completitud">
+        <div className="completitud" role="list" aria-label={ES.coleccion.completitudPorSet}>
           {conCartas.map((c) => (
-            <div className="fila-set" key={c.setExternalId}>
+            <div className="fila-set" role="listitem" key={c.setExternalId}>
               {/* Ruta LOCAL, nunca la del origen (P-001). `alt` vacio a
                   proposito: el codigo y el nombre del set van al lado en texto. */}
               {c.iconPath ? (

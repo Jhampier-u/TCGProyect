@@ -24,7 +24,7 @@ distribuciones de rareza reales** y ver su colección crecer hacia el 100 % de c
 | H8 · Endurecimiento | ✅ Suite E2E, seguridad y las 8 de deuda técnica |
 | H9 · Identidad por juego | 🟡 H9a hecho; H9b (catálogo de Pokémon y ficha) en curso |
 
-**Suite de Vitest y los 11 recorridos E2E en verde · `tsc --build` limpio · `npm audit` limpio (comprobado el 2026-10-15; ver P-041).**
+**Suite de Vitest y los 16 recorridos E2E en verde · `tsc --build` limpio · `npm audit` limpio (comprobado el 2026-10-15; ver P-041).**
 
 ---
 

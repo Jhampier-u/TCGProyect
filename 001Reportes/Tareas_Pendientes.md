@@ -1,6 +1,6 @@
 # Tareas Pendientes
 
-**Última actualización:** 2026-10-15 (S037) · **Total abiertas:** 2 — T-095 de H9b y T-097 de datos
+**Última actualización:** 2026-10-15 (S037) · **Total abiertas:** 1 — T-097, datos de Pokémon
 
 Leyenda de prioridad: 🔴 crítica · 🟠 alta · 🟡 media · ⚪ baja
 
@@ -16,11 +16,11 @@ catálogo.
 T-088, T-089 y T-090 cerradas: sistema de tokens con los dos temas, módulo de cadenas con la regla de
 ASCII por fin comprobada, y la raíz convertida en elección de juego con la portada de Pokémon.
 
-### H9b — Catálogo de Pokémon y ficha de carta
+### H9b — Catálogo de Pokémon y ficha de carta ✅ COMPLETADO (S037)
 
-| ID | Tarea | Agente | Prio |
-|---|---|---|---|
-| T-095 | **Reescritura de la suite E2E**: 8 recorridos rotos rehechos, 2 de invariante ampliados, y las cuatro garantías portadas (teclado, movimiento reducido, iconos locales, P-030). Selectores por rol, no por clase CSS | QA |  🟠 |
+T-091 a T-095 cerradas: facetas indexadas y en la API, catálogo «Consulta» con el raíl y «me faltan»,
+ficha de carta en un diálogo nativo, y la suite E2E reescrita por rol (16 recorridos, siete garantías
+vistas fallar a propósito). Lo siguiente de H9 —las dos colecciones (H9c)— necesita su spec.
 
 ### Datos de Pokémon que el catálogo no tiene
 

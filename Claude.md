@@ -32,7 +32,7 @@ C:\ProyectoTCG\
 ├── docker\e2e.Dockerfile        <- imagen de la suite E2E (ADR-009)
 ├── e2e\                         <- suite Playwright. NO es workspace de npm
 │   ├── playwright.config.ts
-│   └── src\  fixtures · humo · sobres (T-040) · mazos (T-053) · iconos (T-066)
+│   └── src\  fixtures · humo · sobres (T-040) · mazos (T-053) · iconos (T-066) · catalogo (T-095)
 ├── Claude.md                    <- este archivo (Orquestador)
 ├── 00Master\                    <- contexto absoluto, verdad única
 │   ├── 00_Contexto_Global.md
@@ -194,9 +194,11 @@ C:\ProyectoTCG\
 │       ├── styles\ tokens.css: color, tipografia, espaciado y capa por juego (T-088)
 │       ├── layouts\ JuegoLayout: pone `data-juego`, y de ahi sale la personalidad
 │       ├── lib\   api · auth · deck-draft (borrador puro) · use-deck-editor
+│       │          filtros-url (estado del catalogo en la URL) · consultas (claves de cache, P-043)
 │       ├── pages\ Catalogo · Acceso · Sobres · Coleccion · Mazos · MazoEditor
 │       └── components\ CardTile · PackReveal · DeckBuscador · DeckZona ·
-│                     DeckValidacion · DeckTransferencia · SelectorDeSet
+│                     DeckValidacion · DeckTransferencia · SelectorDeSet ·
+│                     RailDeSet · FilaDeCarta · FichaDeCarta · LimiteDeError
 └── package.json                 <- npm workspaces
 ```
 

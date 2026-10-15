@@ -60,9 +60,9 @@ export function Mazos() {
         <div className="vacio">Todavia no tienes mazos. Crea el primero ahi arriba.</div>
       )}
 
-      <div className="mazo-lista">
+      <div className="mazo-lista" role="list" aria-label={ES.semantica.tusMazos}>
         {(mazos.data ?? []).map((mazo) => (
-          <div className="mazo-fila" key={mazo.id}>
+          <div className="mazo-fila" role="listitem" key={mazo.id}>
             <div>
               <div className="nombre">
                 <Link to={`/mazos/${mazo.id}`}>{mazo.name}</Link>

@@ -1,4 +1,4 @@
-import type { Browser, Page } from '@playwright/test';
+import type { Browser, Locator, Page } from '@playwright/test';
 import { test, expect, iniciarSesion, setAbribleDeYgo } from './fixtures.js';
 
 /**
@@ -55,6 +55,21 @@ async function paginaCon(
   return { page, cerrar: () => contexto.close() };
 }
 
+/** El sobre recien abierto: una region con nombre "Sobre #N" (T-095). */
+function sobre(page: Page): Locator {
+  return page.getByRole('region', { name: /^Sobre #/ });
+}
+
+/**
+ * Las cartas de un sobre: botones que se voltean, con `aria-pressed`.
+ *
+ * Se buscan por ese ESTADO y no por su nombre, que cambia al voltear -- "Carta
+ * 3 sin revelar" pasa a ser el nombre de la carta -- ni por su clase.
+ */
+function volteadores(page: Page): Locator {
+  return sobre(page).locator('button[aria-pressed]');
+}
+
 async function abrirUnSobre(page: Page, nombreDeSet: string): Promise<void> {
   await page.goto('/sobres');
   await expect(page.getByRole('heading', { name: 'Abrir sobres' })).toBeVisible();
@@ -62,15 +77,14 @@ async function abrirUnSobre(page: Page, nombreDeSet: string): Promise<void> {
   // Juego y cantidad siguen siendo `<select>` nativos; el de SET ya no lo es.
   // Desde T-066 es un control propio, porque un `<option>` no puede llevar un
   // icono dentro. Elegir en el es abrir y hacer clic en la opcion.
-  const selects = page.locator('.filtros select');
-  await selects.nth(0).selectOption('YGO');
-  await selects.nth(1).selectOption('1');
+  await page.getByRole('combobox', { name: 'Juego' }).selectOption('YGO');
+  await page.getByRole('combobox', { name: 'Cantidad de sobres' }).selectOption('1');
 
-  await page.locator('.selector-set-boton').first().click();
-  await page.locator(`.selector-set-opcion:has-text("${nombreDeSet}")`).first().click();
+  await page.getByRole('button', { name: /^Set:/ }).click();
+  await page.getByRole('listbox', { name: 'Set' }).getByRole('option', { name: nombreDeSet }).first().click();
 
   await page.getByRole('button', { name: 'Abrir' }).click();
-  await expect(page.locator('.sobre')).toBeVisible();
+  await expect(sobre(page)).toBeVisible();
 }
 
 test('las cartas llegan boca abajo y el volteo TERMINA', async ({ browser, request, usuario }) => {
@@ -81,7 +95,7 @@ test('las cartas llegan boca abajo y el volteo TERMINA', async ({ browser, reque
 
     await abrirUnSobre(page, set.name);
 
-    const primera = page.locator('.volteador').first();
+    const primera = volteadores(page).first();
 
     // Llegan boca abajo: con movimiento normal, nada se revela solo.
     await expect(primera).toHaveAttribute('aria-pressed', 'false');
@@ -120,11 +134,11 @@ test('T-040 no es vacuo: con movimiento reducido NO hay volteo que probar', asyn
     await abrirUnSobre(page, set.name);
 
     // Ya reveladas, sin un solo clic.
-    const volteadores = page.locator('.volteador');
-    const total = await volteadores.count();
+    const cartas = volteadores(page);
+    const total = await cartas.count();
     expect(total).toBeGreaterThan(0);
     for (let i = 0; i < total; i++) {
-      await expect(volteadores.nth(i)).toHaveAttribute('aria-pressed', 'true');
+      await expect(cartas.nth(i)).toHaveAttribute('aria-pressed', 'true');
     }
   } finally {
     await cerrar();

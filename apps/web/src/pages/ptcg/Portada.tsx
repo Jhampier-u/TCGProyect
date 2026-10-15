@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { api, imageUrl } from '../../lib/api.js';
+import { imageUrl } from '../../lib/api.js';
+import { consultaEpocas, consultaSets } from '../../lib/consultas.js';
 import { agruparPorEpoca } from '../../lib/epocas.js';
 import { ES } from '../../i18n/es.js';
 
@@ -18,8 +19,8 @@ import { ES } from '../../i18n/es.js';
  * Pokemon y no un componente generico disfrazado.
  */
 export function Portada() {
-  const sets = useQuery({ queryKey: ['sets', 'PTCG'], queryFn: () => api.sets('PTCG') });
-  const epocas = useQuery({ queryKey: ['eras', 'PTCG'], queryFn: () => api.eras('PTCG') });
+  const sets = useQuery(consultaSets('PTCG'));
+  const epocas = useQuery(consultaEpocas('PTCG'));
 
   if (sets.isPending || epocas.isPending) {
     return <p className="vacio">{ES.portada.cargando}</p>;
@@ -28,8 +29,8 @@ export function Portada() {
     return <p className="aviso error">{ES.portada.error}</p>;
   }
 
-  const grupos = agruparPorEpoca(sets.data.data, epocas.data.data);
-  const totalSets = sets.data.data.length;
+  const grupos = agruparPorEpoca(sets.data, epocas.data);
+  const totalSets = sets.data.length;
 
   return (
     <section className="portada">

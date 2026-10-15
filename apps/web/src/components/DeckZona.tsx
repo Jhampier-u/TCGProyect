@@ -19,7 +19,7 @@ export function DeckZona(props: DeckZonaProps) {
   const total = filas.reduce((n, e) => n + e.quantity, 0);
 
   return (
-    <section className="zona">
+    <section className="zona" aria-label={etiqueta}>
       <div className="zona-cabecera">
         <strong>{etiqueta}</strong>
         <span className={`cifras ${mal ? 'mal' : ''}`}>
@@ -29,8 +29,11 @@ export function DeckZona(props: DeckZonaProps) {
 
       {filas.length === 0 && <div className="vacio">Vacia.</div>}
 
+      {/* `role` y no `<ul>`: `.linea-carta` es una rejilla y un `<li>` le meteria
+          margenes y vinetas. La semantica es la misma. */}
+      <div role="list" aria-label={ES.semantica.lineasDeZona(etiqueta)}>
       {filas.map((fila) => (
-        <div className="linea-carta" key={`${fila.printId}-${fila.zone}`}>
+        <div className="linea-carta" role="listitem" key={`${fila.printId}-${fila.zone}`}>
           <div className="cantidad">
             <button
               aria-label={`Quitar una copia de ${fila.name}`}
@@ -66,6 +69,7 @@ export function DeckZona(props: DeckZonaProps) {
           </div>
         </div>
       ))}
+      </div>
     </section>
   );
 }

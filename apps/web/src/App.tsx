@@ -1,4 +1,4 @@
-import { NavLink, Navigate, Route, Routes } from 'react-router-dom';
+import { NavLink, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { useAuth } from './lib/auth.js';
 import { Catalogo } from './pages/Catalogo.js';
 import { Acceso } from './pages/Acceso.js';
@@ -10,6 +10,7 @@ import { Inicio } from './pages/Inicio.js';
 import { Portada } from './pages/ptcg/Portada.js';
 import { JuegoLayout } from './layouts/JuegoLayout.js';
 import { ES } from './i18n/es.js';
+import { LimiteDeError } from './components/LimiteDeError.js';
 
 /** Ruta que exige sesion. Redirige a /acceso conservando la intencion. */
 function Protegida({ children }: { children: React.ReactNode }) {
@@ -23,6 +24,9 @@ function Protegida({ children }: { children: React.ReactNode }) {
 
 export function App() {
   const { user, salir } = useAuth();
+  // La clave reinicia el limite al cambiar de pagina: si no, tras un fallo
+  // seguiria ensenando el error aunque el usuario navegara a otra parte.
+  const { pathname } = useLocation();
 
   return (
     <>
@@ -55,6 +59,7 @@ export function App() {
       </header>
 
       <main>
+        <LimiteDeError key={pathname}>
         <Routes>
           {/* La raiz es una eleccion de juego, no un catalogo con filtro (T-090).
               Mientras fuera lo segundo no habia seccion que personalizar. */}
@@ -79,6 +84,7 @@ export function App() {
 
           <Route path="*" element={<div className="vacio">{ES.error.paginaNoEncontrada}</div>} />
         </Routes>
+        </LimiteDeError>
       </main>
     </>
   );

@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { GameCode, PtcgGameData } from '@tcg/shared';
 import { api, imageUrl, type CardDetail } from '../lib/api.js';
 import { useAuth } from '../lib/auth.js';
+import { consultaRarezas } from '../lib/consultas.js';
 import { addCard, fromDeckDetail, toPayload } from '../lib/deck-draft.js';
 import { estiloDeTipo } from '../lib/tipos-pokemon.js';
 import { ES } from '../i18n/es.js';
@@ -99,7 +100,7 @@ function Contenido({
   const src = imageUrl(carta.imagePath);
   const datos = carta.gameData as PtcgGameData;
   // Misma clave que el catalogo: llega de la cache, no hace otra peticion.
-  const rarezas = useQuery({ queryKey: ['rarezas', juego], queryFn: () => api.rarities(juego).then((r) => r.data) });
+  const rarezas = useQuery(consultaRarezas(juego));
   const rareza = rarezas.data?.find((r) => r.code === carta.rarity)?.label ?? carta.rarity;
   const tipos = datos.types ?? [];
   const nombreDeTipo = (t: string) => ES.pokemon.tipo[t] ?? t;
@@ -269,7 +270,7 @@ function AnadirAMazo({ carta, juego }: { carta: CardDetail; juego: GameCode }) {
   const idSelect = useId();
 
   const mazos = useQuery({
-    queryKey: ['mazos', juego, user?.id ?? null],
+    queryKey: ['decks', juego, user?.id ?? null],
     queryFn: () => api.decks(token as string, juego).then((r) => r.data),
     enabled: token !== null,
   });
@@ -290,8 +291,11 @@ function AnadirAMazo({ carta, juego }: { carta: CardDetail; juego: GameCode }) {
       return { nombre: guardado.name, copias };
     },
     onSuccess: (_r, deckId) => {
-      void cliente.invalidateQueries({ queryKey: ['mazo', deckId] });
-      void cliente.invalidateQueries({ queryKey: ['mazos'] });
+      // Las claves que usan las paginas de mazos: `['deck', id]` en el editor
+      // y `['decks']` en la lista. Con otras, el editor seguiria ensenando el
+      // mazo de antes de anadir.
+      void cliente.invalidateQueries({ queryKey: ['deck', deckId] });
+      void cliente.invalidateQueries({ queryKey: ['decks'] });
     },
   });
 

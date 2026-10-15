@@ -4,6 +4,7 @@ import { useOutletContext, useSearchParams } from 'react-router-dom';
 import type { GameCode } from '@tcg/shared';
 import { api, imageUrl, SIN_MARCA } from '../lib/api.js';
 import { useAuth } from '../lib/auth.js';
+import { consultaRarezas, consultaSets } from '../lib/consultas.js';
 import {
   alternar, escribirFiltros, filtrosActivos, leerFiltros, limpiar, quitar,
   type ClaveFiltro, type FiltrosCatalogo,
@@ -65,8 +66,8 @@ export function Catalogo() {
     });
   const alternarFiltro = (clave: ClaveFiltro, valor: string) => fijar(alternar(filtros, clave, valor));
 
-  const sets = useQuery({ queryKey: ['sets', juego], queryFn: () => api.sets(juego).then((r) => r.data) });
-  const rarezas = useQuery({ queryKey: ['rarezas', juego], queryFn: () => api.rarities(juego).then((r) => r.data) });
+  const sets = useQuery(consultaSets(juego));
+  const rarezas = useQuery(consultaRarezas(juego));
 
   // La clave lleva el usuario: los recuentos con tenencia son de alguien, y al
   // cambiar de sesion no puede servirse la cache del anterior.

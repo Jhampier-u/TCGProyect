@@ -157,3 +157,116 @@ la primera carta que se abrió no cuadraba: la imagen de *Arboliva* muestra la h
 y la ficha no. **El adaptador de Pokémon nunca leyó `abilities`**: `RawCard` no las declara. Queda
 abierto como P-042, con T-097 para arreglarlo; lo caro es la reingesta, no el código.
 `PtcgAbility` ya está declarado y la ficha lo pinta si existe.
+
+---
+
+## T-095 — La suite E2E, por rol, y lo que encontró al ampliarla
+
+### Lo que de verdad estaba roto
+
+El spec contaba **8 de 10 recorridos rotos** porque daba por hecho que H9b rediseñaba todas las
+pantallas. No fue así: H9b rehízo el catálogo y añadió la ficha, y Sobres, Colección y Mazos siguen
+como estaban. Medido antes de tocar nada: **3 de 11 fallaban**, dos por iconos de Yu-Gi-Oh! que aún no
+se habían copiado a esta máquina y uno —la prueba de humo— por algo real.
+
+La reescritura sigue siendo necesaria, y por el motivo del spec: **el rediseño visual que viene**
+romperá todas las clases CSS. Una prueba que busca `.volteador` se cae con el primer cambio de nombre;
+una que busca *«un botón con `aria-pressed` dentro de la región "Sobre #N"»* sobrevive.
+
+### Buscar por rol obligó a que hubiera rol
+
+La interfaz no tenía la semántica que la suite necesitaba, y añadirla mejoró la interfaz:
+
+- Las columnas del editor son regiones con nombre: «Buscador de cartas» y «Tu mazo». La segunda se
+  iba a llamar «Mazo» y chocaba con la única zona de Pokémon, que se llama igual: dos regiones
+  anidadas con el mismo nombre son ambiguas para un lector de pantalla, no sólo para Playwright.
+- Las zonas, los resultados, los problemas y la lista de mazos son listas con nombre. Se usa `role` en
+  vez de `<ul>` donde la maquetación es de rejilla, para no reescribir CSS a ciegas.
+- **El selector de sets no decía qué set tenía elegido.** Su `aria-label` era «Set» a secas, y una
+  etiqueta tapa el contenido del botón: un lector de pantalla decía *«Set, botón»* y nunca el valor.
+  Ahora dice *«Set: Pitch Black»*. Lo encontró escribir el selector de la prueba.
+- Los dos `<select>` nativos de Sobres y Colección no tenían nombre accesible.
+
+### P-043: la prueba de humo cazó un fallo de tres sesiones
+
+Ampliada a las rutas nuevas, la prueba de humo llegaba al catálogo y encontraba **la página en
+blanco**. La portada y el resto de pantallas guardaban cosas distintas bajo la misma clave de caché.
+Reproducido con el código **anterior** a esta sesión: portada de Pokémon y luego Sobres eligiendo
+Pokémon deja la aplicación vacía, y así llevaba desde S034. Arreglado de forma estructural
+(`lib/consultas.ts`, una definición por consulta compartida) y con un límite de error para que una
+pantalla rota no se lleve por delante la navegación. Detalle en P-043.
+
+**Y una invalidación equivocada que salió de revisar las claves**: la ficha (T-094) invalidaba
+`['mazo', id]` y `['mazos']` al añadir una carta, cuando las páginas de mazos usan `['deck', id]` y
+`['decks']`. El editor habría seguido enseñando el mazo de antes. Corregido.
+
+### Siete garantías, vistas fallar
+
+Cada una se rompió a mano, se ejecutó sólo su prueba y se restauró:
+
+| Garantía | Rotura | Resultado |
+|---|---|---|
+| Teclado del selector (T-066) | `Enter`/espacio dejan de elegir | falla |
+| Movimiento reducido (T-040) | `PackReveal` ignora la preferencia | falla |
+| Iconos locales (P-001) | `imageUrl` devuelve un dominio externo | falla |
+| No desbordar la columna (P-030) | `.selector-set` con `min-width: 1400px` | falla |
+| Foco devuelto al cerrar la ficha | sin `previo.focus()` | falla |
+| «Me faltan» de verdad | el catálogo deja de mandar `owned` | falla |
+| Caché con una sola forma (P-043) | la portada vuelve a su clave divergente | falla |
+
+Después, la suite completa otra vez: **16 de 16**.
+
+**Las comprobaciones del Vault me pararon dos veces** antes de cerrar: el recuento publicado de
+recorridos seguía en 11, y el test de ASCII cazó `/^Añadir /`, una expresión regular con eñe que yo
+acababa de escribir. Igual que en S034, el arreglo mejoró el código: una cadena en vez de una regex.
+
+---
+
+## Cierre de H9b, y la pregunta de D-1
+
+El plan obliga a contestarla antes de construir la segunda sección: **¿puede Magic reutilizar lo que
+Pokémon deja montado?** Revisado pieza por pieza:
+
+| Pieza | ¿Sirve a Magic tal cual? |
+|---|---|
+| Estado en la URL (`filtros-url.ts`), chips, «cargar más» keyset | Sí |
+| Sesión opcional, `owned` por fila y por faceta | Sí: no sabe de juegos |
+| Raíl: secciones a partir de los datos, interruptores, «N de M» | Sí el mecanismo; **no** sus secciones |
+| `listFacets` en la API | **No**: cuenta columnas de Pokémon (`elem_type`, `reg_mark`) |
+| Fila de la tabla | **No**: PS, tipo y marca son de Pokémon. Magic querrá coste y colores |
+| Ficha: diálogo, URL, foco, añadir a mazo | Sí |
+| Ficha: el cuerpo (ataques, debilidad…) | **No**, a propósito |
+
+**D-1 se sostiene, pero con una deuda que hay que nombrar:** lo compartido es el armazón —estado,
+sesión, diálogo, raíl como mecanismo—, y lo que cambia por juego son **qué facetas existen** y **qué
+columnas tiene la fila**. Hoy eso está escrito para Pokémon en tres sitios (API, raíl, fila). Antes de
+la sección de Magic conviene un *perfil de facetas por juego*: una lista declarativa que diga qué
+columnas cuenta la API, qué secciones pinta el raíl y qué celdas lleva la fila. Sin él, Magic sería
+copiar y pegar tres ficheros, que es exactamente el riesgo que D-1 quería evitar.
+
+---
+
+## Verificación de la sesión
+
+| Qué | Resultado |
+|---|---|
+| `npm test` | en verde, con el type-check de los tests |
+| Suite E2E | **16 passed** —eran 11—, contra la API y la base reales |
+| Garantías E2E rotas a propósito | 7 de 7 fallan |
+| `npm run vault:mutar` | todas las derivas históricas detectadas |
+| `npm audit` | 0 vulnerabilidades (T-096) |
+| En el navegador | catálogo, raíl, chips, atrás, ficha, teclado, tema claro y 375 px |
+
+**Entorno de esta máquina, para la próxima vez.** La base de Docker (`proyecto-tcg_db_data`) conserva
+el catálogo completo. Las imágenes se copiaron del volumen `proyecto-tcg-prod_imagenes` (182.941
+ficheros, montado en sólo lectura) a `storage/`. El puerto 3000 lo ocupa otro proceso, así que la API
+local corrió en el 3001 con la proxy de Vite apuntando ahí. **Falta la clave de Pokémon en `.env`**
+(T-005), que hará falta para T-097.
+
+## Estado
+
+- **H9b completo.** Abierta: **1** (T-097, habilidades de Pokémon).
+- Problemas: **2 abiertos** (P-016, P-042) · 41 cerrados.
+- Migraciones: hasta la **0027**, sin cambios en esta sesión.
+- **Siguiente:** el rediseño visual que pidió el usuario —sobres recreados, apertura con motion
+  graphics, tratamientos por rareza— y la lluvia de ideas. Ambos necesitan su spec.

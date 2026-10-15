@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { GameCode } from '@tcg/shared';
 import { api, ApiError, type PackOpening } from '../lib/api.js';
 import { useAuth } from '../lib/auth.js';
+import { consultaRarezas, consultaSets } from '../lib/consultas.js';
 import { PackReveal } from '../components/PackReveal.js';
 import { SelectorDeSet } from '../components/SelectorDeSet.js';
 import { ES } from '../i18n/es.js';
@@ -23,16 +24,14 @@ export function Sobres() {
   const cliente = useQueryClient();
 
   const sets = useQuery({
-    queryKey: ['sets', game],
-    queryFn: () => api.sets(game).then((r) => r.data),
+    ...consultaSets(game),
   });
 
   // Los `tier` de rareza deciden el orden de revelado. Se reutiliza el endpoint
   // que ya existe en vez de anadir el tier a la respuesta de apertura: el dato
   // es del catalogo, no de la apertura.
   const rarezas = useQuery({
-    queryKey: ['rarezas', game],
-    queryFn: () => api.rarities(game).then((r) => r.data),
+    ...consultaRarezas(game),
   });
   const tiers = new Map((rarezas.data ?? []).map((r) => [r.code, r.tier]));
 
@@ -76,6 +75,7 @@ export function Sobres() {
 
       <div className="filtros">
         <select
+          aria-label={ES.semantica.juego}
           value={game}
           onChange={(e) => { setGame(e.target.value as GameCode); setSetId(null); setAperturas([]); }}
         >
@@ -97,7 +97,11 @@ export function Sobres() {
           }))}
         />
 
-        <select value={count} onChange={(e) => setCount(Number(e.target.value))}>
+        <select
+          aria-label={ES.semantica.cantidadDeSobres}
+          value={count}
+          onChange={(e) => setCount(Number(e.target.value))}
+        >
           <option value={1}>1 sobre</option>
           <option value={3}>3 sobres</option>
           <option value={24}>Caja (24)</option>

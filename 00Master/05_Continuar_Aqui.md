@@ -1,7 +1,7 @@
 # 05 — Continuar aquí
 
 **Punto de guardado:** 2026-10-15, en la sesión **S037**
-**Commit:** rama `main` · suite de Vitest y los 11 recorridos E2E en verde · `npm audit` limpio
+**Commit:** rama `main` · suite de Vitest y los 16 recorridos E2E en verde · `npm audit` limpio
 (el recuento exacto sale de `npm test`; publicarlo aqui solo servia para que se quedara viejo)
 
 Este documento existe para retomar el proyecto en otra máquina o en otra sesión sin releer todas las
@@ -23,7 +23,7 @@ crecer con completitud por set.
 | H1 Esquema · H2 Ingesta · H3 API · H4 Sobres · H5 Frontend · H6 Cuentas | ✅ |
 | **H7 Constructor de mazos** | ✅ **cerrado en S022** — motor, API, interfaz e import/export |
 | **H8 Endurecimiento** | ✅ **cerrado en S028** — suite E2E, seguridad y las ocho de deuda técnica |
-| **H9 Identidad por juego** | 🟡 **en curso** — H9a cerrado (S034); H9b a medias: T-091 y T-092 hechas |
+| **H9 Identidad por juego** | 🟡 **en curso** — H9a (S034) y **H9b (S037)** cerrados: Pokémon tiene catálogo con «me faltan» y ficha |
 
 ---
 
@@ -188,10 +188,21 @@ son útiles para la lógica, pero **la fidelidad de sus datos determina lo que e
 - **T-096** (S037) — `npm audit` volvió a estar limpio. Había dejado de estarlo **sin que el proyecto
   cambiara**: se publicaron avisos nuevos contra las versiones fijadas (P-041).
 
-**Lo siguiente sigue siendo H9b**: el catálogo denso con su raíl (T-093), la ficha de carta (T-094) y
-la reescritura del E2E (T-095). Después, el usuario pidió en S037 un **rediseño visual ambicioso**
-—apertura de sobres con motion graphics, sobres recreados por juego, tratamientos por rareza— y una
-lluvia de ideas; eso necesita su propio spec, como cada pasada de H9.
+- **H9b completo** (S037) — catálogo «Consulta» con el raíl que dice *«Planta 2 de 35»* y filtra
+  «me faltan» en el servidor (T-093), ficha de carta en un `<dialog>` nativo abierta por la URL
+  (T-094) y la suite E2E reescrita por rol, sin una clase CSS (T-095). Por el camino salieron **P-042**
+  (las habilidades de Pokémon nunca se ingestaron) y **P-043** (una caché compartida que dejaba la
+  aplicación en blanco desde S034).
+
+**Lo siguiente**, por este orden:
+
+1. **El rediseño visual que pidió el usuario en S037**: apertura de sobres con motion graphics, sobres
+   recreados por juego, tratamientos por rareza, y una lluvia de ideas. Necesita su spec, como cada
+   pasada de H9. Ojo: la suite E2E ya busca por rol, así que sobrevive al rediseño **si la semántica
+   se conserva**.
+2. **Un perfil de facetas por juego** antes de la sección de Magic: la revisión de D-1 en S037
+   concluye que, sin él, Magic sería copiar y pegar la API, el raíl y la fila.
+3. **T-097**, en cuanto haya clave de Pokémon en `.env` y tiempo para una reingesta larga.
 
 **Cómo se ejecuta la suite:**
 
@@ -223,7 +234,7 @@ Las ocho tareas de H8c están cerradas. Lo que queda abierto salió de hacerlas,
 | **P-016** | 🟠 | La API de Pokémon responde 200 sólo ~30 % de las veces. **Riesgo operativo permanente**, no algo que se arregle: por eso la ingesta se reanuda |
 | **P-042** | 🟠 | Las **habilidades** de Pokémon no están en el catálogo: el adaptador nunca las leyó. El arreglo es T-097 (una línea más una reingesta de ~20.000 cartas) |
 
-Los 42 problemas —**40 cerrados**, cada uno con su medición— están en
+Los 43 problemas —**41 cerrados**, cada uno con su medición— están en
 `003Problemas/Registro_Problemas.md`.
 
 **P-008 se cerró en S030**, veintisiete sesiones después de abrirse, y deja la lección más útil de las
