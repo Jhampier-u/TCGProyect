@@ -19,12 +19,7 @@
 
 body {
   margin: 0;
-  /* La luz ambiental de Holo Noir: dos focos fijos sobre el fondo. Fijos para
-     que al hacer scroll la pagina no "arrastre" la luz. */
-  background:
-    radial-gradient(60% 40% at 50% -10%, var(--luz-1), transparent 70%) fixed,
-    radial-gradient(40% 30% at 100% 0%, var(--luz-2), transparent 70%) fixed,
-    var(--fondo);
+  background: var(--fondo);
   color: var(--texto);
   font-family: var(--fuente);
   font-size: 15px;
@@ -53,6 +48,20 @@ a:hover { text-decoration: underline; }
 
 /* ------------------------------------------------------------------ layout */
 
+/* La luz ambiental de Holo Noir: dos focos sobre el fondo, en su propia capa
+   fija. Asi tiene capa de composicion propia y no se repinta al hacer scroll
+   (a diferencia de background-attachment: fixed). */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(60% 40% at 50% -10%, var(--luz-1), transparent 70%),
+    radial-gradient(40% 30% at 100% 0%, var(--luz-2), transparent 70%);
+}
+
 h1, h2, .marca { font-family: var(--fuente-titulo); letter-spacing: -0.01em; }
 
 .cabecera {
@@ -60,12 +69,20 @@ h1, h2, .marca { font-family: var(--fuente-titulo); letter-spacing: -0.01em; }
   align-items: center;
   gap: 24px;
   padding: 12px 24px;
-  background: var(--cristal);
+  /* No es --cristal a secas: al 4% el texto de la navegacion se pierde sobre
+     una ilustracion clara. Se tine con el fondo para que siempre se lea. */
+  background: color-mix(in srgb, var(--fondo) 72%, transparent);
   backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
   border-bottom: 1px solid var(--cristal-borde);
   position: sticky;
   top: 0;
   z-index: 10;
+}
+
+/* Sin desenfoque de fondo el velo no basta: se vuelve opaco. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .cabecera { background: var(--fondo-alt); }
 }
 
 .marca { font-weight: 700; font-size: 17px; color: var(--acento); }

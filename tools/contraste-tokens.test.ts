@@ -81,6 +81,16 @@ const PAREJAS: ReadonlyArray<readonly [string, string, number]> = [
   ['peligro-texto', 'peligro-fondo', 4.5],
   ['peligro', 'fondo', 3],
   ['exito', 'fondo', 3],
+  // Los colores de nivel de rareza (H9e) pintan la etiqueta del nivel en la
+  // ficha y en la bandeja: son texto pequeno y piden 4,5.
+  ['nivel-2', 'superficie', 4.5],
+  ['nivel-3', 'superficie', 4.5],
+  ['nivel-4', 'superficie', 4.5],
+  ['nivel-5', 'superficie', 4.5],
+  ['nivel-2', 'fondo', 4.5],
+  ['nivel-3', 'fondo', 4.5],
+  ['nivel-4', 'fondo', 4.5],
+  ['nivel-5', 'fondo', 4.5],
   // WCAG 1.4.11: el limite de un elemento interactivo pide 3:1.
   ['borde-control', 'fondo', 3],
   ['borde-control', 'superficie', 3],
@@ -90,12 +100,6 @@ const PAREJAS: ReadonlyArray<readonly [string, string, number]> = [
   // con 1,25:1, y la tentacion fue bajar el umbral hasta que pasara. Eso es
   // ajustar la prueba al resultado. Lo correcto era separar el borde que SI
   // tiene norma -- el de los controles -- y dejar de medir el que no.
-  // Los colores de nivel de rareza (H9e) pintan la etiqueta del nivel en la
-  // ficha y en la bandeja: son texto pequeno y piden 4,5.
-  ['nivel-2', 'superficie', 4.5],
-  ['nivel-3', 'superficie', 4.5],
-  ['nivel-4', 'superficie', 4.5],
-  ['nivel-5', 'superficie', 4.5],
 ];
 
 const TIPOS = [

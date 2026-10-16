@@ -185,7 +185,6 @@
     --nivel-3: #0f6aa6;
     --nivel-4: #6a3fd1;
     --nivel-5: #8a6217;
-    --fuente-titulo: "Space Grotesk", var(--fuente);
   }
 }
 
@@ -236,7 +235,6 @@
   --nivel-3: #0f6aa6;
   --nivel-4: #6a3fd1;
   --nivel-5: #8a6217;
-  --fuente-titulo: "Space Grotesk", var(--fuente);
 }
 
 /* ====================================================================
