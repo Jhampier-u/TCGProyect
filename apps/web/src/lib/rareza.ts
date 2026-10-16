@@ -25,6 +25,11 @@ export function nivelDe(juego: GameCode, tier: number): Nivel {
   return TABLA[juego][tier] ?? 1;
 }
 
+/** Los tiers con nivel propio, por juego. Lo usa la prueba para detectar uno que falte. */
+export function tiersConNivel(juego: GameCode): number[] {
+  return Object.keys(TABLA[juego]).map(Number).sort((a, b) => a - b);
+}
+
 /** `foil` es una propiedad fisica, no de rareza: no sube el nivel. */
 export function acabadoDe(finish: string): Acabado {
   return finish === 'foil' ? 'foil' : 'normal';
