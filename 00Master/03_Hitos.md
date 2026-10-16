@@ -11,7 +11,7 @@
 | **H6** | Cuentas y colección | Auth, colección persistente, completitud por set | ✅ **COMPLETADO** (Argon2id + JWT, 9 endpoints, verificado con 103 sobres reales) |
 | **H7** | Deckbuilder | CRUD de mazos + validadores por juego + import/export | ✅ **COMPLETADO** (S022) — motor de reglas, 6 endpoints, interfaz e import/export. **Ultima epica de producto del alcance v1.0** |
 | **H8** | Endurecimiento | Suite E2E verde (**ADR-009**: Playwright, no Cypress), auditoría de seguridad, rate limiting propio | ✅ **COMPLETADO (S028)** — H8a suite E2E, H8b seguridad y H8c las ocho tareas de deuda |
-| **H9** | Identidad propia por juego | Cada juego con su sección, su catálogo, su categorización, sus mazos y **dos colecciones** (simulación y real). Rediseño completo de la interfaz | 🟡 **EN CURSO (S033)** — H9a cerrado en S034 y **H9b en S037**: Pokémon tiene catálogo con «me faltan» y ficha. **H9e (Holo Noir y la apertura épica) adelantado por decisión del usuario**: spec en `17_Spec_H9e_HoloNoir.md`. Después, H9c (colecciones) y H9d (mazos por juego) |
+| **H9** | Identidad propia por juego | Cada juego con su sección, su catálogo, su categorización, sus mazos y **dos colecciones** (simulación y real). Rediseño completo de la interfaz | 🟡 **EN CURSO (S033)** — H9a cerrado en S034 y **H9b en S037**: Pokémon tiene catálogo con «me faltan» y ficha. **H9e (Holo Noir y la apertura épica) adelantado por decisión del usuario**: spec en `17_Spec_H9e_HoloNoir.md` y plan en `18_Plan_H9e_HoloNoir.md` (T-098 a T-107). Después, H9c (colecciones) y H9d (mazos por juego) |
 
 ## Hoja de ruta posterior a H9
 

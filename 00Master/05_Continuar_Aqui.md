@@ -196,8 +196,9 @@ son útiles para la lógica, pero **la fidelidad de sus datos determina lo que e
 
 **Lo siguiente**, por este orden:
 
-1. **H9e, Holo Noir y la apertura épica**: el spec está aprobado (`17_Spec_H9e_HoloNoir.md`),
-   decidido con el usuario sobre maquetas. Falta su plan. Ojo: la suite E2E ya busca por rol, así que
+1. **H9e, Holo Noir y la apertura épica**: spec aprobado (`17_Spec_H9e_HoloNoir.md`), decidido con
+   el usuario sobre maquetas, y plan escrito (`18_Plan_H9e_HoloNoir.md`, T-098 a T-107). Empezar por
+   T-098. Ojo: la suite E2E ya busca por rol, así que
    sobrevive al rediseño **si la semántica se conserva**. Las ilustraciones de los sobres las genera
    el usuario con Nano Banana Pro a partir de 25 prompts que hay que entregarle.
 2. **Un perfil de facetas por juego** antes de la sección de Magic: la revisión de D-1 en S037

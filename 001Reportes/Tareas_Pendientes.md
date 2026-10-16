@@ -1,6 +1,6 @@
 # Tareas Pendientes
 
-**Última actualización:** 2026-10-15 (S037) · **Total abiertas:** 1 — T-097, datos de Pokémon
+**Última actualización:** 2026-10-15 (S037) · **Total abiertas:** 11 — las diez de H9e y T-097, datos de Pokémon
 
 Leyenda de prioridad: 🔴 crítica · 🟠 alta · 🟡 media · ⚪ baja
 
@@ -21,6 +21,24 @@ ASCII por fin comprobada, y la raíz convertida en elección de juego con la por
 T-091 a T-095 cerradas: facetas indexadas y en la API, catálogo «Consulta» con el raíl y «me faltan»,
 ficha de carta en un diálogo nativo, y la suite E2E reescrita por rol (16 recorridos, siete garantías
 vistas fallar a propósito). Lo siguiente de H9 —las dos colecciones (H9c)— necesita su spec.
+
+### H9e — Holo Noir y la apertura épica (adelantado por decisión del usuario)
+
+Spec `17_Spec_H9e_HoloNoir.md` y plan `18_Plan_H9e_HoloNoir.md`, ambos de S037. Diez tareas en orden;
+se puede parar limpio después de cualquiera.
+
+| ID | Tarea | Agente | Prio |
+|---|---|---|---|
+| T-098 | **Tokens Holo Noir**: paleta nueva con contraste AA medido en los dos temas, luz ambiental, cristal, colores de nivel y Space Grotesk servida por el proyecto | Frontend | 🟠 |
+| T-099 | **Escalera de rarezas por juego**: `nivelDe(juego, tier)`, porque los tiers no significan lo mismo en Magic, Pokémon y Yu-Gi-Oh! | Frontend | 🟠 |
+| T-100 | **`CartaConBrillo` y `brillos.css`**: los cinco niveles y el foil aparte, también en la ficha | Frontend | 🟠 |
+| T-101 | **Paleta y arte del set en la API** (migración 0028): `artKey` resuelto por el mismo fragmento SQL que usa el motor de sobres | Backend / BD | 🟠 |
+| T-102 | **`npm run sobres:paleta`**: dos colores por set con sharp, sin red | Backend | 🟡 |
+| T-103 | **El sobre sellado** con reserva sin arte, y los 25 prompts para Nano Banana Pro | Frontend | 🟠 |
+| T-104 | **La máquina del ritual**, pura y probada; el orden por escasez se muda aquí | Frontend | 🟠 |
+| T-105 | **La capa de efectos**: lienzo de partículas y rayos que nunca recibe un clic | Frontend | 🟡 |
+| T-106 | **El ritual en Sobres**, sustituyendo a `PackReveal` | Frontend | 🟠 |
+| T-107 | **Pruebas E2E del ritual**, cada garantía vista fallar, y cierre | QA | 🟠 |
 
 ### Datos de Pokémon que el catálogo no tiene
 

@@ -67,7 +67,8 @@ C:\ProyectoTCG\
 │   ├── 14_Plan_T034_PlantillasPorEpoca.md <- plan de implementacion, 7 tareas
 │   ├── 15_Spec_H9ab_Pokemon.md      <- spec de H9a y H9b (identidad por juego, Pokemon primero)
 │   ├── 16_Plan_H9ab_Pokemon.md      <- plan de implementacion, 8 tareas (T-088 a T-095)
-│   └── 17_Spec_H9e_HoloNoir.md      <- spec de H9e: Holo Noir, sobres, rarezas y ritual (S037)
+│   ├── 17_Spec_H9e_HoloNoir.md      <- spec de H9e: Holo Noir, sobres, rarezas y ritual (S037)
+│   └── 18_Plan_H9e_HoloNoir.md      <- plan de implementacion, 10 tareas (T-098 a T-107)
 ├── 005Registro\
 │   ├── 2026-08-25_S001_Inicializacion.md
 │   ├── 2026-08-25_S002_DDL_MySQL.md

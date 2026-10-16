@@ -294,3 +294,27 @@ sobres por juego, estilos por rareza y una lluvia de ideas. Se hizo con maquetas
 **Y una regla del Vault cambió el nombre del hito**: en la conversación era «H10», pero no se abre un
 hito con el anterior sin cerrar. El criterio de H9 ya incluía el rediseño y su spec reservaba H9e para
 el pulido, así que es **H9e, adelantado**. Spec: `17_Spec_H9e_HoloNoir.md`.
+
+### El plan, y lo que corrigió del spec al mirar el código
+
+`18_Plan_H9e_HoloNoir.md`, diez tareas (T-098 a T-107). Escribirlo contra el código y la base cambió
+cinco cosas del spec, todas apuntadas al principio del plan:
+
+1. **El nivel de brillo va por juego, no por tier global.** Magic acaba en tier 6 (la mítica es 4),
+   Yu-Gi-Oh! llega a 15, y el 50 de ambos agrupa promos y etiquetas. Una tabla única habría hecho de
+   una mítica un simple destello y dejado una Starlight sin nivel.
+2. **No hay `reverse` en los datos**: las aperturas sólo devuelven `foil` y `nonfoil`.
+3. **Las pruebas de T-040 no pueden quedar intactas al cien por cien**: con el sobre sellado, las
+   cartas no existen hasta rasgar. Se mantienen las aserciones; el ayudante gana un paso.
+4. **La anticipación de un nivel 5 no se puede probar E2E de forma determinista**, porque el servidor
+   decide las cartas. Va a la máquina de estados y a mirarlo en el navegador.
+5. **El DOM del ritual tiene un orden obligatorio**, bandeja antes que mazo, y la bandeja no se escala:
+   la prueba de T-040 lee la matriz de transformación para saber si el giro terminó.
+
+Y una decisión de diseño que evita una deriva antes de que exista: el arte de cada set y las cartas de
+su sobre salen del **mismo fragmento SQL** (`plantilla-sql.ts`), con una prueba que exige que las dos
+consultas lo contengan literalmente.
+
+La paleta Holo Noir que lleva el plan **ya pasa** el test de contraste en los dos temas: se calculó con
+la misma fórmula antes de escribirla. Y la comprobación del Vault cazó el propio plan: nombraba entre
+comillas de código la migración 0028, que todavía no existe.
