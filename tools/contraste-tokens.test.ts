@@ -90,6 +90,12 @@ const PAREJAS: ReadonlyArray<readonly [string, string, number]> = [
   // con 1,25:1, y la tentacion fue bajar el umbral hasta que pasara. Eso es
   // ajustar la prueba al resultado. Lo correcto era separar el borde que SI
   // tiene norma -- el de los controles -- y dejar de medir el que no.
+  // Los colores de nivel de rareza (H9e) pintan la etiqueta del nivel en la
+  // ficha y en la bandeja: son texto pequeno y piden 4,5.
+  ['nivel-2', 'superficie', 4.5],
+  ['nivel-3', 'superficie', 4.5],
+  ['nivel-4', 'superficie', 4.5],
+  ['nivel-5', 'superficie', 4.5],
 ];
 
 const TIPOS = [

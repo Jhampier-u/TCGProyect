@@ -32,34 +32,34 @@
 
 :root {
   /* ---------------------------------------------------------- superficies */
-  --fondo: #0f1115;
-  --fondo-alt: #171a21;
-  --superficie: #1e222b;
-  --borde: #2b303b;
+  --fondo: #07080c;
+  --fondo-alt: #0d0f16;
+  --superficie: #141722;
+  --borde: #232736;
   /* El borde de un CONTROL, no el de un separador. WCAG 1.4.11 pide 3:1 para
    * el limite de un elemento interactivo, y `--borde` no llega: da 1,25:1
    * contra el fondo en los dos temas. Es el valor mas liviano que cumple
    * contra las tres superficies -- 3,36:1 en oscuro, 3,50:1 en claro. */
-  --borde-control: #6a7389;
+  --borde-control: #6b7290;
 
   /* ------------------------------------------------------------- contenido */
-  --texto: #e6e8ec;
-  --texto-tenue: #9aa1ae;
+  --texto: #eceef6;
+  --texto-tenue: #9ba2b8;
 
   /* ---------------------------------------------------------------- acento */
-  --acento: #e0b450;
-  --acento-tenue: #7a6229;
+  --acento: #ad8cff;
+  --acento-tenue: #5b47a3;
   /* Lo que se escribe ENCIMA del acento. Cambia con el tema porque el acento
    * cambia de claridad: no vale un negro fijo. */
-  --sobre-acento: #1a1508;
+  --sobre-acento: #120a24;
 
   /* ------------------------------------------------------------- semantica
    * Separada del acento a proposito: "peligro" y "exito" significan estado,
    * no marca, y no deben moverse cuando un juego cambia su acento. */
-  --peligro: #d9534f;
+  --peligro: #e5534b;
   --peligro-texto: #ffb3b1;
   --peligro-fondo: #2a1414;
-  --exito: #4f9d69;
+  --exito: #4fae73;
 
   /* --------------------------------------------------------------- relieve
    * Velos y brillos en vez de literales sueltos: en claro, un velo blanco
@@ -119,24 +119,38 @@
   --tipo-metal: #93a0af;
   --tipo-dragon: #c99a4e;
   --tipo-hada: #e07ab4;
+  /* ------------------------------------------------------- Holo Noir (H9e)
+   * Luz ambiental: dos focos de color sobre el negro. En claro se apagan casi
+   * del todo: el holografico es de la oscuridad. */
+  --luz-1: rgba(124, 92, 255, 0.30);
+  --luz-2: rgba(56, 189, 248, 0.14);
+  --cristal: rgba(255, 255, 255, 0.04);
+  --cristal-borde: rgba(255, 255, 255, 0.09);
+  --holo: conic-gradient(from 0deg, #ff6ad5, #c774e8, #ad8cff, #8795e8, #94d0ff, #7cffcb, #fffb96, #ff6ad5);
+  /* Color de cada nivel de rareza: halos, chispas y la etiqueta del nivel. */
+  --nivel-2: #c9d2e3;
+  --nivel-3: #7cc8ff;
+  --nivel-4: #b69cff;
+  --nivel-5: #ffd65a;
+  --fuente-titulo: "Space Grotesk", var(--fuente);
 }
 
 @media (prefers-color-scheme: light) {
   :root:not([data-tema="oscuro"]) {
-    --fondo: #f1f0ec;
-    --fondo-alt: #fbfaf8;
+    --fondo: #f2f1f6;
+    --fondo-alt: #fbfbfe;
     --superficie: #ffffff;
-    --borde: #dbd8d0;
-    --borde-control: #847f74;
+    --borde: #dcdae6;
+    --borde-control: #7f7c92;
 
-    --texto: #1a1c1f;
-    --texto-tenue: #5f6369;
+    --texto: #15161d;
+    --texto-tenue: #585d6e;
 
     /* El oro de #e0b450 sobre blanco no llega a AA para texto. En claro el
      * acento baja de claridad hasta que si llega, conservando el tono. */
-    --acento: #8a6217;
-    --acento-tenue: #c9a75e;
-    --sobre-acento: #fffdf7;
+    --acento: #6a3fd1;
+    --acento-tenue: #b9a6ee;
+    --sobre-acento: #ffffff;
 
     --peligro: #b3241f;
     --peligro-texto: #7d1713;
@@ -162,22 +176,32 @@
     --tipo-metal: #5c6673;
     --tipo-dragon: #856019;
     --tipo-hada: #a82f74;
+    --luz-1: rgba(106, 63, 209, 0.07);
+    --luz-2: rgba(14, 116, 144, 0.05);
+    --cristal: rgba(255, 255, 255, 0.70);
+    --cristal-borde: rgba(21, 22, 29, 0.08);
+    --holo: conic-gradient(from 0deg, #d63fa8, #8f4fd1, #6a3fd1, #3f5fd1, #1f8fd1, #1fa88a, #b89a1f, #d63fa8);
+    --nivel-2: #4d566b;
+    --nivel-3: #0f6aa6;
+    --nivel-4: #6a3fd1;
+    --nivel-5: #8a6217;
+    --fuente-titulo: "Space Grotesk", var(--fuente);
   }
 }
 
 :root[data-tema="claro"] {
-  --fondo: #f1f0ec;
-  --fondo-alt: #fbfaf8;
+  --fondo: #f2f1f6;
+  --fondo-alt: #fbfbfe;
   --superficie: #ffffff;
-  --borde: #dbd8d0;
-  --borde-control: #847f74;
+  --borde: #dcdae6;
+  --borde-control: #7f7c92;
 
-  --texto: #1a1c1f;
-  --texto-tenue: #5f6369;
+  --texto: #15161d;
+  --texto-tenue: #585d6e;
 
-  --acento: #8a6217;
-  --acento-tenue: #c9a75e;
-  --sobre-acento: #fffdf7;
+  --acento: #6a3fd1;
+  --acento-tenue: #b9a6ee;
+  --sobre-acento: #ffffff;
 
   --peligro: #b3241f;
   --peligro-texto: #7d1713;
@@ -203,6 +227,16 @@
   --tipo-metal: #5c6673;
   --tipo-dragon: #856019;
   --tipo-hada: #a82f74;
+  --luz-1: rgba(106, 63, 209, 0.07);
+  --luz-2: rgba(14, 116, 144, 0.05);
+  --cristal: rgba(255, 255, 255, 0.70);
+  --cristal-borde: rgba(21, 22, 29, 0.08);
+  --holo: conic-gradient(from 0deg, #d63fa8, #8f4fd1, #6a3fd1, #3f5fd1, #1f8fd1, #1fa88a, #b89a1f, #d63fa8);
+  --nivel-2: #4d566b;
+  --nivel-3: #0f6aa6;
+  --nivel-4: #6a3fd1;
+  --nivel-5: #8a6217;
+  --fuente-titulo: "Space Grotesk", var(--fuente);
 }
 
 /* ====================================================================

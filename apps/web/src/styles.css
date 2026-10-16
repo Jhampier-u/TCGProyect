@@ -19,7 +19,12 @@
 
 body {
   margin: 0;
-  background: var(--fondo);
+  /* La luz ambiental de Holo Noir: dos focos fijos sobre el fondo. Fijos para
+     que al hacer scroll la pagina no "arrastre" la luz. */
+  background:
+    radial-gradient(60% 40% at 50% -10%, var(--luz-1), transparent 70%) fixed,
+    radial-gradient(40% 30% at 100% 0%, var(--luz-2), transparent 70%) fixed,
+    var(--fondo);
   color: var(--texto);
   font-family: var(--fuente);
   font-size: 15px;
@@ -48,13 +53,16 @@ a:hover { text-decoration: underline; }
 
 /* ------------------------------------------------------------------ layout */
 
+h1, h2, .marca { font-family: var(--fuente-titulo); letter-spacing: -0.01em; }
+
 .cabecera {
   display: flex;
   align-items: center;
   gap: 24px;
   padding: 12px 24px;
-  background: var(--fondo-alt);
-  border-bottom: 1px solid var(--borde);
+  background: var(--cristal);
+  backdrop-filter: blur(14px) saturate(140%);
+  border-bottom: 1px solid var(--cristal-borde);
   position: sticky;
   top: 0;
   z-index: 10;
