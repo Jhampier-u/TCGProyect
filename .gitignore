@@ -23,3 +23,6 @@ Thumbs.db
 # suite E2E
 e2e/node_modules/
 e2e/artefactos/
+
+# Maquetas del brainstorming (visual companion)
+.superpowers/

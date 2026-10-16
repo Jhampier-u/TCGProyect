@@ -270,3 +270,27 @@ local corrió en el 3001 con la proxy de Vite apuntando ahí. **Falta la clave d
 - Migraciones: hasta la **0027**, sin cambios en esta sesión.
 - **Siguiente:** el rediseño visual que pidió el usuario —sobres recreados, apertura con motion
   graphics, tratamientos por rareza— y la lluvia de ideas. Ambos necesitan su spec.
+
+---
+
+## El rediseño: decidido sobre maquetas, no sobre palabras
+
+Con H9b cerrado, la otra mitad de la petición del usuario: rediseño, apertura con motion graphics,
+sobres por juego, estilos por rareza y una lluvia de ideas. Se hizo con maquetas en el navegador
+(cartas reales del catálogo servidas por la API local), una pregunta por pantalla:
+
+| Pregunta | Opciones enseñadas | Elegida |
+|---|---|---|
+| Dirección de arte | Holo Noir · Vitrina · Arcade Pop | **Holo Noir** |
+| Cuántos diseños de sobre | Por juego · por época · por set · híbrido | **Híbrido** (recomendado) |
+| El ritual | Completo · abanico · cascada | **Completo** |
+| Rarezas | 5 niveles · 3 niveles · uno por rareza | **5 niveles**, con el acabado aparte |
+| Motor | DOM · WebGL · híbrido | **Híbrido**, sin WebGL |
+| Lluvia de ideas | 12 ideas | **11**, todas menos la app instalable |
+
+**Una medición cambió una cifra de la maqueta**: decía «unos 17 diseños de época» y la base tiene
+**25** plantillas de época y línea (10, 4 y 11). Se corrigió antes de enseñarla.
+
+**Y una regla del Vault cambió el nombre del hito**: en la conversación era «H10», pero no se abre un
+hito con el anterior sin cerrar. El criterio de H9 ya incluía el rediseño y su spec reservaba H9e para
+el pulido, así que es **H9e, adelantado**. Spec: `17_Spec_H9e_HoloNoir.md`.

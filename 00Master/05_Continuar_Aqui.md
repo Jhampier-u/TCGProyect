@@ -196,10 +196,10 @@ son útiles para la lógica, pero **la fidelidad de sus datos determina lo que e
 
 **Lo siguiente**, por este orden:
 
-1. **El rediseño visual que pidió el usuario en S037**: apertura de sobres con motion graphics, sobres
-   recreados por juego, tratamientos por rareza, y una lluvia de ideas. Necesita su spec, como cada
-   pasada de H9. Ojo: la suite E2E ya busca por rol, así que sobrevive al rediseño **si la semántica
-   se conserva**.
+1. **H9e, Holo Noir y la apertura épica**: el spec está aprobado (`17_Spec_H9e_HoloNoir.md`),
+   decidido con el usuario sobre maquetas. Falta su plan. Ojo: la suite E2E ya busca por rol, así que
+   sobrevive al rediseño **si la semántica se conserva**. Las ilustraciones de los sobres las genera
+   el usuario con Nano Banana Pro a partir de 25 prompts que hay que entregarle.
 2. **Un perfil de facetas por juego** antes de la sección de Magic: la revisión de D-1 en S037
    concluye que, sin él, Magic sería copiar y pegar la API, el raíl y la fila.
 3. **T-097**, en cuanto haya clave de Pokémon en `.env` y tiempo para una reingesta larga.
