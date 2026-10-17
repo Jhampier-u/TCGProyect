@@ -89,17 +89,25 @@ export function ordenarPorEscasez<T extends { rarity: string; slotIndex: number 
   tiers: Map<string, number>,
   game: GameCode,
 ): T[] {
-  const clave = (c: T) => {
-    const tier = tiers.get(c.rarity) ?? 0;
-    return { nivel: nivelDe(game, tier), tier: tier >= 50 ? 0 : tier };
-  };
-  return [...cards].sort((a, b) => {
-    const ka = clave(a);
-    const kb = clave(b);
-    if (ka.nivel !== kb.nivel) return ka.nivel - kb.nivel;
-    if (ka.tier !== kb.tier) return ka.tier - kb.tier;
-    return a.slotIndex - b.slotIndex;
-  });
+  return clasificar(cards, tiers, game).map((k) => k.carta);
+}
+
+/** Cada carta con su nivel y su tier de orden, YA ordenadas: se calculan una vez. */
+function clasificar<T extends { rarity: string; slotIndex: number }>(
+  cards: readonly T[],
+  tiers: Map<string, number>,
+  game: GameCode,
+): Array<{ carta: T; nivel: Nivel; tier: number }> {
+  return cards
+    .map((carta) => {
+      const tier = tiers.get(carta.rarity) ?? 0;
+      return { carta, nivel: nivelDe(game, tier), tier: tier >= 50 ? 0 : tier };
+    })
+    .sort((a, b) => {
+      if (a.nivel !== b.nivel) return a.nivel - b.nivel;
+      if (a.tier !== b.tier) return a.tier - b.tier;
+      return a.carta.slotIndex - b.carta.slotIndex;
+    });
 }
 
 /**
@@ -114,6 +122,6 @@ export function prepararSobre<T extends { rarity: string; slotIndex: number }>(
   tiers: Map<string, number>,
   game: GameCode,
 ): { orden: T[]; niveles: Nivel[] } {
-  const orden = ordenarPorEscasez(cards, tiers, game);
-  return { orden, niveles: orden.map((c) => nivelDe(game, tiers.get(c.rarity) ?? 0)) };
+  const clasificadas = clasificar(cards, tiers, game);
+  return { orden: clasificadas.map((k) => k.carta), niveles: clasificadas.map((k) => k.nivel) };
 }
