@@ -187,6 +187,9 @@ export function Ritual({
       ref={seccion}
       className="sobre ritual"
       aria-labelledby={idTitulo}
+      // Los tokens de dorso y el acento del juego cuelgan de este atributo: sin
+      // el, el sobre sin paleta y los reversos se quedan sin color en /sobres.
+      data-juego={game.toLowerCase()}
       data-fase={estado.fase}
       onFocus={alEnfocar}
       onBlur={alDesenfocar}

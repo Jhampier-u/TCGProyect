@@ -136,3 +136,27 @@ test('el lector de pantalla oye la carta revelada', async ({ page, request, usua
   expect(nombre.length).toBeGreaterThan(0);
   await expect(region(page).locator('[aria-live="polite"]')).toContainText(nombre);
 });
+
+test('un set sin paleta no deja el sobre transparente', async ({ page, request, usuario }) => {
+  // Sin paleta, el sobre cae en los colores de dorso del juego. Esos tokens solo
+  // existen bajo `data-juego`: si el ritual no lo pone, el fondo entero se anula
+  // y el sobre se pinta transparente.
+  await page.route('**/api/games/YGO/sets*', async (ruta) => {
+    const res = await ruta.fetch();
+    const cuerpo = (await res.json()) as { data: Array<Record<string, unknown>> };
+    for (const s of cuerpo.data) s.palette = null;
+    await ruta.fulfill({ response: res, json: cuerpo });
+  });
+  const set = await setAbribleDeYgo(request);
+  await iniciarSesion(page, usuario.token);
+  await abrir(page, 'YGO', set);
+
+  const sellado = region(page).getByRole('button', { name: /^Rasgar el sobre/ });
+  await expect(sellado).toBeVisible();
+  const fondo = await sellado.evaluate((el) => {
+    const cs = getComputedStyle(el);
+    return { imagen: cs.backgroundImage, color: cs.backgroundColor };
+  });
+  expect(fondo.imagen).not.toBe('none');
+  expect(fondo.color).not.toBe('rgba(0, 0, 0, 0)');
+});

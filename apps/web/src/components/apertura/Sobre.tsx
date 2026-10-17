@@ -29,8 +29,11 @@ export function Sobre({ juego, set, rasgando, onRasgar }: Props) {
   const icono = imageUrl(set.iconPath);
 
   const estilo = {
-    '--paleta-1': set.palette?.primario ?? 'var(--dorso-1)',
-    '--paleta-2': set.palette?.secundario ?? 'var(--dorso-3)',
+    // Los tokens de dorso cuelgan de `data-juego` (lo pone el ritual); la segunda
+    // reserva es por si el sobre se pinta fuera de el: sin ella, una variable sin
+    // definir anula el fondo entero y el sobre sale transparente.
+    '--paleta-1': set.palette?.primario ?? 'var(--dorso-1, var(--superficie))',
+    '--paleta-2': set.palette?.secundario ?? 'var(--dorso-3, var(--superficie))',
     ...(arte ? { '--arte': `url("${arte}")` } : {}),
   } as CSSProperties;
 
