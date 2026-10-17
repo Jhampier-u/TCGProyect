@@ -33,6 +33,9 @@ interface Props {
 export function CapaDeEfectos({ disparo, nivel }: Props) {
   const reducido = useReducedMotion() ?? false;
   const lienzo = useRef<HTMLCanvasElement>(null);
+  /** El nivel vigente; el efecto de disparo lo lee sin depender de el. */
+  const nivelActual = useRef(nivel);
+  nivelActual.current = nivel;
   const particulas = useRef<Particula[]>([]);
   const rayosHasta = useRef(0);
   const colorRayos = useRef('');
@@ -133,12 +136,13 @@ export function CapaDeEfectos({ disparo, nivel }: Props) {
 
   useEffect(() => {
     if (reducido || disparo === 0) return;
+    const nivel = nivelActual.current;
     const c = lienzo.current;
     if (!c) return;
     const estilo = getComputedStyle(c);
     const leer = (n: number) => estilo.getPropertyValue(`--nivel-${n}`).trim();
 
-    const color = leer(Math.max(3, nivel));
+    const color = leer(nivel);
     const n = Math.round(PARTICULAS[nivel] * medidor.current.carga);
     if (color !== '') {
       for (let i = 0; i < n; i += 1) {
@@ -156,7 +160,7 @@ export function CapaDeEfectos({ disparo, nivel }: Props) {
       if (colorRayos.current !== '') rayosHasta.current = performance.now() + RAYOS_MS;
     }
     arrancar.current();
-  }, [disparo, nivel, reducido]);
+  }, [disparo, reducido]);
 
   if (reducido) return null;
   return <canvas ref={lienzo} className="capa-efectos" aria-hidden="true" />;
