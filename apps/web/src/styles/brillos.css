@@ -166,3 +166,5 @@
   content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
   background: var(--velo-fuerte); border-radius: var(--radio-g);
 }
+/* "Abrir otro" mientras se pide: inerte pero enfocable (aria-disabled, no disabled). */
+.sobre-cabecera button[aria-disabled="true"] { opacity: 0.45; cursor: progress; }

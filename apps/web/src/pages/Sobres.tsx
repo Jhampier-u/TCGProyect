@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { GameCode } from '@tcg/shared';
 import { api, ApiError, type PackOpening, type SetSummary } from '../lib/api.js';
@@ -69,6 +69,33 @@ export function Sobres() {
   let activo = 0;
   while (terminados.has(activo)) activo += 1;
 
+  // ------------------------------------------------- el foco al abrir otro lote
+  //
+  // Al llegar el lote nuevo, el foco va al primer sobre: a su sobre sellado, o a
+  // su titulo si no lo hay (movimiento reducido). Solo si el foco estaba en el
+  // boton que lo pidio o se habia perdido en <body> (el "Abrir otro" se va con
+  // el lote viejo); si el usuario se fue a otra parte, no se le mueve.
+  const botonAbrir = useRef<HTMLButtonElement>(null);
+  const zonaSobres = useRef<HTMLDivElement>(null);
+  const enfocarLote = useRef(false);
+  useEffect(() => {
+    if (!enfocarLote.current || aperturas.length === 0) return;
+    enfocarLote.current = false;
+    const activoDom = document.activeElement;
+    const desdeElBoton =
+      activoDom === null || activoDom === document.body || activoDom === botonAbrir.current;
+    if (!desdeElBoton) return;
+    const primero = zonaSobres.current?.querySelector('section');
+    const destino =
+      primero?.querySelector<HTMLElement>('.sobre-sellado') ?? primero?.querySelector<HTMLElement>('h2');
+    destino?.focus();
+  }, [aperturas]);
+
+  const pedir = (p: Peticion) => {
+    enfocarLote.current = true;
+    abrir.mutate(p);
+  };
+
   const abrir = useMutation({
     mutationFn: async (p: Peticion) => {
       if (!token) throw new Error('Falta sesion');
@@ -132,9 +159,10 @@ export function Sobres() {
         </select>
 
         <button
+          ref={botonAbrir}
           className="primario"
           onClick={() => {
-            if (setId !== null) abrir.mutate({ setId, count, set: setElegido });
+            if (setId !== null) pedir({ setId, count, set: setElegido });
           }}
           // Sin las rarezas no se sabe en que orden revelar ni que anunciar: el
           // sobre saldria en orden de slot y sin anticipacion. Se espera a tenerlas.
@@ -171,25 +199,32 @@ export function Sobres() {
           (spec, seccion 7), y de uno en uno: cada sobre espera sellado a que
           termine el anterior. Sin tiers no se pinta nada: el orden saldria mal y
           quedaria congelado para todo el ritual. */}
-      {tiers.size > 0 &&
-        aperturas.map(({ apertura: a, peticion }, i) => (
-          <Ritual
-            key={a.openingId}
-            game={game}
-            cards={a.cards}
-            tiers={tiers}
-            etiquetas={etiquetas}
-            openingId={a.openingId}
-            seed={a.seed}
-            set={peticion.set}
-            rapido={i > 0}
-            enEspera={i > activo}
-            onTerminado={() => setTerminados((t) => new Set(t).add(i))}
-            onAbrirOtro={
-              i === aperturas.length - 1 && !abrir.isPending ? () => abrir.mutate(peticion) : undefined
-            }
-          />
-        ))}
+      <div ref={zonaSobres}>
+        {tiers.size > 0 &&
+          aperturas.map(({ apertura: a, peticion }, i) => (
+            <Ritual
+              key={a.openingId}
+              game={game}
+              cards={a.cards}
+              tiers={tiers}
+              etiquetas={etiquetas}
+              openingId={a.openingId}
+              seed={a.seed}
+              set={peticion.set}
+              rapido={i > 0}
+              enEspera={i > activo}
+              onTerminado={() => setTerminados((t) => new Set(t).add(i))}
+              // Solo con el lote ENTERO terminado: abrir otro descarta los sobres
+              // que aun esperasen sellados.
+              onAbrirOtro={
+                i === aperturas.length - 1 && terminados.size === aperturas.length
+                  ? () => pedir(peticion)
+                  : undefined
+              }
+              abriendo={abrir.isPending}
+            />
+          ))}
+      </div>
     </>
   );
 }

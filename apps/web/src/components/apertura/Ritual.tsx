@@ -3,7 +3,7 @@ import { motion, useReducedMotion } from 'framer-motion';
 import type { GameCode } from '@tcg/shared';
 import type { OpenedCard, SetSummary } from '../../lib/api.js';
 import { acabadoDe } from '../../lib/rareza.js';
-import { avanzar, iniciar, prepararSobre } from '../../lib/ritual.js';
+import { avanzar, iniciar, NIVEL_CON_ANTICIPACION, prepararSobre } from '../../lib/ritual.js';
 import { CartaConBrillo } from './CartaConBrillo.js';
 import { CapaDeEfectos } from './CapaDeEfectos.js';
 import { Sobre } from './Sobre.js';
@@ -35,6 +35,8 @@ export interface RitualProps {
   onTerminado: () => void;
   /** Abre otro sobre del mismo set y cantidad. Sin el, no hay boton. */
   onAbrirOtro?: (() => void) | undefined;
+  /** Hay una apertura en curso: "Abrir otro" sigue montado, pero inerte. */
+  abriendo?: boolean;
 }
 
 /**
@@ -51,6 +53,7 @@ export interface RitualProps {
  */
 export function Ritual({
   game, cards, tiers, openingId, seed, set, rapido, etiquetas, enEspera, onTerminado, onAbrirOtro,
+  abriendo = false,
 }: RitualProps) {
   // Se lee al montar y el estado inicial sale de aqui. Cambiar la preferencia a
   // mitad de un sobre no rehace ese sobre; el siguiente (otra `key`) ya la toma.
@@ -156,16 +159,28 @@ export function Ritual({
   const sellado = estado.fase === 'sellado' || estado.fase === 'rasgando';
 
   // Lo que oye un lector de pantalla. El foco salta a la siguiente "Carta N sin
-  // revelar", asi que sin esto nunca sabria que ha salido. Carta a carta en el
-  // ritual completo; una sola linea de resumen al saltar, con movimiento
-  // reducido o en modo rapido (diez sobres carta a carta serian ruido).
+  // revelar", asi que sin esto nunca sabria que ha salido.
+  //  - Ritual completo: carta a carta.
+  //  - Modo rapido: solo las de nivel 4 o 5 (en las que el mazo se para y el
+  //    usuario voltea) y, al final, una linea de resumen. Diez sobres carta a
+  //    carta serian ruido.
+  //  - Saltar o movimiento reducido: solo la linea de resumen.
+  // La region nace VACIA y se llena tras montar: un lector de pantalla solo
+  // anuncia cambios, y con movimiento reducido el resumen existe desde el
+  // primer render.
+  const [montado, setMontado] = useState(false);
+  useEffect(() => { setMontado(true); }, []);
   const ultima = estado.reveladas > 0 ? orden[estado.reveladas - 1] : undefined;
-  const anuncio =
-    ultima === undefined
-      ? ''
-      : reducido || saltado || rapido
-        ? estado.fase === 'resumen' ? ES.ritual.resumen(orden.length, nuevas) : ''
-        : ES.ritual.revelada(ultima.name, etiquetas.get(ultima.rarity) ?? ultima.rarity.replace(/_/g, ' '));
+  const nivelUltima = estado.reveladas > 0 ? niveles[estado.reveladas - 1]! : 1;
+  const resumen = estado.fase === 'resumen' ? ES.ritual.resumen(orden.length, nuevas) : '';
+  let anuncio = '';
+  if (montado && ultima !== undefined) {
+    const carta = ES.ritual.revelada(ultima.name, etiquetas.get(ultima.rarity) ?? ultima.rarity.replace(/_/g, ' '));
+    if (reducido || saltado) anuncio = resumen;
+    else if (!rapido) anuncio = carta;
+    else if (nivelUltima >= NIVEL_CON_ANTICIPACION) anuncio = resumen ? `${carta}. ${resumen}` : carta;
+    else anuncio = resumen;
+  }
 
   return (
     <section
@@ -191,7 +206,15 @@ export function Ritual({
           </button>
         )}
         {estado.fase === 'resumen' && onAbrirOtro && (
-          <button type="button" className="primario" onClick={onAbrirOtro} style={{ marginLeft: 'auto' }}>
+          // aria-disabled y no disabled: mientras se pide, el boton conserva el
+          // foco en vez de soltarlo a <body>.
+          <button
+            type="button"
+            className="primario"
+            aria-disabled={abriendo}
+            onClick={() => { if (!abriendo) onAbrirOtro(); }}
+            style={{ marginLeft: 'auto' }}
+          >
             {ES.ritual.abrirOtro}
           </button>
         )}
