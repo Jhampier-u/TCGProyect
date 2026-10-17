@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { GameCode } from '@tcg/shared';
 import { api, ApiError, type PackOpening, type SetSummary } from '../lib/api.js';
@@ -16,6 +16,8 @@ import { ES } from '../i18n/es.js';
  */
 /** Lo que se pidio al abrir: con ello se repite ("Abrir otro") y se viste el sobre. */
 interface Peticion {
+  /** El juego de la peticion: el ritual se pinta con el, no con el del selector. */
+  game: GameCode;
   setId: number;
   count: number;
   /** El set tal y como era al abrir: cambiar luego el selector no reviste el sobre. */
@@ -37,6 +39,10 @@ export function Sobres() {
   const [terminados, setTerminados] = useState<ReadonlySet<number>>(new Set());
   const [error, setError] = useState<string | null>(null);
   const cliente = useQueryClient();
+  // El juego vigente, para la respuesta que llegue tarde: si el usuario cambio
+  // de juego mientras se abria, ese lote ya no es de esta pantalla.
+  const juegoActual = useRef(game);
+  useLayoutEffect(() => { juegoActual.current = game; }, [game]);
 
   const sets = useQuery({
     ...consultaSets(game),
@@ -102,6 +108,7 @@ export function Sobres() {
       return api.openPack(token, p.setId, p.count);
     },
     onSuccess: (r, peticion) => {
+      if (peticion.game !== juegoActual.current) return;
       setAperturas(r.data.map((apertura) => ({ apertura, peticion })));
       setTerminados(new Set());
       setError(null);
@@ -111,7 +118,8 @@ export function Sobres() {
       void cliente.invalidateQueries({ queryKey: ['completion'] });
       void cliente.invalidateQueries({ queryKey: ['summary'] });
     },
-    onError: (e: unknown) => {
+    onError: (e: unknown, peticion) => {
+      if (peticion.game !== juegoActual.current) return;
       setError(e instanceof ApiError ? e.message : 'No se pudo abrir el sobre');
     },
   });
@@ -162,7 +170,7 @@ export function Sobres() {
           ref={botonAbrir}
           className="primario"
           onClick={() => {
-            if (setId !== null) pedir({ setId, count, set: setElegido });
+            if (setId !== null) pedir({ game, setId, count, set: setElegido });
           }}
           // Sin las rarezas no se sabe en que orden revelar ni que anunciar: el
           // sobre saldria en orden de slot y sin anticipacion. Se espera a tenerlas.
@@ -204,7 +212,7 @@ export function Sobres() {
           aperturas.map(({ apertura: a, peticion }, i) => (
             <Ritual
               key={a.openingId}
-              game={game}
+              game={peticion.game}
               cards={a.cards}
               tiers={tiers}
               etiquetas={etiquetas}
