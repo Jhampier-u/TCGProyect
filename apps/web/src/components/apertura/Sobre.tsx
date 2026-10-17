@@ -45,7 +45,7 @@ export function Sobre({ juego, set, rasgando, onRasgar }: Props) {
           // Pasada la mitad, se rasga; antes, vuelve a su sitio sola.
           if (info.offset.x > 90) onRasgar();
         }}
-        animate={rasgando && !reducido ? { y: -60, rotate: 8, opacity: 0 } : { y: 0, rotate: 0, opacity: 1 }}
+        animate={reducido ? {} : rasgando ? { y: -60, rotate: 8, opacity: 0 } : { y: 0, rotate: 0, opacity: 1 }}
         transition={{ duration: 0.45 }}
       />
       <motion.button
@@ -56,7 +56,7 @@ export function Sobre({ juego, set, rasgando, onRasgar }: Props) {
         aria-label={ES.ritual.rasgar(set.name)}
         onClick={onRasgar}
         disabled={rasgando}
-        animate={rasgando && !reducido ? { y: 140, opacity: 0.2 } : { y: [0, -6, 0] }}
+        animate={reducido ? {} : rasgando ? { y: 140, opacity: 0.2 } : { y: [0, -6, 0] }}
         transition={rasgando ? { duration: 0.6 } : { duration: 3.2, repeat: Infinity, ease: 'easeInOut' }}
       >
         <span className="sobre-marca">ProyectoTCG</span>
