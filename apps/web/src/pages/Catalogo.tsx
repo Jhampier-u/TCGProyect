@@ -221,7 +221,6 @@ export function Catalogo() {
             <FichaDeCarta
               key={cartaAbierta}
               printId={cartaAbierta}
-              juego={juego}
               owned={filas.find((f) => f.printId === cartaAbierta)?.owned ?? null}
               onCerrar={cerrarCarta}
             />

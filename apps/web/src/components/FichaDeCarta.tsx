@@ -24,7 +24,6 @@ const INICIO_DE_LAS_MARCAS = '2019-11-15';
 
 interface Props {
   printId: number;
-  juego: GameCode;
   /**
    * Lo que la fila sabia de la tenencia. La ficha viene de `findCard`, que no
    * tiene usuario y devuelve `owned: null`; la fila si lo sabia.
@@ -45,7 +44,7 @@ interface Props {
  * Se abre y se cierra por la URL (`?carta=`), asi que la ficha se comparte con
  * un enlace y el boton de atras la cierra en vez de sacarte del catalogo.
  */
-export function FichaDeCarta({ printId, juego, owned, onCerrar }: Props) {
+export function FichaDeCarta({ printId, owned, onCerrar }: Props) {
   const dialogo = useRef<HTMLDialogElement>(null);
   const idTitulo = useId();
 
@@ -94,7 +93,7 @@ export function FichaDeCarta({ printId, juego, owned, onCerrar }: Props) {
 
         {carta.isPending && <p className="vacio" id={idTitulo}>{ES.ficha.cargando}</p>}
         {carta.isError && <p className="aviso error" id={idTitulo}>{ES.ficha.error}</p>}
-        {carta.data && <Contenido carta={carta.data} juego={juego} owned={owned} idTitulo={idTitulo} />}
+        {carta.data && <Contenido carta={carta.data} owned={owned} idTitulo={idTitulo} />}
       </div>
     </dialog>
   );
@@ -119,8 +118,11 @@ interface PiezasDeFicha {
 }
 
 function Contenido({
-  carta, juego, owned, idTitulo,
-}: { carta: CardDetail; juego: GameCode; owned: boolean | null; idTitulo: string }) {
+  carta, owned, idTitulo,
+}: { carta: CardDetail; owned: boolean | null; idTitulo: string }) {
+  // El juego es el de la carta, no el de la ruta: un enlace
+  // `/mtg/catalogo?carta=<una de Yu-Gi-Oh!>` pinta Yu-Gi-Oh! y ofrece sus mazos.
+  const juego = carta.game;
   const src = imageUrl(carta.imagePath);
   // Misma clave que el catalogo: llega de la cache, no hace otra peticion.
   const rarezas = useQuery(consultaRarezas(juego));
