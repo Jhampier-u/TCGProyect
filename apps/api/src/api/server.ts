@@ -148,7 +148,9 @@ function registrarRutasDeCatalogo(app: FastifyInstance, options: ApiOptions): vo
         otros[clave] = valor;
         continue;
       }
-      if (typeof valor !== 'string') continue;
+      // Vacia es "sin filtro": un formulario GET manda `?color=` tal cual, y
+      // eso no es preguntar por una faceta de otro juego.
+      if (typeof valor !== 'string' || valor.trim() === '') continue;
       if (!game || !facetOf(game, clave)) {
         // Una clave de otro juego es un error de quien pregunta, no un filtro
         // que se ignora: `?color=U` en Pokemon devolveria el catalogo entero

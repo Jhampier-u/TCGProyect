@@ -187,6 +187,17 @@ describe('validacion de entrada', () => {
     await app.close();
   });
 
+  it('una faceta vacia no filtra ni es un 400: el formulario la manda asi', async () => {
+    const { catalog, ultimaConsulta } = fakeCatalog();
+    const app = buildServer({ catalog });
+    const res = await app.inject({ method: 'GET', url: '/api/cards?game=PTCG&color=' });
+    expect(res.statusCode).toBe(200);
+    expect(ultimaConsulta()?.facetas).toBeUndefined();
+    const conEspacios = await app.inject({ method: 'GET', url: '/api/cards?game=PTCG&color=%20' });
+    expect(conEspacios.statusCode).toBe(200);
+    await app.close();
+  });
+
   it('una faceta sin juego tambien es 400: no hay perfil contra el que mirarla', async () => {
     const { catalog } = fakeCatalog();
     const app = buildServer({ catalog });
