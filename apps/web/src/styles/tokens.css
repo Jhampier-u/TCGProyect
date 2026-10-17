@@ -67,9 +67,6 @@
   --velo-suave: rgba(0, 0, 0, 0.22);
   --velo-fuerte: rgba(0, 0, 0, 0.45);
   --brillo-suave: rgba(255, 255, 255, 0.11);
-  --brillo-medio: rgba(255, 255, 255, 0.16);
-  --brillo-fuerte: rgba(255, 255, 255, 0.42);
-  --destello: rgba(180, 220, 255, 0.30);
   --sombra-1: 0 8px 24px rgb(0 0 0 / 35%);
 
   /* ------------------------------------------------------------ tipografia */
@@ -153,7 +150,8 @@
   --efecto-leyenda-2: rgb(255 120 200 / 0.35);
   --efecto-leyenda-3: rgb(120 200 255 / 0.35);
   --efecto-foil: rgb(180 220 255 / 0.30);
-  /* El sobre es siempre un objeto oscuro, en los dos temas: su tinta y sus sombras no varian con el tema. */
+  /* El sobre es siempre un objeto oscuro, en los dos temas: su tinta no varia con el tema.
+     Su sombra si: en claro, `--sobre-sombra` se suaviza (bloques de tema claro). */
   --sobre-tinta: #ffffff;
   --sobre-oscuro: #07080c;
   --sobre-sombra: rgb(0 0 0 / 0.6);
@@ -189,10 +187,8 @@
     --velo-suave: rgba(0, 0, 0, 0.06);
     --velo-fuerte: rgba(0, 0, 0, 0.14);
     --brillo-suave: rgba(0, 0, 0, 0.04);
-    --brillo-medio: rgba(0, 0, 0, 0.09);
-    --brillo-fuerte: rgba(255, 255, 255, 0.75);
-    --destello: rgba(120, 170, 220, 0.35);
     --sombra-1: 0 8px 24px rgb(31 28 22 / 12%);
+    --sobre-sombra: rgb(31 28 22 / 0.18);
 
     --tipo-agua: #1f6592;
     --tipo-planta: #2f7a46;
@@ -239,10 +235,8 @@
   --velo-suave: rgba(0, 0, 0, 0.06);
   --velo-fuerte: rgba(0, 0, 0, 0.14);
   --brillo-suave: rgba(0, 0, 0, 0.04);
-  --brillo-medio: rgba(0, 0, 0, 0.09);
-  --brillo-fuerte: rgba(255, 255, 255, 0.75);
-  --destello: rgba(120, 170, 220, 0.35);
   --sombra-1: 0 8px 24px rgb(31 28 22 / 12%);
+  --sobre-sombra: rgb(31 28 22 / 0.18);
 
   --tipo-agua: #1f6592;
   --tipo-planta: #2f7a46;
