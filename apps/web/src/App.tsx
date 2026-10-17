@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { NavLink, Navigate, Route, Routes, useLocation } from 'react-router-dom';
+import { Link, NavLink, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import type { GameCode } from '@tcg/shared';
 import { useAuth } from './lib/auth.js';
 import { Catalogo } from './pages/Catalogo.js';
@@ -48,9 +48,16 @@ export function App() {
       <header className="cabecera">
         <NavLink to="/" className="marca">{ES.navegacion.marca}</NavLink>
         <nav className="nav">
-          <NavLink to={destinoCatalogo} end={destinoCatalogo === '/'} className={({ isActive }) => (isActive ? 'activo' : '')}>
-            {ES.navegacion.catalogo}
-          </NavLink>
+          {/* Sin juego todavia, el catalogo lleva a la eleccion de juego: un
+              enlace normal, porque estar en "/" no es estar en el catalogo y
+              un NavLink se marcaria activo (y `aria-current`) en la portada. */}
+          {destinoCatalogo === '/' ? (
+            <Link to="/">{ES.navegacion.catalogo}</Link>
+          ) : (
+            <NavLink to={destinoCatalogo} className={({ isActive }) => (isActive ? 'activo' : '')}>
+              {ES.navegacion.catalogo}
+            </NavLink>
+          )}
           <NavLink to="/sobres" className={({ isActive }) => (isActive ? 'activo' : '')}>
             {ES.navegacion.sobres}
           </NavLink>
