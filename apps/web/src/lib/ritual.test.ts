@@ -156,6 +156,10 @@ describe('el ritual de apertura (H9e-4)', () => {
     expect(pasar(iniciar([], false), 'rasgar', 'rasgado', 'siguiente').fase).toBe('resumen');
   });
 
+  it('un sobre vacio va al resumen nada mas rasgarse: no hay mazo que pulsar', () => {
+    expect(pasar(iniciar([], false), 'rasgar', 'rasgado')).toMatchObject({ fase: 'resumen', reveladas: 0, foco: null });
+  });
+
   it('una de nivel 3 NO pasa por la anticipacion', () => {
     const e = pasar(iniciar([3, 1], false), 'rasgar', 'rasgado', 'siguiente');
     expect(e).toMatchObject({ fase: 'mazo', reveladas: 1 });

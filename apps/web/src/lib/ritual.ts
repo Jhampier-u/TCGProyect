@@ -60,7 +60,10 @@ export function avanzar(e: EstadoRitual, a: Accion): EstadoRitual {
     case 'sellado':
       return a.tipo === 'rasgar' ? { ...e, fase: 'rasgando' } : e;
     case 'rasgando':
-      return a.tipo === 'rasgado' ? { ...e, fase: 'mazo' } : e;
+      if (a.tipo !== 'rasgado') return e;
+      // Un sobre vacio no tiene mazo: pintar uno sin cartas dejaria al usuario
+      // sin nada que pulsar. Va directo al resumen.
+      return { ...e, fase: e.niveles.length === 0 ? 'resumen' : 'mazo' };
     case 'mazo': {
       if (a.tipo !== 'siguiente') return e;
       // Avanzar SIEMPRE vacia el foco primero: la carta en grande vuela a la bandeja.

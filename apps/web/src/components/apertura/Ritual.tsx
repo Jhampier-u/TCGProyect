@@ -1,4 +1,4 @@
-import { useEffect, useId, useLayoutEffect, useReducer, useRef, useState, type FocusEvent } from 'react';
+import { useEffect, useId, useLayoutEffect, useReducer, useRef, useState, type FocusEvent, type KeyboardEvent } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import type { GameCode } from '@tcg/shared';
 import type { OpenedCard, SetSummary } from '../../lib/api.js';
@@ -195,8 +195,22 @@ export function Ritual({
    */
   const focoPrevio = useRef<number | null>(null);
   useLayoutEffect(() => { focoPrevio.current = estado.foco; }, [estado.foco]);
-  /** Un gesto de deslizar acaba en un clic: ese clic no debe avanzar otra vez. */
+  /**
+   * Un deslizamiento que YA avanzo acaba en un clic: ese clic no debe avanzar
+   * otra vez. Solo se marca cuando el gesto avanzo de verdad: un temblor del
+   * raton al hacer clic tambien es un "pan", y no debe tragarse el clic.
+   */
   const deslizado = useRef(false);
+  /**
+   * Una pulsacion fisica, un avance. Mantener Intro en un boton repite el
+   * keydown y cada repeticion es un clic: las cartas pasarian solas. Se anula
+   * la repeticion (Espacio no la necesita: su clic llega al soltar). No hay
+   * ademas un plazo minimo entre avances: quien pulsa rapido, tecla a tecla,
+   * debe poder hacerlo, y la prueba del teclado lo hace.
+   */
+  const sinRepeticion = (e: KeyboardEvent<HTMLButtonElement>) => {
+    if (e.repeat && (e.key === 'Enter' || e.key === ' ')) e.preventDefault();
+  };
   const avanzarFoco = () => {
     if (focoRevelado) despachar({ tipo: 'siguiente' });
   };
@@ -354,10 +368,16 @@ export function Ritual({
                       rotateY: { duration: nivelFoco >= 4 ? 0.8 : 0.55, ease: [0.2, 0.7, 0.2, 1] },
                       layout: { type: 'spring', stiffness: 220, damping: 26 },
                     }}
+                    onKeyDown={sinRepeticion}
                     onPointerDown={() => { deslizado.current = false; }}
-                    onPanStart={() => { deslizado.current = true; }}
+                    // Solo en horizontal: con `touch-action: pan-y` el vertical es
+                    // desplazar la pagina en un tactil, y con raton seria un gesto
+                    // que nadie descubre.
                     onPanEnd={(_e, info) => {
-                      if (Math.abs(info.offset.x) > PX_DESLIZAR || info.offset.y < -PX_DESLIZAR) avanzarFoco();
+                      if (Math.abs(info.offset.x) > PX_DESLIZAR) {
+                        deslizado.current = true;
+                        avanzarFoco();
+                      }
                     }}
                     onClick={() => {
                       if (deslizado.current) {
@@ -416,6 +436,7 @@ export function Ritual({
                     // pulsarla no hace nada: la maquina lo ignora.
                     aria-hidden={i !== 0 ? true : undefined}
                     disabled={i !== 0}
+                    onKeyDown={sinRepeticion}
                     onClick={() => despachar({ tipo: 'siguiente' })}
                     style={{ zIndex: mazo.length - i, translate: `${i * 2}px ${i * -2}px` }}
                   />
