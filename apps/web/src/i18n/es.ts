@@ -280,6 +280,8 @@ export const ES = {
 
   /** El ritual de apertura (H9e-4). */
   ritual: {
+    /** El titulo de cada sobre, y el nombre de su region. */
+    titulo: (id: number) => `Sobre #${id}`,
     rasgar: (set: string) => `Rasgar el sobre de ${set}`,
     pista: 'Arrastra por el borde para rasgarlo, o pulsa.',
     saltar: 'Saltar',

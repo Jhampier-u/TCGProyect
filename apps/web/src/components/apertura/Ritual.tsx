@@ -103,11 +103,13 @@ export function Ritual({
     alTerminar.current();
   }, [estado.fase]);
 
-  // Cada revelado de nivel 3 o mas dispara la capa de efectos.
+  // Cada revelado de nivel 3 o mas dispara la capa de efectos. Saltar no es un
+  // revelado: quien salta no quiere el estallido de la ultima carta.
   const ultimoNivel = estado.reveladas > 0 ? niveles[estado.reveladas - 1]! : 1;
   useEffect(() => {
+    if (saltado) return;
     if (estado.reveladas > 0 && ultimoNivel >= 3) setDisparo((d) => d + 1);
-  }, [estado.reveladas, ultimoNivel]);
+  }, [estado.reveladas, ultimoNivel, saltado]);
 
   // ---------------------------------------------------------------- el foco
   //
@@ -129,6 +131,20 @@ export function Ritual({
   const bandejaRef = useRef<HTMLDivElement>(null);
   /** El ultimo elemento de esta seccion que tuvo el foco; null si se fue fuera. */
   const ultimoFoco = useRef<HTMLElement | null>(null);
+
+  // Un sobre en espera no se toca: ni clic ni tabulador ni lector de pantalla.
+  // `inert` va por la ref porque React 18 no conoce el atributo. Al pasar a ser
+  // el activo de un lote, se trae a la vista (sin deslizar con movimiento reducido).
+  const estabaEnEspera = useRef(enEspera);
+  useLayoutEffect(() => {
+    const el = seccion.current;
+    if (!el) return;
+    el.inert = enEspera;
+    if (estabaEnEspera.current && !enEspera) {
+      el.scrollIntoView({ block: 'nearest', behavior: reducido ? 'auto' : 'smooth' });
+    }
+    estabaEnEspera.current = enEspera;
+  }, [enEspera, reducido]);
 
   const alEnfocar = (e: FocusEvent<HTMLElement>) => {
     ultimoFoco.current = e.target;
@@ -196,9 +212,10 @@ export function Ritual({
     >
       <div className="sobre-cabecera">
         {/* tabIndex -1: enfocable por programa (ultimo recurso del foco), no por tabulador. */}
-        <h2 ref={titulo} tabIndex={-1} style={{ margin: 0 }} id={idTitulo}>Sobre #{openingId}</h2>
+        <h2 ref={titulo} tabIndex={-1} style={{ margin: 0 }} id={idTitulo}>{ES.ritual.titulo(openingId)}</h2>
         <span className="semilla" title={ES.ritual.semilla}>{seed}</span>
-        <span className="etiqueta nueva">{ES.ritual.nuevas(nuevas)}</span>
+        {/* Solo en el resumen: antes, cuantas nuevas hay destriparia el sobre. */}
+        {estado.fase === 'resumen' && <span className="etiqueta nueva">{ES.ritual.nuevas(nuevas)}</span>}
         {estado.fase !== 'resumen' && (
           <button
             type="button"
