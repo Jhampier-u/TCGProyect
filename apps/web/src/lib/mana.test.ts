@@ -58,7 +58,7 @@ describe('el coste en mana de Magic, de "{2}{B}" a simbolos (H9f, F-9)', () => {
 
   it('el coste tiene su propio nombre accesible', () => {
     expect(ES.mana.coste([ES.mana.generico('2'), ES.mana.nombre.B!])).toBe(
-      `${ES.mana.costeEtiqueta}${ES.mana.generico('2')}, ${ES.mana.nombre.B}`,
+      `Coste: ${ES.mana.generico('2')}, ${ES.mana.nombre.B}`,
     );
   });
 });
