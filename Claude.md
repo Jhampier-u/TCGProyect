@@ -32,7 +32,7 @@ C:\ProyectoTCG\
 ├── docker\e2e.Dockerfile        <- imagen de la suite E2E (ADR-009)
 ├── e2e\                         <- suite Playwright. NO es workspace de npm
 │   ├── playwright.config.ts
-│   └── src\  fixtures · humo · sobres (T-040) · mazos (T-053) · iconos (T-066) · catalogo (T-095)
+│   └── src\  fixtures · humo · sobres (T-040) · mazos (T-053) · iconos (T-066) · catalogo (T-095) · ritual (T-107)
 ├── Claude.md                    <- este archivo (Orquestador)
 ├── 00Master\                    <- contexto absoluto, verdad única
 │   ├── 00_Contexto_Global.md
@@ -179,12 +179,15 @@ C:\ProyectoTCG\
 │       │                       catalog-query-repository (H3) · pack-repository (H4)
 │       │                       collection-repository (H6)
 │       │                       deck-repository (H7)
+│       │                       plantilla-sql: la plantilla del set, una sola para motor y arte (T-101)
 │       ├── cli\                ingest.ts: CLI para poblar el catalogo
+│       │                       paleta.ts: `npm run sobres:paleta`, dos colores por set (T-102)
 │       ├── ingest\             IngestService: el orquestador (T-021)
 │       │                       openable: que set es un producto de sobres (T-069)
 │       ├── images\             image-harvest: descarga unica + WebP (T-014)
 │       │                       cartas y iconos de set, el mismo job (T-035)
 │       │                       harvester · sharp-encoder · file-store
+│       │                       paleta: color dominante de la ilustracion, recorte por juego (T-102)
 │       ├── packs\              motor de sobres (H4)
 │       │                       prng (xoshiro128**) · pack-service
 │       │                       coverage: que rarezas no puede entregar (T-034)
@@ -193,16 +196,20 @@ C:\ProyectoTCG\
 │           ├── scryfall\       ScryfallAdapter + lector JSONL gz (T-011)
 │           └── pokemontcg\     PokemonTcgAdapter (T-013)
 ├── apps\web\                    <- @tcg/web (Vite + React)
-│   └── src│       ├── lib\   api.ts (cliente) · auth.tsx (sesion)
+│   └── src\
 │       ├── i18n\  es.ts: el texto visible, unica excepcion a la regla de ASCII (T-089)
 │       ├── styles\ tokens.css: color, tipografia, espaciado y capa por juego (T-088)
+│       │          Holo Noir (T-098) · brillos.css: niveles de carta, sobre y ritual (T-100)
 │       ├── layouts\ JuegoLayout: pone `data-juego`, y de ahi sale la personalidad
 │       ├── lib\   api · auth · deck-draft (borrador puro) · use-deck-editor
 │       │          filtros-url (estado del catalogo en la URL) · consultas (claves de cache, P-043)
+│       │          rareza (nivel por juego, T-099) · ritual (maquina de estados, T-104)
+│       │          efectos (particulas por tiempo, T-105) · arte-sobres (arte local, T-103)
 │       ├── pages\ Catalogo · Acceso · Sobres · Coleccion · Mazos · MazoEditor
-│       └── components\ CardTile · PackReveal · DeckBuscador · DeckZona ·
+│       └── components\ CardTile · DeckBuscador · DeckZona ·
 │                     DeckValidacion · DeckTransferencia · SelectorDeSet ·
 │                     RailDeSet · FilaDeCarta · FichaDeCarta · LimiteDeError
+│                     apertura\ CartaConBrillo · Sobre · CapaDeEfectos · Ritual (H9e)
 └── package.json                 <- npm workspaces
 ```
 

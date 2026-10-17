@@ -1,7 +1,7 @@
 # 05 — Continuar aquí
 
-**Punto de guardado:** 2026-10-15, en la sesión **S037**
-**Commit:** rama `main` · suite de Vitest y los 16 recorridos E2E en verde · `npm audit` limpio
+**Punto de guardado:** 2026-10-16, en la sesión **S037**
+**Commit:** rama `h9e-holo-noir` (sin fusionar en `main`) · suite de Vitest y los 22 recorridos E2E en verde · `npm audit` limpio
 (el recuento exacto sale de `npm test`; publicarlo aqui solo servia para que se quedara viejo)
 
 Este documento existe para retomar el proyecto en otra máquina o en otra sesión sin releer todas las
@@ -196,11 +196,10 @@ son útiles para la lógica, pero **la fidelidad de sus datos determina lo que e
 
 **Lo siguiente**, por este orden:
 
-1. **H9e, Holo Noir y la apertura épica**: spec aprobado (`17_Spec_H9e_HoloNoir.md`), decidido con
-   el usuario sobre maquetas, y plan escrito (`18_Plan_H9e_HoloNoir.md`, T-098 a T-107). Empezar por
-   T-098. Ojo: la suite E2E ya busca por rol, así que
-   sobrevive al rediseño **si la semántica se conserva**. Las ilustraciones de los sobres las genera
-   el usuario con Nano Banana Pro a partir de 25 prompts que hay que entregarle.
+1. **H9e está hecho** (T-098 a T-107) en la rama `h9e-holo-noir`: fusionarla es decisión del usuario.
+   Las 25 ilustraciones de sobre las genera el usuario con Nano Banana Pro desde
+   `19_Prompts_Sobres.md`; cada una se deja en `apps/web/public/sobres/<juego>/` y su clave se añade a
+   `DISPONIBLES` en `apps/web/src/lib/arte-sobres.ts`. Hasta entonces, la reserva sin arte.
 2. **Un perfil de facetas por juego** antes de la sección de Magic: la revisión de D-1 en S037
    concluye que, sin él, Magic sería copiar y pegar la API, el raíl y la fila.
 3. **T-097**, en cuanto haya clave de Pokémon en `.env` y tiempo para una reingesta larga.

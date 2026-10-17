@@ -318,3 +318,66 @@ consultas lo contengan literalmente.
 La paleta Holo Noir que lleva el plan **ya pasa** el test de contraste en los dos temas: se calculó con
 la misma fórmula antes de escribirla. Y la comprobación del Vault cazó el propio plan: nombraba entre
 comillas de código la migración 0028, que todavía no existe.
+
+## H9e ejecutado (2026-10-16): T-098 a T-107
+
+El plan se ejecutó con un subagente por tarea y dos revisiones entre tareas, una de cumplimiento del
+spec y otra de calidad. Cada corrección volvió al mismo agente que había hecho la tarea. Rama
+`h9e-holo-noir`, 26 commits, sin fusionar.
+
+### Lo que cazaron las revisiones, y que el plan traía escrito
+
+- **Colores literales en el CSS** del plan, fuera de `tokens.css`, se movieron a tokens.
+- **La clase `.brillo` chocaba** con la capa de foil vieja y se renombró con el prefijo `carta-brillo`.
+- **Pruebas vacuas en T-099**: se reescribieron hasta verlas fallar.
+- **La paleta elegía el marco y los grises**: ahora recorta la ilustración según el juego y pesa
+  saturación² × valor. Se revisó sobre hojas de contacto.
+- **Plantilla sin desempate**: dos plantillas empatadas podían dar un arte distinto del sobre que
+  entrega el motor. Se resolvió con `, t.id` en el fragmento compartido.
+- **`clip-path` recortaba la sombra y el anillo de foco** del sobre, y su flotación infinita impedía
+  que Playwright lo diera por estable.
+- **Partículas por fotograma y sin tope de `devicePixelRatio`**: en una pantalla de 120 Hz el efecto
+  iba al doble de velocidad. Ahora se simulan por tiempo y el `devicePixelRatio` tiene tope de 2.
+- **Las rarezas se congelaban antes de llegar**: el orden se calculaba con un mapa vacío. Ahora la
+  página espera a tenerlas.
+- **Sin región viva ni pies de foto en el resumen**: un lector de pantalla no oía qué salía. Ahora
+  oye cada carta revelada.
+
+### Verificación
+
+Se miró en pantalla con Playwright sin cabecera, porque el panel del navegador oculto no ejecuta
+`requestAnimationFrame`:
+
+- el catálogo y la ficha en Holo Noir;
+- la inclinación medida con el puntero;
+- el ritual entero sobre *151*;
+- una caja de 24 sobres con anticipación y rayos a 59-60 fps;
+- la sombra y los pies de foto en el tema claro.
+
+La suite E2E pasa de 16 a **22 recorridos** con `ritual.spec.ts`. Se rompió a mano cada garantía y se
+vio fallar la prueba correspondiente:
+
+- el teclado;
+- el foco tras rasgar;
+- Saltar;
+- que no haya lienzo con movimiento reducido;
+- P-001;
+- que el arte salga de la plantilla del motor;
+- la región viva.
+
+**Y la revisión de T-107 cazó una prueba vacua en la propia T-107**: la del teclado esperaba 800 ms
+fijos tras rasgar, y sin esa espera el bucle de cartas no daba ni una vuelta (el mazo aún no estaba
+pintado), con la aserción final cumpliéndose sobre cero cartas. Ahora espera el foco en la carta de
+arriba, comprueba en cada vuelta que el foco llegó solo y cuenta las cartas reveladas, que tienen que
+ser más de cero. La prueba de P-001, además, sólo miraba el sobre sellado: ahora mira también las
+imágenes de las cartas, que es por donde se colaría una URL externa.
+
+Al repetir la suite muchas veces se agotó el cupo de altas de la API, y hubo que reiniciarla para
+vaciarlo. El fallo era de cupo, no de las pruebas.
+
+### Lo que queda
+
+- **Del usuario**: generar las 25 ilustraciones (`19_Prompts_Sobres.md`) y decidir si se fusiona la
+  rama.
+- **Pendiente**: T-097, la hoja de ruta de la lluvia de ideas y el perfil de facetas por juego antes
+  de Magic.
