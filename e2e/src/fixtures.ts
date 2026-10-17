@@ -106,6 +106,8 @@ export interface SetAbrible {
   /** La sigla del set: el emblema del sobre de Yu-Gi-Oh! (y de un set sin icono). */
   code: string;
   name: string;
+  /** `YYYY-MM-DD`: la portada por anio lo agrupa por aqui (H9f). */
+  releasedAt: string | null;
   poolSize: number;
   isOpenable: boolean;
 }
