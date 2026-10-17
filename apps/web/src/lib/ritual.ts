@@ -20,6 +20,19 @@ export interface EstadoRitual {
   niveles: readonly Nivel[];
   /** Cuantas van reveladas, desde el principio del orden. */
   reveladas: number;
+  /**
+   * La carta que esta EN EL FOCO: revelada, en grande, en el centro de la
+   * escena, esperando a que el usuario avance. Es un indice del orden (siempre
+   * `reveladas - 1` cuando no es null). Null: no hay ninguna en grande.
+   *
+   * Avanzar ('siguiente') la manda a la bandeja y revela la siguiente. La
+   * ULTIMA tambien espera a un avance mas antes del resumen: es la mejor del
+   * sobre (el orden va de menos a mas escasa) y quitarsela al usuario con un
+   * temporizador le robaria justo el momento que el ritual prepara.
+   */
+  foco: number | null;
+  /** Modo rapido (sobres 2 y siguientes de un lote): solo van al foco los niveles 4 y 5. */
+  rapido: boolean;
 }
 
 export type Accion =
@@ -32,16 +45,17 @@ export type Accion =
 /** Desde que nivel una carta se anuncia antes de voltearse (spec, seccion 7). */
 export const NIVEL_CON_ANTICIPACION = 4;
 
-export function iniciar(niveles: readonly Nivel[], reducido: boolean): EstadoRitual {
-  // Con movimiento reducido no hay ritual: el contenido no puede depender de la
-  // animacion (es lo que comprueba T-040).
+export function iniciar(niveles: readonly Nivel[], reducido: boolean, rapido = false): EstadoRitual {
+  // Con movimiento reducido no hay ritual ni foco: el contenido no puede
+  // depender de la animacion (es lo que comprueba T-040).
   return reducido
-    ? { fase: 'resumen', niveles, reveladas: niveles.length }
-    : { fase: 'sellado', niveles, reveladas: 0 };
+    ? { fase: 'resumen', niveles, reveladas: niveles.length, foco: null, rapido }
+    : { fase: 'sellado', niveles, reveladas: 0, foco: null, rapido };
 }
 
 export function avanzar(e: EstadoRitual, a: Accion): EstadoRitual {
-  if (a.tipo === 'saltar') return { ...e, fase: 'resumen', reveladas: e.niveles.length };
+  // Saltar no pasa por el foco: quien salta quiere el resumen, no el espectaculo.
+  if (a.tipo === 'saltar') return { ...e, fase: 'resumen', reveladas: e.niveles.length, foco: null };
   switch (e.fase) {
     case 'sellado':
       return a.tipo === 'rasgar' ? { ...e, fase: 'rasgando' } : e;
@@ -49,10 +63,12 @@ export function avanzar(e: EstadoRitual, a: Accion): EstadoRitual {
       return a.tipo === 'rasgado' ? { ...e, fase: 'mazo' } : e;
     case 'mazo': {
       if (a.tipo !== 'siguiente') return e;
+      // Avanzar SIEMPRE vacia el foco primero: la carta en grande vuela a la bandeja.
+      const sinFoco = { ...e, foco: null };
       const nivel = e.niveles[e.reveladas];
-      // Solo se alcanza con un sobre vacio: si no, el estado pasa a resumen al revelar la ultima.
-      if (nivel === undefined) return { ...e, fase: 'resumen' };
-      return nivel >= NIVEL_CON_ANTICIPACION ? { ...e, fase: 'anticipacion' } : revelarUna(e);
+      // Mazo vacio: o la ultima carta deja el foco, o el sobre estaba vacio.
+      if (nivel === undefined) return { ...sinFoco, fase: 'resumen' };
+      return nivel >= NIVEL_CON_ANTICIPACION ? { ...sinFoco, fase: 'anticipacion' } : revelarUna(sinFoco);
     }
     case 'anticipacion':
       return a.tipo === 'anticipado' ? revelarUna(e) : e;
@@ -67,8 +83,13 @@ export function avanzar(e: EstadoRitual, a: Accion): EstadoRitual {
 }
 
 function revelarUna(e: EstadoRitual): EstadoRitual {
-  const reveladas = e.reveladas + 1;
-  return { ...e, reveladas, fase: reveladas >= e.niveles.length ? 'resumen' : 'mazo' };
+  const indice = e.reveladas;
+  const reveladas = indice + 1;
+  const alFoco = !e.rapido || e.niveles[indice]! >= NIVEL_CON_ANTICIPACION;
+  const foco = alFoco ? indice : null;
+  // Con la ultima en el foco aun no hay resumen: espera a su avance.
+  const fase = reveladas >= e.niveles.length && foco === null ? 'resumen' : 'mazo';
+  return { ...e, reveladas, foco, fase };
 }
 
 /**

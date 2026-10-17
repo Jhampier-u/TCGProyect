@@ -356,10 +356,70 @@ button.primario:hover:not(:disabled) { filter: brightness(1.08); }
  * Formas genericas dibujadas en CSS. NO son reproducciones de los reversos
  * reales: son obra protegida, y ademas exigiria descargar y re-hospedar mas
  * imagenes de terceros (P-001).
+ *
+ * Un dorso por juego, de cinco capas y dos pseudo-elementos, todo con tokens:
+ *  - fondo: el degradado de dorso del juego, una celosia fina y un reflejo;
+ *  - marco: doble filete con el acento del juego (sombras interiores);
+ *  - ::before: el anillo holografico del centro;
+ *  - ::after: el emblema, una forma distinta por juego (estrella de cuatro
+ *    puntas, hexagono de anillos, estallido de ocho).
+ * Las medidas van en `cqi` para que el mismo dorso valga para el mazo y para la
+ * carta grande del foco; sus contenedores declaran `container-type`.
+ * El elemento lo posiciona quien lo usa (el mazo, el foco): aqui no se toca.
  */
-.reverso-mtg  { background: radial-gradient(circle at 50% 45%, var(--dorso-1) 0%, var(--dorso-2) 60%, var(--dorso-3) 100%); }
-.reverso-ygo  { background: radial-gradient(circle at 50% 45%, var(--dorso-1) 0%, var(--dorso-2) 60%, var(--dorso-3) 100%); }
-.reverso-ptcg { background: radial-gradient(circle at 50% 45%, var(--dorso-1) 0%, var(--dorso-2) 60%, var(--dorso-3) 100%); }
+.reverso-mtg, .reverso-ygo, .reverso-ptcg {
+  overflow: hidden;
+  background:
+    linear-gradient(118deg, transparent 26%, var(--dorso-brillo) 42%, transparent 56%),
+    radial-gradient(circle at 50% 50%, transparent 0 38%, color-mix(in srgb, var(--dorso-3) 75%, transparent) 100%),
+    repeating-linear-gradient(45deg, var(--dorso-linea) 0 1px, transparent 1px 9px),
+    repeating-linear-gradient(-45deg, var(--dorso-linea) 0 1px, transparent 1px 9px),
+    radial-gradient(circle at 50% 45%, var(--dorso-1) 0%, var(--dorso-2) 60%, var(--dorso-3) 100%);
+  box-shadow:
+    inset 0 0 0 3.5cqi var(--dorso-3),
+    inset 0 0 0 4.3cqi color-mix(in srgb, var(--juego-acento) 85%, transparent),
+    inset 0 0 0 6.6cqi color-mix(in srgb, var(--dorso-3) 45%, transparent),
+    inset 0 0 0 7.1cqi color-mix(in srgb, var(--juego-acento) 35%, transparent),
+    var(--dorso-elevacion, 0 0 0 transparent);
+}
+/* El anillo holografico: el arcoiris de los brillos sobre el acento del juego. */
+.reverso-mtg::before, .reverso-ygo::before, .reverso-ptcg::before {
+  content: ""; position: absolute; inset-inline-start: 19%; inset-block-start: 50%; translate: 0 -50%;
+  inline-size: 62%; aspect-ratio: 1; border-radius: 50%; pointer-events: none;
+  background:
+    radial-gradient(circle closest-side, var(--dorso-2) 0 70%, var(--dorso-3) 70% 75%, transparent 76%),
+    conic-gradient(from 210deg, var(--efecto-holo-1), var(--efecto-holo-2), var(--efecto-holo-3),
+      var(--efecto-holo-4), var(--efecto-holo-1)),
+    var(--juego-acento);
+  box-shadow: 0 0 0 1px var(--dorso-filo), 0 0 9cqi color-mix(in srgb, var(--juego-acento) 50%, transparent);
+}
+/* El emblema, en el centro del anillo. */
+.reverso-mtg::after, .reverso-ygo::after, .reverso-ptcg::after {
+  content: ""; position: absolute; inset-inline-start: 31%; inset-block-start: 50%; translate: 0 -50%;
+  inline-size: 38%; aspect-ratio: 1; pointer-events: none;
+  filter: drop-shadow(0 0 3cqi color-mix(in srgb, var(--juego-acento) 70%, transparent));
+}
+/* Magic: una estrella de cuatro puntas, como una rosa de los vientos. */
+.reverso-mtg::after {
+  background:
+    linear-gradient(135deg, var(--sobre-tinta) 0%, var(--dorso-oro) 30%, var(--juego-acento) 60%, var(--dorso-2) 100%);
+  clip-path: polygon(50% 0, 60% 40%, 100% 50%, 60% 60%, 50% 100%, 40% 60%, 0 50%, 40% 40%);
+}
+/* Yu-Gi-Oh!: un hexagono de anillos concentricos con un ojo de luz. */
+.reverso-ygo::after {
+  background:
+    radial-gradient(circle closest-side, var(--sobre-tinta) 0 9%, var(--dorso-oro) 10% 16%, transparent 17%),
+    repeating-radial-gradient(circle closest-side, var(--juego-acento) 0 7%, var(--dorso-3) 7% 12%),
+    var(--dorso-3);
+  clip-path: polygon(25% 7%, 75% 7%, 100% 50%, 75% 93%, 25% 93%, 0 50%);
+}
+/* Pokemon: un estallido de ocho puntas, oro sobre el azul del dorso. */
+.reverso-ptcg::after {
+  background:
+    radial-gradient(circle closest-side, var(--sobre-tinta) 0 12%, var(--dorso-oro) 30%, var(--juego-acento) 75%);
+  clip-path: polygon(50% 0, 59% 30%, 85% 15%, 70% 41%, 100% 50%, 70% 59%, 85% 85%, 59% 70%, 50% 100%,
+    41% 70%, 15% 85%, 30% 59%, 0 50%, 30% 41%, 15% 15%, 41% 30%);
+}
 
 /* Quien pide menos movimiento no deberia sufrir transiciones de adorno. El
    ritual de apertura (brillos.css) trata su propio movimiento reducido. */

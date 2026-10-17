@@ -412,6 +412,12 @@ export const ES = {
     pista: 'Arrastra por el borde para rasgarlo, o pulsa.',
     saltar: 'Saltar',
     sinRevelar: (n: number) => `Carta ${n} sin revelar`,
+    /** Bajo el mazo, antes de la primera carta. */
+    pistaMazo: 'Pulsa el mazo para sacar la primera carta',
+    /** Bajo la carta en grande: avanzar la manda a la bandeja y saca la siguiente. */
+    pistaFoco: 'Pulsa, desliza o usa Intro para la siguiente',
+    /** Bajo la ultima carta del sobre. */
+    pistaFinal: 'Pulsa para ver el sobre completo',
     nuevas: (n: number) => (n === 1 ? '1 nueva' : `${n} nuevas`),
     semilla: 'Semilla de la apertura: la hace reproducible',
     /** Lo que oye un lector de pantalla al revelarse una carta. */

@@ -103,11 +103,11 @@ const SOBRE: Nivel[] = [1, 1, 2, 3, 5];
 
 describe('el ritual de apertura (H9e-4)', () => {
   it('empieza sellado y nada revelado', () => {
-    expect(iniciar(SOBRE, false)).toEqual({ fase: 'sellado', niveles: SOBRE, reveladas: 0 });
+    expect(iniciar(SOBRE, false)).toEqual({ fase: 'sellado', niveles: SOBRE, reveladas: 0, foco: null, rapido: false });
   });
 
   it('con movimiento reducido no hay ritual: todo revelado y al resumen', () => {
-    expect(iniciar(SOBRE, true)).toMatchObject({ fase: 'resumen', reveladas: 5 });
+    expect(iniciar(SOBRE, true)).toMatchObject({ fase: 'resumen', reveladas: 5, foco: null });
   });
 
   it('rasgar, terminar de rasgar, y el mazo', () => {
@@ -136,7 +136,9 @@ describe('el ritual de apertura (H9e-4)', () => {
   it('una de nivel 4 o 5 pasa ANTES por la anticipacion', () => {
     const antes = pasar(iniciar(SOBRE, false), 'rasgar', 'rasgado', 'siguiente', 'siguiente', 'siguiente', 'siguiente', 'siguiente');
     expect(antes).toMatchObject({ fase: 'anticipacion', reveladas: 4 });
-    expect(pasar(antes, 'anticipado')).toMatchObject({ fase: 'resumen', reveladas: 5 });
+    // Tras la anticipacion se voltea EN EL FOCO; el resumen llega con el avance siguiente.
+    expect(pasar(antes, 'anticipado')).toMatchObject({ fase: 'mazo', reveladas: 5, foco: 4 });
+    expect(pasar(antes, 'anticipado', 'siguiente')).toMatchObject({ fase: 'resumen', reveladas: 5 });
   });
 
   it('durante la anticipacion, pedir otra carta no se la salta', () => {
@@ -185,5 +187,64 @@ describe('prepararSobre', () => {
       'common', 'common', 'normal_parallel_rare', 'rare', 'super_rare',
     ]);
     expect(niveles).toEqual([1, 1, 2, 2, 3]);
+  });
+});
+
+describe('el foco: cada carta sale en grande antes de ir a la bandeja', () => {
+  const abierto = (niveles: Nivel[], rapido = false) => pasar(iniciar(niveles, false, rapido), 'rasgar', 'rasgado');
+
+  it('nada esta en el foco hasta la primera carta', () => {
+    expect(abierto(SOBRE).foco).toBeNull();
+  });
+
+  it('la carta revelada se queda en el foco', () => {
+    expect(pasar(abierto(SOBRE), 'siguiente')).toMatchObject({ fase: 'mazo', reveladas: 1, foco: 0 });
+  });
+
+  it('avanzar manda la del foco a la bandeja y revela la siguiente en grande', () => {
+    expect(pasar(abierto(SOBRE), 'siguiente', 'siguiente')).toMatchObject({ fase: 'mazo', reveladas: 2, foco: 1 });
+  });
+
+  it('la ultima se queda en el foco hasta otro avance, que lleva al resumen', () => {
+    const ultima = pasar(abierto([1, 2]), 'siguiente', 'siguiente');
+    expect(ultima).toMatchObject({ fase: 'mazo', reveladas: 2, foco: 1 });
+    expect(pasar(ultima, 'siguiente')).toMatchObject({ fase: 'resumen', reveladas: 2, foco: null });
+  });
+
+  it('antes de anticipar, la del foco ya se fue a la bandeja', () => {
+    const antes = pasar(abierto([1, 5]), 'siguiente', 'siguiente');
+    expect(antes).toMatchObject({ fase: 'anticipacion', reveladas: 1, foco: null });
+    expect(pasar(antes, 'anticipado')).toMatchObject({ fase: 'mazo', reveladas: 2, foco: 1 });
+  });
+
+  it('en modo rapido los niveles 1 a 3 van directos a la bandeja', () => {
+    const e = pasar(abierto([1, 2, 3, 4], true), 'siguiente', 'siguiente', 'siguiente');
+    expect(e).toMatchObject({ fase: 'mazo', reveladas: 3, foco: null });
+  });
+
+  it('en modo rapido los niveles 4 y 5 si salen al foco, y esperan', () => {
+    const antes = pasar(abierto([1, 2, 3, 4], true), 'siguiente', 'siguiente', 'siguiente', 'siguiente');
+    expect(antes).toMatchObject({ fase: 'anticipacion', foco: null });
+    const foco = pasar(antes, 'anticipado');
+    expect(foco).toMatchObject({ fase: 'mazo', reveladas: 4, foco: 3 });
+    expect(pasar(foco, 'siguiente')).toMatchObject({ fase: 'resumen', foco: null });
+  });
+
+  it('en modo rapido, si la ultima es de nivel 3 o menos, se llega al resumen sin foco', () => {
+    expect(pasar(abierto([1, 3], true), 'siguiente', 'siguiente')).toMatchObject({ fase: 'resumen', reveladas: 2, foco: null });
+  });
+
+  it('saltar vacia el foco', () => {
+    const e = pasar(abierto(SOBRE), 'siguiente', 'saltar');
+    expect(e).toMatchObject({ fase: 'resumen', reveladas: 5, foco: null });
+  });
+
+  it('con movimiento reducido no hay foco, tampoco en modo rapido', () => {
+    expect(iniciar(SOBRE, true, true)).toMatchObject({ fase: 'resumen', foco: null });
+  });
+
+  it('anticipado con la carta en el foco no hace nada', () => {
+    const e = pasar(abierto(SOBRE), 'siguiente');
+    expect(pasar(e, 'anticipado')).toEqual(e);
   });
 });

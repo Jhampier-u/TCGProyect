@@ -184,6 +184,12 @@
   --sobre-halo-icono: rgb(255 255 255 / 0.4);
   --sobre-tira: rgb(255 255 255 / 0.85);
   --fuente-titulo: "Space Grotesk", var(--fuente);
+  /* El dorso de las cartas (styles.css): como el sobre, un objeto oscuro en los
+     dos temas, asi que sus trazos no varian con el tema y solo viven aqui. */
+  --dorso-linea: rgb(255 255 255 / 0.05);
+  --dorso-brillo: rgb(255 255 255 / 0.13);
+  --dorso-filo: rgb(255 255 255 / 0.28);
+  --dorso-oro: #ffd65a;
 }
 
 @media (prefers-color-scheme: light) {

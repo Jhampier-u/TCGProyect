@@ -152,18 +152,30 @@
 }
 
 /* La capa de particulas y rayos (T-105): luz, nunca recibe un clic. */
-.capa-efectos { position: absolute; inset: 0; inline-size: 100%; block-size: 100%; pointer-events: none; z-index: 0; }
+.capa-efectos {
+  position: absolute; inset: 0; inline-size: 100%; block-size: 100%; pointer-events: none; z-index: 0;
+  /* Los rayos se desvanecen hacia los bordes en vez de cortarse en seco contra el lienzo. */
+  -webkit-mask: radial-gradient(farthest-side at 50% 45%, var(--sobre-oscuro) 55%, transparent);
+  mask: radial-gradient(farthest-side at 50% 45%, var(--sobre-oscuro) 55%, transparent);
+}
 
 /* --------------------------------------------------------- el ritual (H9e-4) */
-/* Capas dentro de la escena: velo (::before) y lienzo en 0, todo lo demas en 1.
+/* Capas dentro de la escena: velo (::before) y lienzo en 0, sobre y escenario en 1,
+   la bandeja en 2.
    `isolation` las encierra: no compiten con el resto de la pagina. */
 .ritual-escena {
   position: relative; isolation: isolate; min-block-size: 420px;
   display: grid; gap: 18px; justify-items: center; padding: 12px 0;
 }
 .ritual-pista { position: relative; z-index: 1; margin: 0; color: var(--texto-tenue); font-size: var(--paso-00); }
+
+/* A la vista: sobre, escenario (foco + mazo) y, debajo, la bandeja. En el DOM la
+   bandeja va antes (T-040): el orden visual lo pone `order`, no el marcado. */
+.ritual-escenario { order: 1; }
 .ritual-bandeja {
-  position: relative; z-index: 1; inline-size: 100%; display: grid; gap: 12px;
+  order: 2;
+  /* z-index 2: la carta que vuela del foco a su hueco pasa POR ENCIMA del escenario. */
+  position: relative; z-index: 2; inline-size: 100%; display: grid; gap: 12px;
   grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
 }
 .ritual-bandeja:empty { display: none; }
@@ -180,26 +192,150 @@
 .ritual-pie { min-block-size: 20px; display: flex; align-items: center; justify-content: space-between; gap: 6px; font-size: 11px; }
 .ritual-nombre { min-inline-size: 0; overflow: hidden; text-overflow: ellipsis; text-wrap: nowrap; color: var(--texto-tenue); }
 .ritual-pie .etiqueta { flex: none; }
-.ritual-mazo { position: relative; z-index: 1; inline-size: 180px; block-size: 252px; }
-/* El fondo lo pone `.reverso-<juego>` (styles.css): el dorso generico del juego. */
-.ritual-mazo .volteador {
-  position: absolute; inset: 0; padding: 0; border-radius: 10px; border: 1px solid var(--cristal-borde);
-  box-shadow: 0 18px 36px var(--sobre-sombra);
+
+/* ------------------------------------------------ el escenario: foco y mazo
+   Los tamanos salen de la ventana: la carta del foco mide 340px como mucho, el
+   58% del ancho en un movil, y nunca mas alta que lo que cabe en pantalla. */
+.ritual-escenario {
+  --foco-ancho: max(180px, min(340px, 58vw, calc((100svh - 220px) * 0.716)));
+  --mazo-ancho: clamp(72px, 19vw, 150px);
+  position: relative; z-index: 1; inline-size: 100%;
+  display: flex; align-items: center; justify-content: center; gap: clamp(18px, 6vw, 72px);
+  /* Alto fijo: que aparezca o se vaya la carta del foco no empuja la bandeja. */
+  min-block-size: calc(var(--foco-ancho) * 1.396 + 104px);
 }
+
+.ritual-mazo {
+  position: relative; z-index: 1; flex: none; inline-size: var(--mazo-ancho); aspect-ratio: 245 / 342;
+  /* Las medidas del dorso (marco, emblema) van en `cqi`: crecen con la carta. */
+  container-type: inline-size;
+}
+.ritual-mazo .volteador {
+  position: absolute; inset: 0; padding: 0; border-radius: 4.5% / 3.2%; border: 1px solid var(--cristal-borde);
+  --dorso-elevacion: 0 1px 2px var(--sobre-sombra);
+}
+/* La sombra grande, solo bajo la carta de abajo: diez sombras apiladas hacen una caja. */
+.ritual-mazo .volteador:last-of-type { --dorso-elevacion: 0 18px 36px var(--sobre-sombra); }
 .ritual-mazo .volteador:not(:disabled) { cursor: pointer; }
+.ritual-mazo .volteador:not(:disabled):hover {
+  --dorso-elevacion: 0 0 0 1px var(--juego-acento, var(--acento)), 0 0 28px color-mix(in srgb, var(--juego-acento, var(--acento)) 45%, transparent), 0 22px 40px var(--sobre-sombra);
+}
 /* Las de debajo no se ven apagadas: son el mismo mazo, no botones inactivos. */
 .ritual-mazo .volteador:disabled { opacity: 1; cursor: default; }
+.ritual-pista.mazo-pista {
+  position: absolute; inset-block-start: calc(100% + 14px); inset-inline: -60px; text-align: center;
+  animation: foco-aparece 600ms 150ms both;
+}
 .ritual-escena .volteador:focus-visible { outline: 2px solid var(--juego-acento, var(--acento)); outline-offset: 3px; }
+
+/* El foco: la carta revelada, en grande, hasta que el usuario avance. */
+.ritual-foco {
+  --foco-luz: var(--juego-acento, var(--acento));
+  --foco-tinta: var(--texto-tenue);
+  position: relative; display: grid; justify-items: center; gap: 14px;
+}
+.ritual-foco[data-nivel="2"] { --foco-luz: var(--nivel-2); --foco-tinta: var(--nivel-2); }
+.ritual-foco[data-nivel="3"] { --foco-luz: var(--nivel-3); --foco-tinta: var(--nivel-3); }
+.ritual-foco[data-nivel="4"] { --foco-luz: var(--nivel-4); --foco-tinta: var(--nivel-4); }
+.ritual-foco[data-nivel="5"] { --foco-luz: var(--nivel-5); --foco-tinta: var(--nivel-5); }
+
+.foco-marco {
+  position: relative; inline-size: var(--foco-ancho); aspect-ratio: 245 / 342;
+  perspective: 1400px; container-type: inline-size;
+}
+/* La sombra en el suelo: la carta flota. */
+.foco-marco::after {
+  content: ""; position: absolute; z-index: 0; inset-inline: 8%; inset-block-end: -7%; block-size: 9%;
+  border-radius: 50%; pointer-events: none;
+  background: radial-gradient(closest-side, var(--sobre-sombra), transparent);
+}
+.foco-carta {
+  position: relative; z-index: 1; display: block; inline-size: 100%; block-size: 100%;
+  padding: 0; border: 0; background: none; border-radius: 4.5% / 3.2%;
+  transform-style: preserve-3d; cursor: pointer;
+  /* El gesto horizontal es del ritual; el vertical sigue siendo desplazar la pagina. */
+  touch-action: pan-y;
+}
+.foco-cara {
+  position: absolute; inset: 0; border-radius: inherit;
+  backface-visibility: hidden; -webkit-backface-visibility: hidden;
+}
+.foco-frente .carta-brillo { inline-size: 100%; block-size: 100%; }
+.foco-dorso { transform: rotateY(180deg); --dorso-elevacion: 0 30px 60px var(--sobre-sombra); }
+
+/* El halo del nivel detras de la carta. Solo opacidad y transform: nada de layout. */
+.foco-aura {
+  position: absolute; z-index: 0; inset: -24% -38%; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--foco-luz) 62%, transparent),
+    color-mix(in srgb, var(--foco-luz) 22%, transparent) 55%, transparent);
+  animation: foco-aura-entra 900ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+.ritual-foco[data-nivel="1"] .foco-aura { opacity: 0.55; }
+/* Del nivel 3 en adelante, una corona de luz que gira despacio. */
+.ritual-foco[data-nivel="3"] .foco-aura::before,
+.ritual-foco[data-nivel="4"] .foco-aura::before,
+.ritual-foco[data-nivel="5"] .foco-aura::before {
+  /* Cuadrada y mas ancha que la carta: los rayos asoman por los cuatro lados. */
+  content: ""; position: absolute; inset-inline-start: 50%; inset-block-start: 50%; translate: -50% -50%;
+  inline-size: 215cqi; aspect-ratio: 1; border-radius: 50%;
+  background: repeating-conic-gradient(from 0deg, color-mix(in srgb, var(--foco-luz) 70%, transparent) 0deg 3deg, transparent 3deg 15deg);
+  -webkit-mask: radial-gradient(closest-side, transparent 40%, var(--sobre-oscuro) 66%, transparent);
+  mask: radial-gradient(closest-side, transparent 40%, var(--sobre-oscuro) 66%, transparent);
+  transition: opacity 600ms;
+  animation: foco-corona 24s linear infinite;
+}
+.ritual-foco[data-nivel="5"] .foco-aura::before { animation-duration: 14s; }
+.ritual-foco[data-revelada="false"] .foco-aura::before { opacity: 0; }
+
+/* El fogonazo al voltearse: del nivel 2 en adelante, mas fuerte cuanto mas alto. */
+.foco-destello {
+  position: absolute; z-index: 2; inset: -6%; border-radius: 50%; pointer-events: none; opacity: 0;
+  background: radial-gradient(closest-side, var(--efecto-reflejo), color-mix(in srgb, var(--foco-luz) 40%, transparent) 50%, transparent);
+  mix-blend-mode: screen;
+}
+.ritual-foco[data-revelada="true"]:not([data-nivel="1"]) .foco-destello { animation: foco-destello 700ms 260ms ease-out both; }
+.ritual-foco[data-revelada="true"][data-nivel="4"] .foco-destello,
+.ritual-foco[data-revelada="true"][data-nivel="5"] .foco-destello { inset: -30%; animation-duration: 1100ms; animation-delay: 380ms; }
+
+/* La leyenda: nombre, rareza y la pista de como seguir. */
+.foco-leyenda {
+  position: relative; z-index: 1; min-block-size: 76px; max-inline-size: min(calc(var(--foco-ancho) + 120px), 92vw);
+  display: grid; justify-items: center; align-content: start; gap: 6px; text-align: center;
+}
+.foco-nombre {
+  font-family: var(--fuente-titulo); font-size: var(--paso-2); font-weight: 700; line-height: var(--linea-apretada);
+  color: var(--texto); text-wrap: balance;
+  animation: foco-aparece 500ms 300ms both;
+}
+.foco-rareza {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: var(--paso-00); font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: var(--foco-tinta);
+  animation: foco-aparece 500ms 420ms both;
+}
+.foco-rareza .etiqueta { letter-spacing: normal; text-transform: none; }
+.foco-pista { font-size: var(--paso-00); color: var(--texto-tenue); animation: foco-aparece 600ms 1100ms both; }
+
+/* La anticipacion: la carta, aun boca abajo en el centro, tiembla y brilla. */
 .volteador.anticipando { animation: ritual-temblor 0.12s linear infinite; }
 .volteador.anticipando.nivel-4 { box-shadow: 0 0 50px var(--nivel-4); }
 .volteador.anticipando.nivel-5 { box-shadow: 0 0 70px var(--nivel-5), 0 0 120px var(--nivel-4); }
+.ritual[data-fase="anticipacion"] .foco-aura { animation: foco-aura-entra 600ms both, foco-latido 0.5s 600ms ease-in-out infinite alternate; }
 @keyframes ritual-temblor { 0%, 100% { translate: 0 0 } 25% { translate: -2px 1px } 75% { translate: 2px -1px } }
+@keyframes foco-aura-entra { from { opacity: 0; transform: scale(0.55) } to { opacity: 1; transform: scale(1) } }
+@keyframes foco-latido { from { transform: scale(1) } to { transform: scale(1.12) } }
+@keyframes foco-corona { to { transform: rotate(1turn) } }
+@keyframes foco-destello { 0% { opacity: 0; transform: scale(0.6) } 30% { opacity: 1 } 100% { opacity: 0; transform: scale(1.35) } }
+@keyframes foco-aparece { from { opacity: 0; transform: translateY(8px) } to { opacity: 1; transform: none } }
 /* La luz se apaga durante la anticipacion. El velo va en la capa 0: oscurece
    el fondo, no las cartas. */
 .ritual[data-fase="anticipacion"] .ritual-escena::before {
   content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
   background: var(--velo-fuerte); border-radius: var(--radio-g);
+  -webkit-mask: radial-gradient(farthest-side at 50% 45%, var(--sobre-oscuro) 50%, transparent);
+  mask: radial-gradient(farthest-side at 50% 45%, var(--sobre-oscuro) 50%, transparent);
+  animation: foco-aparece-velo 400ms both;
 }
+@keyframes foco-aparece-velo { from { opacity: 0 } to { opacity: 1 } }
 /* "Abrir otro" mientras se pide: inerte pero enfocable (aria-disabled, no disabled). */
 .sobre-cabecera button[aria-disabled="true"] { opacity: 0.45; cursor: progress; }
 
