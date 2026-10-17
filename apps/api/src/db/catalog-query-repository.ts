@@ -1,6 +1,7 @@
 import type { GameCode } from '@tcg/shared';
 import { GAME_IDS, isGameCode } from '@tcg/shared';
 import type { Database } from './connection.js';
+import type { Paleta } from '../images/paleta.js';
 import { ORDEN_DE_PLANTILLA, PLANTILLA_DE_EPOCA_O_LINEA, artKeyDe } from './plantilla-sql.js';
 
 /**
@@ -152,7 +153,7 @@ export interface EraSummary {
   isDefault: boolean;
 }
 
-export interface Paleta { primario: string; secundario: string }
+export type { Paleta } from '../images/paleta.js';
 
 /** `listSets` es su unico productor: un campo nuevo solo necesita esa consulta (P-024/T-092). */
 export interface SetSummary {
