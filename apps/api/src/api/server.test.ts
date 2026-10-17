@@ -103,6 +103,24 @@ describe('P-001: la respuesta no puede filtrar una URL externa', () => {
     await app.close();
   });
 
+  it('la paleta y el artKey de un set sobreviven a la serializacion', async () => {
+    // Con `['object','null']` fast-json-stringify es donde los campos
+    // desaparecen en silencio; null solo estaba cubierto.
+    const base = (await fakeCatalog().catalog.listSets('PTCG'))[0]!;
+    const { catalog } = fakeCatalog({
+      listSets: async () => [{
+        ...base, palette: { primario: '#c0392b', secundario: '#ffd54a' }, artKey: 'booster-scarlet-violet',
+      }],
+    });
+    const app = buildServer({ catalog });
+    const res = await app.inject({ method: 'GET', url: '/api/games/PTCG/sets' });
+    expect(res.statusCode).toBe(200);
+    const set = res.json().data[0];
+    expect(set.palette).toEqual({ primario: '#c0392b', secundario: '#ffd54a' });
+    expect(set.artKey).toBe('booster-scarlet-violet');
+    await app.close();
+  });
+
   it('ninguna respuesta del catalogo contiene http', async () => {
     const { catalog } = fakeCatalog({
       findCard: async () => CARTA,

@@ -122,6 +122,8 @@ export const LIST_SETS = {
               palette: {
                 type: ['object', 'null'],
                 properties: { primario: { type: 'string' }, secundario: { type: 'string' } },
+                required: ['primario', 'secundario'],
+                additionalProperties: false,
               },
               artKey: { type: ['string', 'null'] },
             },

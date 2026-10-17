@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { CatalogQueryRepository } from './catalog-query-repository.js';
 import { PackRepositoryMysql } from './pack-repository.js';
-import { PLANTILLA_DE_EPOCA_O_LINEA, artKeyDe } from './plantilla-sql.js';
+import { ORDEN_DE_PLANTILLA, PLANTILLA_DE_EPOCA_O_LINEA, artKeyDe } from './plantilla-sql.js';
 import type { Database } from './connection.js';
 
 function espia(filas: unknown[] = []) {
@@ -15,17 +15,21 @@ function espia(filas: unknown[] = []) {
   return { db, consultas };
 }
 
-describe('el arte del sobre sale de la MISMA eleccion que el motor (H9e)', () => {
-  it('findTemplate y listSets usan el mismo fragmento SQL', async () => {
+describe('el arte del sobre sale de la MISMA eleccion de epoca que el motor (H9e)', () => {
+  it('findTemplate y listSets usan el mismo fragmento SQL y el mismo orden', async () => {
     // Si las dos consultas tuvieran cada una su copia, un dia una cambiaria y
     // el sobre de un set ensenaria una epoca y traeria las cartas de otra.
     const motor = espia();
     await new PackRepositoryMysql(motor.db).findTemplate(1);
     expect(motor.consultas[0]).toContain(PLANTILLA_DE_EPOCA_O_LINEA('t', 's'));
+    expect(motor.consultas[0]).toContain(ORDEN_DE_PLANTILLA('t', 's'));
+    expect(motor.consultas[0]).toContain('ORDER BY');
 
     const catalogo = espia();
     await new CatalogQueryRepository(catalogo.db).listSets('PTCG');
     expect(catalogo.consultas[0]).toContain(PLANTILLA_DE_EPOCA_O_LINEA('t2', 's'));
+    expect(catalogo.consultas[0]).toContain(ORDEN_DE_PLANTILLA('t2', 's'));
+    expect(catalogo.consultas[0]).toContain('ORDER BY');
   });
 
   it('el artKey es el nombre de la plantilla, normalizado', () => {

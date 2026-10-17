@@ -7,6 +7,10 @@
  * sin un solo error. Por eso el texto vive aqui una vez, y una prueba comprueba
  * que las dos lo incluyen literalmente.
  *
+ * La subconsulta del catalogo NO exige `is_openable`: un set no abrible tambien
+ * lleva artKey, porque el catalogo lo ensena. Y un set con plantilla propia
+ * lleva el arte de su EPOCA, no el de su producto.
+ *
  * NO incluye las plantillas propias de un set (`t.set_id = s.id`): esas las
  * anade `findTemplate`, porque el arte es de epoca, no de producto.
  */
@@ -20,13 +24,17 @@ export const PLANTILLA_DE_EPOCA_O_LINEA = (t: string, s: string): string => `(
   OR (${t}.set_id IS NULL AND ${t}.product_line IS NULL AND ${t}.is_default = 1
       AND ${t}.valid_from IS NULL AND ${t}.valid_to IS NULL))`;
 
-/** La precedencia: set, linea, ventana, por defecto. */
+/**
+ * La precedencia: set, linea, ventana, por defecto. Se desempata por `id`: sin
+ * desempate, dos filas del mismo rango podrian elegirse distinto en cada
+ * consulta, que es justo la deriva que este fragmento compartido evita.
+ */
 export const ORDEN_DE_PLANTILLA = (t: string, s: string): string => `CASE
       WHEN ${t}.set_id = ${s}.id THEN 1
       WHEN ${t}.product_line IS NOT NULL THEN 2
       WHEN ${t}.valid_from IS NOT NULL OR ${t}.valid_to IS NOT NULL THEN 3
       ELSE 4
-    END`;
+    END, ${t}.id`;
 
 /**
  * El nombre de una plantilla como clave de fichero: "Booster Scarlet & Violet"

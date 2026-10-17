@@ -154,6 +154,7 @@ export interface EraSummary {
 
 export interface Paleta { primario: string; secundario: string }
 
+/** `listSets` es su unico productor: un campo nuevo solo necesita esa consulta (P-024/T-092). */
 export interface SetSummary {
   /**
    * Id numerico. Se expone porque `POST /api/packs/open` lo necesita y es lo
@@ -228,7 +229,7 @@ export class CatalogQueryRepository {
       iconPath: r.icon_local_path,
       poolSize: Number(r.pool_size),
       palette: paletaValida(parseJson(r.palette, null)),
-      artKey: r.plantilla ? artKeyDe(r.plantilla) : null,
+      artKey: r.plantilla ? artKeyDe(r.plantilla) || null : null,
     }));
   }
 
