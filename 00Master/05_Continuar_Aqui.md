@@ -1,7 +1,7 @@
 # 05 — Continuar aquí
 
 **Punto de guardado:** 2026-10-16, en la sesión **S037**
-**Commit:** rama `h9e-holo-noir` (sin fusionar en `main`) · suite de Vitest y los 23 recorridos E2E en verde · `npm audit` limpio
+**Commit:** rama `main`, con H9e fusionado en local el 2026-10-16 (sin subir al remoto) · suite de Vitest y los 23 recorridos E2E en verde · `npm audit` limpio
 (el recuento exacto sale de `npm test`; publicarlo aqui solo servia para que se quedara viejo)
 
 Este documento existe para retomar el proyecto en otra máquina o en otra sesión sin releer todas las
@@ -196,7 +196,7 @@ son útiles para la lógica, pero **la fidelidad de sus datos determina lo que e
 
 **Lo siguiente**, por este orden:
 
-1. **H9e está hecho** (T-098 a T-107) en la rama `h9e-holo-noir`: fusionarla es decisión del usuario.
+1. **H9e está hecho** (T-098 a T-107) y fusionado en `main` en local; subirlo al remoto es decisión del usuario.
    Las 25 ilustraciones de sobre las genera el usuario con Nano Banana Pro desde
    `19_Prompts_Sobres.md`; cada una se deja en `apps/web/public/sobres/<juego>/` y su clave se añade a
    `DISPONIBLES` en `apps/web/src/lib/arte-sobres.ts`. Hasta entonces, la reserva sin arte.
