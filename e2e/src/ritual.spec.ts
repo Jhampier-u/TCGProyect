@@ -31,19 +31,25 @@ test('el ritual entero se hace con el teclado', async ({ page, request, usuario 
 
   await region(page).getByRole('button', { name: /^Rasgar el sobre/ }).focus();
   await page.keyboard.press('Enter');
-  await page.waitForTimeout(800); // el rasgado
 
-  // T-106: tras rasgar, el foco pasa solo a la carta de arriba.
-  await expect(region(page).getByRole('button', { name: /sin revelar$/ }).first()).toBeFocused();
-
-  // Carta a carta: la de arriba del mazo es siempre la primera "sin revelar".
+  // T-106: tras rasgar, el foco pasa solo a la carta de arriba (toBeFocused reintenta).
+  // La de arriba del mazo es siempre la primera "sin revelar".
   const arriba = region(page).getByRole('button', { name: /sin revelar$/ }).first();
+  const reveladas = region(page).locator('button[aria-pressed="true"]');
+  // Sin esto el bucle puede no arrancar (el rasgado aun no ha pintado el mazo) y pasar vacio.
+  await expect(arriba).toBeFocused({ timeout: 5000 });
+  let hechas = 0;
   for (let i = 0; i < 20 && (await arriba.count()) > 0; i += 1) {
-    await arriba.focus();
+    // El foco lo lleva el ritual, no el test: si no aguanta carta a carta, falla aqui.
+    await expect(arriba).toBeFocused();
     await page.keyboard.press('Enter');
-    await page.waitForTimeout(1400); // cubre la anticipacion (1,2 s) si toca
+    // Determinista: espera a que la carta quede revelada (cubre la anticipacion de 1,2 s).
+    await expect(reveladas).toHaveCount(i + 1, { timeout: 5000 });
+    hechas += 1;
   }
   await expect(region(page).locator('button[aria-pressed="false"]')).toHaveCount(0);
+  // En el resumen la bandeja deja de ser botones: se cuenta lo revelado por el camino.
+  expect(hechas).toBeGreaterThan(0);
 });
 
 test('Saltar revela todo y va al resumen', async ({ page, request, usuario }) => {
@@ -53,15 +59,25 @@ test('Saltar revela todo y va al resumen', async ({ page, request, usuario }) =>
 
   await region(page).getByRole('button', { name: 'Saltar' }).click();
   await expect(region(page).locator('button[aria-pressed="false"]')).toHaveCount(0);
+  expect(await region(page).locator('button[aria-pressed="true"]').count()).toBeGreaterThan(0);
   await expect(region(page).getByRole('button', { name: 'Saltar' })).toHaveCount(0);
+  // El resumen: una sola linea "N cartas, M nuevas" en la region en vivo.
+  await expect(region(page).locator('[aria-live="polite"]')).toContainText(/\d+ cartas?, /);
 });
 
 test('con movimiento reducido no hay lienzo de efectos', async ({ browser, request, usuario }) => {
   const { page, cerrar } = await contexto(browser, 'reduce');
   try {
+    const reduce = await page.evaluate(
+      () => window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+    );
+    expect(reduce, 'la emulacion de movimiento no se aplico (P-029)').toBe(true);
     const set = await setAbribleDeYgo(request);
     await iniciarSesion(page, usuario.token);
     await abrir(page, 'YGO', set);
+    // Con movimiento reducido todo llega revelado: esperar a que asiente y entonces mirar.
+    await expect(region(page).locator('button[aria-pressed="true"]').first()).toBeVisible();
+    await expect(region(page).locator('button[aria-pressed="false"]')).toHaveCount(0);
     await expect(region(page).locator('canvas')).toHaveCount(0);
   } finally {
     await cerrar();
@@ -72,15 +88,26 @@ test('el sobre no lleva ninguna URL externa (P-001)', async ({ page, request, us
   const set = await setAbribleDeYgo(request);
   await iniciarSesion(page, usuario.token);
   await abrir(page, 'YGO', set);
-  const html = await region(page).evaluate((el) => el.outerHTML);
-  expect(html.match(/https?:\/\/(?!localhost)[^"'\s)]+/g)).toBeNull();
+  // Cualquier http(s) cuyo host no sea localhost / 127.0.0.1 exactos.
+  const externa = /https?:\/\/(?!(?:localhost|127\.0\.0\.1)(?::\d+)?[\/"'])[^"'\s)]+/g;
+
+  // Sellado: aqui esta el arte del sobre.
+  const sellado = await region(page).evaluate((el) => el.outerHTML);
+  expect(sellado.match(externa)).toBeNull();
+
+  // Revelado: aqui estan las imagenes de las cartas, de donde vendria una URL externa.
+  await region(page).getByRole('button', { name: 'Saltar' }).click();
+  await expect(region(page).locator('button[aria-pressed="false"]')).toHaveCount(0);
+  expect(await region(page).locator('img').count()).toBeGreaterThan(0);
+  const revelado = await region(page).evaluate((el) => el.outerHTML);
+  expect(revelado.match(externa)).toBeNull();
 });
 
 test('el sobre de 151 lleva el arte de Scarlet & Violet', async ({ page, request, usuario }) => {
   // Lo que comprueba es que el arte sale de la MISMA plantilla que el motor
   // (T-101): si las dos consultas se separaran, esto lo diria.
   const res = await request.get(`${API}/api/games/PTCG/sets`);
-  const { data } = (await res.json()) as { data: Array<SetAbrible & { externalId: string }> };
+  const { data } = (await res.json()) as { data: SetAbrible[] };
   const s151 = data.find((s) => s.externalId === 'sv3pt5' && s.isOpenable && s.poolSize > 0);
   expect(s151, 'falta 151 en el catalogo: ingesta PTCG').toBeTruthy();
 
@@ -104,9 +131,8 @@ test('el lector de pantalla oye la carta revelada', async ({ page, request, usua
 
   const revelada = region(page).locator('button[aria-pressed="true"]').first();
   await expect(revelada).toBeVisible();
-  const nombre = ((await revelada.getAttribute('aria-label')) ?? (await revelada.innerText())).trim();
+  // El aria-label del boton revelado es exactamente el nombre de la carta.
+  const nombre = (await revelada.getAttribute('aria-label')) ?? '';
   expect(nombre.length).toBeGreaterThan(0);
-  // Un nombre largo puede ir acompanado de rareza en la etiqueta: basta el inicio.
-  const inicio = nombre.slice(0, 8);
-  await expect(region(page).locator('[aria-live="polite"]')).toContainText(inicio);
+  await expect(region(page).locator('[aria-live="polite"]')).toContainText(nombre);
 });
