@@ -79,7 +79,7 @@ describe('orden de revelado', () => {
       carta('rareza_que_no_conocemos', 2), carta('common', 3),
     ];
     expect(ordenarPorEscasez(sobre, tiers, 'PTCG').map((c) => c.rarity)).toEqual([
-      'common', 'rareza_que_no_conocemos', 'promo', 'illustration_rare',
+      'rareza_que_no_conocemos', 'common', 'promo', 'illustration_rare',
     ]);
   });
 
