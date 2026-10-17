@@ -325,7 +325,7 @@ export const ES = {
       Pyro: 'Piro', Thunder: 'Trueno', Dinosaur: 'Dinosaurio', Fish: 'Pez', Wyrm: 'Wyrm',
       'Sea Serpent': 'Serpiente Marina', Illusion: 'Ilusión', 'Divine-Beast': 'Bestia Divina',
       'Creator-God': 'Dios Creador',
-      Normal: 'Normal', 'Quick-Play': 'Rápida', Continuous: 'Continua', Field: 'Campo',
+      Normal: 'Normal', 'Quick-Play': 'Juego Rápido', Continuous: 'Continua', Field: 'Campo',
       Equip: 'Equipo', Ritual: 'Ritual', Counter: 'Contraefecto',
     } as Record<string, string>,
     coste: (v: string) => `Coste ${v}`,
