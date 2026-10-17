@@ -10,6 +10,12 @@
   transition: transform 120ms ease-out;
 }
 .carta-brillo img { display: block; inline-size: 100%; block-size: 100%; object-fit: cover; border-radius: inherit; }
+/* Sin imagen: la carta conserva su tamano y dice su nombre. */
+.carta-brillo .sin-imagen {
+  display: flex; align-items: center; justify-content: center; inline-size: 100%; block-size: 100%;
+  padding: var(--e2); border-radius: inherit; background: var(--superficie);
+  color: var(--texto-tenue); font-size: var(--paso-00); text-align: center; overflow-wrap: anywhere;
+}
 .carta-brillo-capa { position: absolute; inset: 0; border-radius: inherit; pointer-events: none; }
 
 /* 1 - base: nada. */

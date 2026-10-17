@@ -81,8 +81,12 @@ const PAREJAS: ReadonlyArray<readonly [string, string, number]> = [
   ['peligro-texto', 'peligro-fondo', 4.5],
   ['peligro', 'fondo', 3],
   ['exito', 'fondo', 3],
-  // Los colores de nivel de rareza (H9e) pintan la etiqueta del nivel en la
-  // ficha y en la bandeja: son texto pequeno y piden 4,5.
+  // Los colores de nivel de rareza (H9e) NO son texto: pintan los halos de las
+  // cartas, el filo de las de nivel 2 y las particulas de la capa de efectos.
+  // El filo es un limite no textual (1.4.11 pide 3:1), y aun asi se exige 4,5 a
+  // proposito: es el liston que la paleta ya cumple, y garantiza que el color se
+  // lee contra el fondo en los dos temas y que, si un dia pinta texto, no habra
+  // que volver a medirlo.
   ['nivel-2', 'superficie', 4.5],
   ['nivel-3', 'superficie', 4.5],
   ['nivel-4', 'superficie', 4.5],

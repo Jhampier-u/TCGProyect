@@ -69,8 +69,8 @@ h1, h2, .marca { font-family: var(--fuente-titulo); letter-spacing: -0.01em; }
   align-items: center;
   gap: 24px;
   padding: 12px 24px;
-  /* No es --cristal a secas: al 4% el texto de la navegacion se pierde sobre
-     una ilustracion clara. Se tine con el fondo para que siempre se lea. */
+  /* No es un cristal casi transparente: al 4% el texto de la navegacion se
+     pierde sobre una ilustracion clara. Se tine con el fondo para que siempre se lea. */
   background: color-mix(in srgb, var(--fondo) 72%, transparent);
   backdrop-filter: blur(14px) saturate(140%);
   -webkit-backdrop-filter: blur(14px) saturate(140%);
@@ -765,10 +765,6 @@ button.carta-nombre-fila:focus-visible { outline: 2px solid var(--juego-acento, 
 .ficha-rejilla { display: grid; gap: var(--e5); }
 @media (min-width: 720px) { .ficha-rejilla { grid-template-columns: 245px minmax(0, 1fr); } }
 .ficha-imagen { margin: 0; justify-self: center; }
-.ficha-imagen > img {
-  display: block; inline-size: 245px; max-inline-size: 100%; block-size: auto;
-  border-radius: 10px; box-shadow: var(--sombra-1);
-}
 
 .ficha-imagen .carta-brillo { inline-size: 245px; max-inline-size: 100%; }
 

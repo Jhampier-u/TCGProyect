@@ -121,10 +121,8 @@
    * del todo: el holografico es de la oscuridad. */
   --luz-1: rgba(124, 92, 255, 0.30);
   --luz-2: rgba(56, 189, 248, 0.14);
-  --cristal: rgba(255, 255, 255, 0.04);
   --cristal-borde: rgba(255, 255, 255, 0.09);
-  --holo: conic-gradient(from 0deg, #ff6ad5, #c774e8, #ad8cff, #8795e8, #94d0ff, #7cffcb, #fffb96, #ff6ad5);
-  /* Color de cada nivel de rareza: halos, chispas y la etiqueta del nivel. */
+  /* Color de cada nivel de rareza: halos, filo y chispas de la capa de efectos. */
   --nivel-2: #c9d2e3;
   --nivel-3: #7cc8ff;
   --nivel-4: #b69cff;
@@ -203,9 +201,7 @@
     --tipo-hada: #a82f74;
     --luz-1: rgba(106, 63, 209, 0.07);
     --luz-2: rgba(14, 116, 144, 0.05);
-    --cristal: rgba(255, 255, 255, 0.70);
     --cristal-borde: rgba(21, 22, 29, 0.08);
-    --holo: conic-gradient(from 0deg, #d63fa8, #8f4fd1, #6a3fd1, #3f5fd1, #1f8fd1, #1fa88a, #b89a1f, #d63fa8);
     --nivel-2: #4d566b;
     --nivel-3: #0f6aa6;
     --nivel-4: #6a3fd1;
@@ -251,9 +247,7 @@
   --tipo-hada: #a82f74;
   --luz-1: rgba(106, 63, 209, 0.07);
   --luz-2: rgba(14, 116, 144, 0.05);
-  --cristal: rgba(255, 255, 255, 0.70);
   --cristal-borde: rgba(21, 22, 29, 0.08);
-  --holo: conic-gradient(from 0deg, #d63fa8, #8f4fd1, #6a3fd1, #3f5fd1, #1f8fd1, #1fa88a, #b89a1f, #d63fa8);
   --nivel-2: #4d566b;
   --nivel-3: #0f6aa6;
   --nivel-4: #6a3fd1;
