@@ -1,6 +1,7 @@
 import type { GameCode } from '@tcg/shared';
 import { GAME_IDS, isGameCode } from '@tcg/shared';
 import type { Database } from './connection.js';
+import { ORDEN_DE_PLANTILLA, PLANTILLA_DE_EPOCA_O_LINEA, artKeyDe } from './plantilla-sql.js';
 
 /**
  * Longitud minima para usar busqueda FULLTEXT.
@@ -151,6 +152,8 @@ export interface EraSummary {
   isDefault: boolean;
 }
 
+export interface Paleta { primario: string; secundario: string }
+
 export interface SetSummary {
   /**
    * Id numerico. Se expone porque `POST /api/packs/open` lo necesita y es lo
@@ -173,6 +176,10 @@ export interface SetSummary {
   iconPath: string | null;
   /** Impresiones que pueden salir en sobre. 0 significa que no se puede abrir. */
   poolSize: number;
+  /** Dos colores para tenir el sobre (0028). Null hasta `npm run sobres:paleta`. */
+  palette: Paleta | null;
+  /** La plantilla de epoca o linea, como clave de fichero de arte (H9e). */
+  artKey: string | null;
 }
 
 /**
@@ -192,10 +199,15 @@ export class CatalogQueryRepository {
     const rows = await this.db.select<{
       id: number; external_id: string; code: string; name: string; released_at: string | null;
       card_count: number; is_openable: number; icon_url: string | null; icon_local_path: string | null;
-      pool_size: number;
+      pool_size: number; palette: unknown; plantilla: string | null;
     }>(
       `SELECT s.id, s.external_id, s.code, s.name, s.released_at, s.card_count, s.is_openable, s.icon_url,
               s.icon_local_path,
+              s.palette,
+              (SELECT t2.name FROM pack_templates t2
+                WHERE t2.game_id = s.game_id AND ${PLANTILLA_DE_EPOCA_O_LINEA('t2', 's')}
+                ORDER BY ${ORDEN_DE_PLANTILLA('t2', 's')}
+                LIMIT 1) AS plantilla,
               COUNT(p.id) AS pool_size
        FROM sets s
        LEFT JOIN card_prints p ON p.set_id = s.id AND p.in_boosters = 1 AND p.withdrawn_at IS NULL
@@ -215,6 +227,8 @@ export class CatalogQueryRepository {
       iconUrl: r.icon_url,
       iconPath: r.icon_local_path,
       poolSize: Number(r.pool_size),
+      palette: paletaValida(parseJson(r.palette, null)),
+      artKey: r.plantilla ? artKeyDe(r.plantilla) : null,
     }));
   }
 
@@ -604,6 +618,16 @@ function parseJson(value: unknown, fallback: unknown): unknown {
     }
   }
   return value;
+}
+
+/** Una paleta con la forma de 0028, o null. Una a medias no se sirve. */
+function paletaValida(v: unknown): Paleta | null {
+  const p = v as Partial<Paleta> | null;
+  const hex = /^#[0-9a-f]{6}$/i;
+  return p && typeof p.primario === 'string' && hex.test(p.primario)
+    && typeof p.secundario === 'string' && hex.test(p.secundario)
+    ? { primario: p.primario, secundario: p.secundario }
+    : null;
 }
 
 function gameCodeOf(id: number): GameCode {

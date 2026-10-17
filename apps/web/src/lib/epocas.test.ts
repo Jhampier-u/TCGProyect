@@ -7,6 +7,7 @@ function set(code: string, releasedAt: string | null): SetSummary {
   return {
     id: code.length, externalId: code, code, name: `Set ${code}`,
     releasedAt, cardCount: 100, isOpenable: true, iconPath: null, poolSize: 100,
+    palette: null, artKey: null,
   };
 }
 

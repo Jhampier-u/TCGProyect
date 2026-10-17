@@ -42,6 +42,7 @@ Una expansión/colección. Existe en los 3 juegos.
 | `icon_local_path` | VARCHAR(255) NULL | **Ruta propia** del icono cosechado. Es la única que se sirve, como `iconPath` (migración 0008, T-035) |
 | `icon_fail_count` | SMALLINT UNSIGNED DEFAULT 0 | Intentos fallidos. Al agotarlos deja de reintentarse, igual que en `card_prints` (T-019) |
 | `icon_failed_at` | TIMESTAMP NULL | Cuándo falló la última vez |
+| `palette` | JSON NULL | Los dos colores con que se tiñe el sobre del set: `{"primario":"#rrggbb","secundario":"#rrggbb"}`. Se calcula con `npm run sobres:paleta`, y se puede corregir a mano. Nula hasta entonces: la web usa los colores de dorso del juego. Sale en la API como `palette` (migración 0028, T-101) |
 | **UNIQUE** | `(game_id, external_id)` | Clave natural de deduplicación |
 
 ### `cards`

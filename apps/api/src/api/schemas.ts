@@ -119,6 +119,11 @@ export const LIST_SETS = {
               // icono sin incumplir P-001.
               iconPath: { type: ['string', 'null'] },
               poolSize: { type: 'integer' },
+              palette: {
+                type: ['object', 'null'],
+                properties: { primario: { type: 'string' }, secundario: { type: 'string' } },
+              },
+              artKey: { type: ['string', 'null'] },
             },
           },
         },

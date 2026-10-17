@@ -31,6 +31,8 @@ function fakeCatalog(over: Partial<CatalogQueryRepository> = {}): {
         iconUrl: 'https://images.ygoprodeck.com/images/sets/BLB.jpg',
         iconPath: 'mtg/blb/icon.64.webp',
         poolSize: 281,
+        palette: null,
+        artKey: 'play-booster',
       },
     ],
     listRarities: async () => [{ code: 'common', label: 'common', tier: 1 }],

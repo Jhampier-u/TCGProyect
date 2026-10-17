@@ -2,6 +2,7 @@ import type { GameCode } from '@tcg/shared';
 import { GAME_IDS } from '@tcg/shared';
 import { DuplicateSeedError } from '../packs/pack-service.js';
 import type { Database } from './connection.js';
+import { ORDEN_DE_PLANTILLA, PLANTILLA_DE_EPOCA_O_LINEA } from './plantilla-sql.js';
 import type {
   PackOpening,
   PackRepository,
@@ -74,23 +75,9 @@ export class PackRepositoryMysql implements PackRepository {
       `SELECT t.id, t.game_id, t.name, t.card_count
        FROM pack_templates t
        JOIN sets s ON s.game_id = t.game_id AND s.id = ? AND s.is_openable = 1
-       WHERE
-             (t.set_id = s.id AND t.is_default = 1)
-          OR (t.set_id IS NULL AND t.product_line IS NOT NULL
-              AND t.product_line = s.product_line)
-          OR (t.set_id IS NULL AND t.product_line IS NULL
-              AND (t.valid_from IS NOT NULL OR t.valid_to IS NOT NULL)
-              AND s.released_at IS NOT NULL
-              AND (t.valid_from IS NULL OR s.released_at >= t.valid_from)
-              AND (t.valid_to   IS NULL OR s.released_at <= t.valid_to))
-          OR (t.set_id IS NULL AND t.product_line IS NULL AND t.is_default = 1
-              AND t.valid_from IS NULL AND t.valid_to IS NULL)
-       ORDER BY CASE
-                  WHEN t.set_id = s.id THEN 1
-                  WHEN t.product_line IS NOT NULL THEN 2
-                  WHEN t.valid_from IS NOT NULL OR t.valid_to IS NOT NULL THEN 3
-                  ELSE 4
-                END
+       WHERE (t.set_id = s.id AND t.is_default = 1)
+          OR ${PLANTILLA_DE_EPOCA_O_LINEA('t', 's')}
+       ORDER BY ${ORDEN_DE_PLANTILLA('t', 's')}
        LIMIT 1`,
       [setId],
     );

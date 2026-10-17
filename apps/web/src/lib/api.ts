@@ -155,6 +155,8 @@ export interface UnresolvedLine {
   zone: DeckZone;
 }
 
+export interface Paleta { primario: string; secundario: string }
+
 export interface SetSummary {
   id: number;
   externalId: string;
@@ -171,6 +173,10 @@ export interface SetSummary {
    */
   iconPath: string | null;
   poolSize: number;
+  /** Dos colores para tenir el sobre (0028). Null hasta `npm run sobres:paleta`. */
+  palette: Paleta | null;
+  /** La plantilla de epoca o linea, como clave de fichero de arte (H9e). */
+  artKey: string | null;
 }
 
 /** Una epoca de sobre. Las ventanas salen de `pack_templates` (T-090). */

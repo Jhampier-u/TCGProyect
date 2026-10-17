@@ -1,0 +1,15 @@
+-- =====================================================================
+-- ProyectoTCG - Migracion 0028 - La paleta de cada set
+-- Agente: Base de Datos - Tarea: T-101 - Sesion: S037
+-- =====================================================================
+-- Los sobres de H9e son UNA ilustracion por epoca tenida con los colores de
+-- cada set. Esos colores se calculan una vez (`npm run sobres:paleta`, sin red,
+-- desde las imagenes ya cosechadas) y se guardan aqui.
+--
+-- JSON y no dos columnas: es un dato de presentacion que se lee entero y nunca
+-- se filtra ni se ordena por el. Forma: {"primario":"#rrggbb","secundario":"#rrggbb"}.
+--
+-- NULLABLE A PROPOSITO: un set sin paleta todavia no es un error. La web usa
+-- los colores de dorso del juego hasta que el comando la calcule. Y si una
+-- paleta automatica sale fea, se corrige a mano aqui sin tocar codigo.
+ALTER TABLE sets ADD COLUMN palette JSON NULL AFTER icon_failed_at;
