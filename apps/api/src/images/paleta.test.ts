@@ -40,4 +40,30 @@ describe('la paleta de un set (H9e)', () => {
     const p = await paletaDe(await liso('#30a050'));
     expect(p.secundario).not.toBe(p.primario);
   });
+
+  async function carta(fondo: string, color: string, r: { left: number; top: number; width: number; height: number }) {
+    const base = sharp({ create: { width: 100, height: 140, channels: 3, background: fondo } });
+    const pieza = await sharp({ create: { width: r.width, height: r.height, channels: 3, background: color } })
+      .png()
+      .toBuffer();
+    return base.composite([{ input: pieza, left: r.left, top: r.top }]).png().toBuffer();
+  }
+
+  it('el marco no es el color', async () => {
+    const img = await carta('#f0d020', '#2050d0', { left: 15, top: 20, width: 70, height: 50 });
+    const p = await paletaDe(img);
+    expect(parseInt(p.primario.slice(5, 7), 16)).toBeGreaterThan(parseInt(p.primario.slice(1, 3), 16));
+  });
+
+  it('el negro y el gris no ganan al color', async () => {
+    const img = await carta('#151515', '#d03030', { left: 30, top: 25, width: 30, height: 30 });
+    expect(rojizo((await paletaDe(img)).primario)).toBe(true);
+  });
+
+  it('una imagen gris sigue dando dos colores', async () => {
+    const p = await paletaDe(await liso('#808080'));
+    expect(p.primario).toMatch(HEX);
+    expect(p.secundario).toMatch(HEX);
+    expect(p.secundario).not.toBe(p.primario);
+  });
 });
