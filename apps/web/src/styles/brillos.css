@@ -140,6 +140,12 @@
   display: block; inline-size: 100%; padding: 0; border: 0; background: none;
   border-radius: 4.5% / 3.2%; transform-style: preserve-3d; cursor: default;
 }
+/* La perspectiva va en el hueco, no en el boton: el rotateY se lee como volteo y
+   el `transform` del boton sigue sin nada mas que el giro. */
+.ritual-hueco { perspective: 900px; min-inline-size: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; align-content: start; }
+.ritual-pie { min-block-size: 20px; display: flex; align-items: center; justify-content: space-between; gap: 6px; font-size: 11px; }
+.ritual-nombre { min-inline-size: 0; overflow: hidden; text-overflow: ellipsis; text-wrap: nowrap; color: var(--texto-tenue); }
+.ritual-pie .etiqueta { flex: none; }
 .ritual-mazo { position: relative; z-index: 1; inline-size: 180px; block-size: 252px; }
 /* El fondo lo pone `.reverso-<juego>` (styles.css): el dorso generico del juego. */
 .ritual-mazo .volteador {

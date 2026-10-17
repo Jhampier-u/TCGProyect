@@ -286,6 +286,15 @@ export const ES = {
     sinRevelar: (n: number) => `Carta ${n} sin revelar`,
     nuevas: (n: number) => (n === 1 ? '1 nueva' : `${n} nuevas`),
     semilla: 'Semilla de la apertura: la hace reproducible',
+    /** Lo que oye un lector de pantalla al revelarse una carta. */
+    revelada: (carta: string, rareza: string) => `${carta} — ${rareza}`,
+    /** Una sola linea al saltar, con movimiento reducido o en modo rapido. */
+    resumen: (total: number, nuevas: number) =>
+      `${total === 1 ? '1 carta' : `${total} cartas`}, ${nuevas === 1 ? '1 nueva' : `${nuevas} nuevas`}`,
+    nueva: 'nueva',
+    abrirOtro: 'Abrir otro',
+    rarezasSinCargar: 'No se pudieron cargar las rarezas de este juego, y sin ellas el sobre no sabe en qué orden revelar.',
+    reintentar: 'Reintentar',
   },
 
   error: {

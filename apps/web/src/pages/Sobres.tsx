@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { GameCode } from '@tcg/shared';
-import { api, ApiError, type PackOpening } from '../lib/api.js';
+import { api, ApiError, type PackOpening, type SetSummary } from '../lib/api.js';
 import { useAuth } from '../lib/auth.js';
 import { consultaRarezas, consultaSets } from '../lib/consultas.js';
 import { Ritual } from '../components/apertura/Ritual.js';
@@ -14,12 +14,27 @@ import { ES } from '../i18n/es.js';
  * Las cartas llegan boca abajo y se revelan una a una, ordenadas de menos a mas
  * escasa: la gracia de abrir un sobre real esta en dejar la buena para el final.
  */
+/** Lo que se pidio al abrir: con ello se repite ("Abrir otro") y se viste el sobre. */
+interface Peticion {
+  setId: number;
+  count: number;
+  /** El set tal y como era al abrir: cambiar luego el selector no reviste el sobre. */
+  set: SetSummary | null;
+}
+
+interface Apertura {
+  apertura: PackOpening;
+  peticion: Peticion;
+}
+
 export function Sobres() {
   const { token } = useAuth();
   const [game, setGame] = useState<GameCode>('YGO');
   const [setId, setSetId] = useState<number | null>(null);
   const [count, setCount] = useState(1);
-  const [aperturas, setAperturas] = useState<PackOpening[]>([]);
+  const [aperturas, setAperturas] = useState<Apertura[]>([]);
+  /** Indices de los sobres que ya llegaron al resumen. */
+  const [terminados, setTerminados] = useState<ReadonlySet<number>>(new Set());
   const [error, setError] = useState<string | null>(null);
   const cliente = useQueryClient();
 
@@ -33,7 +48,8 @@ export function Sobres() {
   const rarezas = useQuery({
     ...consultaRarezas(game),
   });
-  const tiers = new Map((rarezas.data ?? []).map((r) => [r.code, r.tier]));
+  const tiers = useMemo(() => new Map((rarezas.data ?? []).map((r) => [r.code, r.tier])), [rarezas.data]);
+  const etiquetas = useMemo(() => new Map((rarezas.data ?? []).map((r) => [r.code, r.label])), [rarezas.data]);
 
   // Solo se ofrecen sets ABRIBLES, y hacen falta las dos condiciones:
   //
@@ -48,13 +64,19 @@ export function Sobres() {
   // El set del sobre: su arte, su paleta y su icono visten el sobre sellado.
   const setElegido = abribles.find((s) => s.id === setId) ?? null;
 
+  // El sobre en curso es el primero sin terminar: los de despues esperan sellados
+  // (spec, seccion 7). Saltar uno de los de despues no adelanta a los de en medio.
+  let activo = 0;
+  while (terminados.has(activo)) activo += 1;
+
   const abrir = useMutation({
-    mutationFn: async () => {
-      if (!token || setId === null) throw new Error('Falta sesion o set');
-      return api.openPack(token, setId, count);
+    mutationFn: async (p: Peticion) => {
+      if (!token) throw new Error('Falta sesion');
+      return api.openPack(token, p.setId, p.count);
     },
-    onSuccess: (r) => {
-      setAperturas(r.data);
+    onSuccess: (r, peticion) => {
+      setAperturas(r.data.map((apertura) => ({ apertura, peticion })));
+      setTerminados(new Set());
       setError(null);
       // La coleccion ha cambiado: se invalida para que al navegar alli no se
       // muestren datos viejos.
@@ -111,8 +133,12 @@ export function Sobres() {
 
         <button
           className="primario"
-          onClick={() => abrir.mutate()}
-          disabled={setId === null || abrir.isPending}
+          onClick={() => {
+            if (setId !== null) abrir.mutate({ setId, count, set: setElegido });
+          }}
+          // Sin las rarezas no se sabe en que orden revelar ni que anunciar: el
+          // sobre saldria en orden de slot y sin anticipacion. Se espera a tenerlas.
+          disabled={setId === null || abrir.isPending || !rarezas.isSuccess}
         >
           {abrir.isPending ? 'Abriendo...' : 'Abrir'}
         </button>
@@ -125,6 +151,13 @@ export function Sobres() {
         </div>
       )}
 
+      {rarezas.isError && (
+        <div className="aviso error">
+          {ES.ritual.rarezasSinCargar}{' '}
+          <button type="button" onClick={() => void rarezas.refetch()}>{ES.ritual.reintentar}</button>
+        </div>
+      )}
+
       {error && <div className="aviso error">{error}</div>}
 
       {aperturas.length === 0 && !abrir.isPending && (
@@ -134,19 +167,29 @@ export function Sobres() {
         </div>
       )}
 
-      {/* El primer sobre, ritual completo; del segundo en adelante, modo rapido (spec, seccion 7). */}
-      {aperturas.map((a, i) => (
-        <Ritual
-          key={a.openingId}
-          game={game}
-          cards={a.cards}
-          tiers={tiers}
-          openingId={a.openingId}
-          seed={a.seed}
-          set={setElegido}
-          rapido={i > 0}
-        />
-      ))}
+      {/* El primer sobre, ritual completo; del segundo en adelante, modo rapido
+          (spec, seccion 7), y de uno en uno: cada sobre espera sellado a que
+          termine el anterior. Sin tiers no se pinta nada: el orden saldria mal y
+          quedaria congelado para todo el ritual. */}
+      {tiers.size > 0 &&
+        aperturas.map(({ apertura: a, peticion }, i) => (
+          <Ritual
+            key={a.openingId}
+            game={game}
+            cards={a.cards}
+            tiers={tiers}
+            etiquetas={etiquetas}
+            openingId={a.openingId}
+            seed={a.seed}
+            set={peticion.set}
+            rapido={i > 0}
+            enEspera={i > activo}
+            onTerminado={() => setTerminados((t) => new Set(t).add(i))}
+            onAbrirOtro={
+              i === aperturas.length - 1 && !abrir.isPending ? () => abrir.mutate(peticion) : undefined
+            }
+          />
+        ))}
     </>
   );
 }

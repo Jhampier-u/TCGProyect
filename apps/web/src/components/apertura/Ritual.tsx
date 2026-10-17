@@ -1,4 +1,4 @@
-import { useEffect, useId, useReducer, useRef, useState, type FocusEvent } from 'react';
+import { useEffect, useId, useLayoutEffect, useReducer, useRef, useState, type FocusEvent } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import type { GameCode } from '@tcg/shared';
 import type { OpenedCard, SetSummary } from '../../lib/api.js';
@@ -24,6 +24,17 @@ export interface RitualProps {
   set: SetSummary | null;
   /** Varios sobres: del segundo en adelante, solo se para en niveles 4 y 5. */
   rapido: boolean;
+  /** code -> nombre legible de la rareza, para lo que oye el lector de pantalla. */
+  etiquetas: Map<string, string>;
+  /**
+   * Hay un sobre anterior aun en curso: este espera sellado y quieto, sin
+   * avanzar solo. Los sobres van de uno en uno (spec, seccion 7).
+   */
+  enEspera: boolean;
+  /** Se llama una vez, al llegar al resumen: deja paso al sobre siguiente. */
+  onTerminado: () => void;
+  /** Abre otro sobre del mismo set y cantidad. Sin el, no hay boton. */
+  onAbrirOtro?: (() => void) | undefined;
 }
 
 /**
@@ -38,7 +49,9 @@ export interface RitualProps {
  * La pagina lo monta con `key={openingId}`: cada apertura es un componente
  * nuevo, y con el el reductor arranca de cero.
  */
-export function Ritual({ game, cards, tiers, openingId, seed, set, rapido }: RitualProps) {
+export function Ritual({
+  game, cards, tiers, openingId, seed, set, rapido, etiquetas, enEspera, onTerminado, onAbrirOtro,
+}: RitualProps) {
   // Se lee al montar y el estado inicial sale de aqui. Cambiar la preferencia a
   // mitad de un sobre no rehace ese sobre; el siguiente (otra `key`) ya la toma.
   const reducido = useReducedMotion() ?? false;
@@ -51,6 +64,8 @@ export function Ritual({ game, cards, tiers, openingId, seed, set, rapido }: Rit
   const [{ orden, niveles }] = useState(() => prepararSobre(cards, tiers, game));
   const [estado, despachar] = useReducer(avanzar, undefined, () => iniciar(niveles, reducido));
   const [disparo, setDisparo] = useState(0);
+  /** Si se llego al resumen con "Saltar": entonces se anuncia una sola linea. */
+  const [saltado, setSaltado] = useState(false);
 
   // Los tiempos son del componente; la secuencia, de la maquina.
   useEffect(() => {
@@ -62,6 +77,8 @@ export function Ritual({ game, cards, tiers, openingId, seed, set, rapido }: Rit
       const t = setTimeout(() => despachar({ tipo: 'anticipado' }), MS_ANTICIPACION);
       return () => clearTimeout(t);
     }
+    // En espera, nada avanza solo: el sobre anterior aun no ha terminado.
+    if (enEspera) return undefined;
     // Sin set (la lista aun no ha llegado) no hay sobre que pintar: se rasga solo
     // en vez de dejar al usuario ante una escena vacia sin nada que pulsar.
     if ((rapido || !set) && estado.fase === 'sellado') despachar({ tipo: 'rasgar' });
@@ -70,7 +87,18 @@ export function Ritual({ game, cards, tiers, openingId, seed, set, rapido }: Rit
       return () => clearTimeout(t);
     }
     return undefined;
-  }, [estado.fase, estado.reveladas, rapido, niveles, set]);
+  }, [estado.fase, estado.reveladas, rapido, niveles, set, enEspera]);
+
+  // Al llegar al resumen se avisa UNA vez a la pagina, que da paso al siguiente.
+  // La funcion va por ref: la pagina la rehace en cada render.
+  const alTerminar = useRef(onTerminado);
+  useLayoutEffect(() => { alTerminar.current = onTerminado; }, [onTerminado]);
+  const avisado = useRef(false);
+  useEffect(() => {
+    if (estado.fase !== 'resumen' || avisado.current) return;
+    avisado.current = true;
+    alTerminar.current();
+  }, [estado.fase]);
 
   // Cada revelado de nivel 3 o mas dispara la capa de efectos.
   const ultimoNivel = estado.reveladas > 0 ? niveles[estado.reveladas - 1]! : 1;
@@ -116,8 +144,9 @@ export function Ritual({ game, cards, tiers, openingId, seed, set, rapido }: Rit
     const perdido = previo !== null && !previo.isConnected && (activo === null || activo === document.body);
     if (!perdido) return;
     const cima = mazoRef.current?.querySelector<HTMLButtonElement>('button:not(:disabled)');
-    const ultimaRevelada = bandejaRef.current?.lastElementChild;
-    const destino = cima ?? (ultimaRevelada instanceof HTMLElement ? ultimaRevelada : null) ?? titulo.current;
+    const enBandeja = bandejaRef.current?.querySelectorAll<HTMLButtonElement>('button');
+    const ultimaRevelada = enBandeja && enBandeja.length > 0 ? enBandeja[enBandeja.length - 1] : undefined;
+    const destino = cima ?? ultimaRevelada ?? titulo.current;
     destino?.focus();
   }, [estado.fase, estado.reveladas]);
 
@@ -125,6 +154,18 @@ export function Ritual({ game, cards, tiers, openingId, seed, set, rapido }: Rit
   const mazo = orden.slice(estado.reveladas);
   const nuevas = cards.filter((c) => c.isNew).length;
   const sellado = estado.fase === 'sellado' || estado.fase === 'rasgando';
+
+  // Lo que oye un lector de pantalla. El foco salta a la siguiente "Carta N sin
+  // revelar", asi que sin esto nunca sabria que ha salido. Carta a carta en el
+  // ritual completo; una sola linea de resumen al saltar, con movimiento
+  // reducido o en modo rapido (diez sobres carta a carta serian ruido).
+  const ultima = estado.reveladas > 0 ? orden[estado.reveladas - 1] : undefined;
+  const anuncio =
+    ultima === undefined
+      ? ''
+      : reducido || saltado || rapido
+        ? estado.fase === 'resumen' ? ES.ritual.resumen(orden.length, nuevas) : ''
+        : ES.ritual.revelada(ultima.name, etiquetas.get(ultima.rarity) ?? ultima.rarity.replace(/_/g, ' '));
 
   return (
     <section
@@ -141,11 +182,21 @@ export function Ritual({ game, cards, tiers, openingId, seed, set, rapido }: Rit
         <span className="semilla" title={ES.ritual.semilla}>{seed}</span>
         <span className="etiqueta nueva">{ES.ritual.nuevas(nuevas)}</span>
         {estado.fase !== 'resumen' && (
-          <button type="button" onClick={() => despachar({ tipo: 'saltar' })} style={{ marginLeft: 'auto' }}>
+          <button
+            type="button"
+            onClick={() => { setSaltado(true); despachar({ tipo: 'saltar' }); }}
+            style={{ marginLeft: 'auto' }}
+          >
             {ES.ritual.saltar}
           </button>
         )}
+        {estado.fase === 'resumen' && onAbrirOtro && (
+          <button type="button" className="primario" onClick={onAbrirOtro} style={{ marginLeft: 'auto' }}>
+            {ES.ritual.abrirOtro}
+          </button>
+        )}
       </div>
+      <p className="sr-solo" aria-live="polite">{anuncio}</p>
 
       <div className="ritual-escena">
         <CapaDeEfectos disparo={disparo} nivel={ultimoNivel} />
@@ -160,19 +211,28 @@ export function Ritual({ game, cards, tiers, openingId, seed, set, rapido }: Rit
         {/* LA BANDEJA VA ANTES QUE EL MAZO EN EL DOM: lo exige la prueba de T-040. */}
         <div className="ritual-bandeja" ref={bandejaRef}>
           {reveladas.map((carta, i) => (
-            <motion.button
-              key={carta.slotIndex}
-              layoutId={`carta-${openingId}-${carta.slotIndex}`}
-              type="button"
-              className="volteador revelada"
-              aria-pressed={true}
-              aria-label={carta.name}
-              initial={reducido ? false : { rotateY: 180 }}
-              animate={{ rotateY: 0 }}
-              transition={{ duration: niveles[i]! >= 4 ? 0.7 : 0.35 }}
-            >
-              <CartaConBrillo imagePath={carta.imagePath} nombre={carta.name} nivel={niveles[i]!} acabado={acabadoDe(carta.finish)} />
-            </motion.button>
+            // El hueco da la perspectiva: con ella el rotateY se lee como un volteo
+            // y no como un aplastamiento, y el `transform` del boton no la lleva
+            // (la prueba de T-040 lee su m11).
+            <div className="ritual-hueco" key={carta.slotIndex}>
+              <motion.button
+                layoutId={`carta-${openingId}-${carta.slotIndex}`}
+                type="button"
+                className="volteador revelada"
+                aria-pressed={true}
+                aria-label={carta.name}
+                initial={reducido ? false : { rotateY: 180 }}
+                animate={{ rotateY: 0 }}
+                transition={{ duration: niveles[i]! >= 4 ? 0.7 : 0.35 }}
+              >
+                <CartaConBrillo imagePath={carta.imagePath} nombre={carta.name} nivel={niveles[i]!} acabado={acabadoDe(carta.finish)} />
+              </motion.button>
+              <div className="ritual-pie">
+                {/* El nombre ya lo dice el boton: aqui es solo para la vista. */}
+                <span className="ritual-nombre" aria-hidden="true" title={carta.name}>{carta.name}</span>
+                {carta.isNew && <span className="etiqueta nueva">{ES.ritual.nueva}</span>}
+              </div>
+            </div>
           ))}
         </div>
 
@@ -190,6 +250,9 @@ export function Ritual({ game, cards, tiers, openingId, seed, set, rapido }: Rit
                 }
                 aria-pressed={false}
                 aria-label={ES.ritual.sinRevelar(estado.reveladas + i + 1)}
+                // Las de debajo son el canto del mazo, no controles: el lector
+                // de pantalla solo ve la de arriba.
+                aria-hidden={i !== 0 ? true : undefined}
                 disabled={i !== 0}
                 onClick={() => despachar({ tipo: 'siguiente' })}
                 style={{ zIndex: mazo.length - i, translate: `${i * 2}px ${i * -2}px` }}
