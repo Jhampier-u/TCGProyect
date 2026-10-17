@@ -186,6 +186,7 @@ C:\ProyectoTCG\
 │       │                       collection-repository (H6)
 │       │                       deck-repository (H7)
 │       │                       facetas-sql: cada clave del perfil con su SQL (T-110)
+│       │                       cache-de-facetas: recuentos anonimos del rail, con TTL y marca de ingesta
 │       │                       plantilla-sql: la plantilla del set, una sola para motor y arte (T-101)
 │       ├── cli\                ingest.ts: CLI para poblar el catalogo
 │       │                       paleta.ts: `npm run sobres:paleta`, dos colores por set (T-102)

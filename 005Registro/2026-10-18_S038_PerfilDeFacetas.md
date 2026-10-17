@@ -194,3 +194,27 @@ A mitad de sesión el reloj del equipo saltó un día atrás (del 2026-10-18 al 
   porque un arreglo verificado en los tests no aparecía al pedirlo a la API.
 
 Si vuelve a pasar: compilar con `--force` antes de reiniciar.
+
+## Caché de los recuentos del raíl
+
+Lo pidió el usuario, después de que la revisión final de H9f lo dejara anotado. **Sólo se guardan
+los recuentos base**, los que no dependen del usuario, y se guardan por juego y set. La tenencia se
+sigue consultando siempre, en paralelo.
+
+- **Medido por HTTP:** el raíl de Magic sin set tarda 0,26 s en frío y unos 2 ms en caliente, y el de
+  Yu-Gi-Oh! 0,21 s y menos de 2 ms. Con sesión, la parte caliente queda en la tenencia, unos 28 ms.
+- **Resultados idénticos** a los de antes en diez casos reales, con y sin usuario.
+- **TTL:** `FACETAS_CACHE_TTL_SEGUNDOS` (por defecto 300; 0 la apaga), documentado en `.env.example`.
+- **Invalidación entre procesos:** la ingesta es otro proceso, así que al terminar escribe un UUID en
+  `<STORAGE_PATH>/.catalogo-generacion`. La API lo lee en cada petición del raíl y descarta lo que
+  calculó con otro. Se escribe también si la ingesta falla a mitad. Tras un Ctrl+C sólo queda el TTL.
+- **Redis no está conectado a la API**: `redis-quota.ts` sólo define la interfaz. Por eso la marca es
+  un fichero y no una clave de Redis. Si un día se conecta Redis, sólo cambia la función que lee la
+  generación.
+
+**La revisión cazó una fuga real:** `@fastify/static` sirve por defecto los ficheros ocultos, así
+que `/images/.catalogo-generacion` habría salido por HTTP con caché de un año. El comentario del
+código afirmaba lo contrario. Ahora se sirve con `dotfiles: 'ignore'`, y una prueba con un directorio
+real da 200 antes del arreglo y 404 después.
+
+Suite: 693 pruebas y 32 recorridos E2E en verde.
