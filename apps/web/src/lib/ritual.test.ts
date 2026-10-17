@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { avanzar, iniciar, ordenarPorEscasez, type Accion, type EstadoRitual } from './ritual.js';
+import { avanzar, iniciar, ordenarPorEscasez, prepararSobre, type Accion, type EstadoRitual } from './ritual.js';
 import type { Nivel } from './rareza.js';
 
 /** Tiers reales de Yu-Gi-Oh! sembrados por la migracion 0002. */
@@ -64,11 +64,23 @@ describe('orden de revelado', () => {
   it('una rareza de tier 50 no se queda el final: su nivel es 2', () => {
     const tiers = new Map([...TIERS_YGO, ['normal_parallel_rare', 50]]);
     const sobre = [
-      carta('common', 0), carta('common', 1),
-      carta('super_rare', 7), carta('normal_parallel_rare', 8),
+      carta('common', 0), carta('common', 1), carta('rare', 2),
+      carta('normal_parallel_rare', 3), carta('super_rare', 4),
     ];
-    const orden = ordenarPorEscasez(sobre, tiers, 'YGO');
-    expect(orden[orden.length - 1]!.rarity).toBe('super_rare');
+    expect(ordenarPorEscasez(sobre, tiers, 'YGO').map((c) => c.rarity)).toEqual([
+      'common', 'common', 'normal_parallel_rare', 'rare', 'super_rare',
+    ]);
+  });
+
+  it('PTCG: desconocida y comun primero, la promo en su nivel, la IR al final', () => {
+    const tiers = new Map([['common', 1], ['promo', 50], ['illustration_rare', 7]]);
+    const sobre = [
+      carta('illustration_rare', 0), carta('promo', 1),
+      carta('rareza_que_no_conocemos', 2), carta('common', 3),
+    ];
+    expect(ordenarPorEscasez(sobre, tiers, 'PTCG').map((c) => c.rarity)).toEqual([
+      'common', 'rareza_que_no_conocemos', 'promo', 'illustration_rare',
+    ]);
   });
 
   it('no modifica el array original', () => {
@@ -140,5 +152,38 @@ describe('el ritual de apertura (H9e-4)', () => {
 
   it('un sobre vacio rasgado acaba en el resumen al pedir carta', () => {
     expect(pasar(iniciar([], false), 'rasgar', 'rasgado', 'siguiente').fase).toBe('resumen');
+  });
+
+  it('una de nivel 3 NO pasa por la anticipacion', () => {
+    const e = pasar(iniciar([3, 1], false), 'rasgar', 'rasgado', 'siguiente');
+    expect(e).toMatchObject({ fase: 'mazo', reveladas: 1 });
+  });
+
+  it('anticipado fuera de la anticipacion se ignora', () => {
+    const mazo = pasar(iniciar(SOBRE, false), 'rasgar', 'rasgado');
+    expect(pasar(mazo, 'anticipado')).toEqual(mazo);
+    expect(pasar(iniciar(SOBRE, false), 'anticipado')).toEqual(iniciar(SOBRE, false));
+  });
+
+  it('saltar desde la anticipacion y desde el resumen', () => {
+    const antes = pasar(iniciar([5], false), 'rasgar', 'rasgado', 'siguiente');
+    const fin = pasar(antes, 'saltar');
+    expect(fin).toMatchObject({ fase: 'resumen', reveladas: 1 });
+    expect(pasar(fin, 'saltar')).toEqual(fin);
+  });
+});
+
+describe('prepararSobre', () => {
+  it('niveles[i] corresponde a orden[i]', () => {
+    const tiers = new Map([...TIERS_YGO, ['normal_parallel_rare', 50]]);
+    const sobre = [
+      carta('super_rare', 4), carta('common', 0), carta('normal_parallel_rare', 3),
+      carta('rare', 2), carta('common', 1),
+    ];
+    const { orden, niveles } = prepararSobre(sobre, tiers, 'YGO');
+    expect(orden.map((c) => c.rarity)).toEqual([
+      'common', 'common', 'normal_parallel_rare', 'rare', 'super_rare',
+    ]);
+    expect(niveles).toEqual([1, 1, 2, 2, 3]);
   });
 });

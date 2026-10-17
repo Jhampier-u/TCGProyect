@@ -50,6 +50,7 @@ export function avanzar(e: EstadoRitual, a: Accion): EstadoRitual {
     case 'mazo': {
       if (a.tipo !== 'siguiente') return e;
       const nivel = e.niveles[e.reveladas];
+      // Solo se alcanza con un sobre vacio: si no, el estado pasa a resumen al revelar la ultima.
       if (nivel === undefined) return { ...e, fase: 'resumen' };
       return nivel >= NIVEL_CON_ANTICIPACION ? { ...e, fase: 'anticipacion' } : revelarUna(e);
     }
@@ -57,6 +58,11 @@ export function avanzar(e: EstadoRitual, a: Accion): EstadoRitual {
       return a.tipo === 'anticipado' ? revelarUna(e) : e;
     case 'resumen':
       return e;
+    default: {
+      // Una Fase nueva sin tratar aqui es un error de compilacion.
+      const exhaustivo: never = e.fase;
+      return exhaustivo;
+    }
   }
 }
 
@@ -94,4 +100,20 @@ export function ordenarPorEscasez<T extends { rarity: string; slotIndex: number 
     if (ka.tier !== kb.tier) return ka.tier - kb.tier;
     return a.slotIndex - b.slotIndex;
   });
+}
+
+/**
+ * Orden y niveles de un sobre, calculados JUNTOS.
+ *
+ * El componente debe usar este unico resultado tanto para pintar las cartas
+ * como para llamar a `iniciar`: asi el orden que se ve y los niveles que
+ * deciden la anticipacion no pueden divergir. `niveles[i]` es el de `orden[i]`.
+ */
+export function prepararSobre<T extends { rarity: string; slotIndex: number }>(
+  cards: readonly T[],
+  tiers: Map<string, number>,
+  game: GameCode,
+): { orden: T[]; niveles: Nivel[] } {
+  const orden = ordenarPorEscasez(cards, tiers, game);
+  return { orden, niveles: orden.map((c) => nivelDe(game, tiers.get(c.rarity) ?? 0)) };
 }
