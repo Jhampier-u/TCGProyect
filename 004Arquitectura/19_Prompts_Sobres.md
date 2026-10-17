@@ -2,12 +2,18 @@
 
 **Prompt base** (se antepone a cada motivo):
 
-> Vertical trading-card booster pack wrapper artwork, 2:3 aspect ratio, 1024x1536, full-bleed
+> Vertical trading-card booster pack wrapper artwork, 9:16 aspect ratio, full-bleed
 > illustration only. Original design, no text, no letters, no logos, no trademarks, no existing
 > characters. Holo Noir style: deep black background with violet and cyan ambient light, iridescent
 > holographic foil highlights, subtle glass reflections, cinematic lighting. Leave a calm, darker
 > circular area in the upper-middle third (an emblem will be placed there) and a calm band in the
-> lower fifth (a title will be placed there). High detail, premium product photography feel.
+> lower fifth (a title will be placed there). Keep the top and bottom edges free of important
+> detail. High detail, premium product photography feel.
+
+**Por qué 9:16 y no 2:3** (2026-10-17): Nano Banana Pro no ofrece 2:3; sus proporciones verticales
+son 9:16 y 3:4. El sobre se pinta a 210 × 340 (≈ 0,62) con `background-size: cover`. Con 9:16 se
+pierde un 4 % arriba y otro abajo; con 3:4, casi un 9 % por cada lado. De ahí la línea que pide
+dejar libres los bordes superior e inferior.
 
 | Fichero (`apps/web/public/sobres/…`) | Motivo |
 |---|---|
