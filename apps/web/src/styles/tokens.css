@@ -120,13 +120,16 @@
    * Los cinco colores y el incoloro, pintados en CSS a partir de "{2}{B}": nada
    * de imagenes de terceros (F-9, P-001). El circulo es un grafico (3:1 contra
    * la superficie) y la letra de encima es texto (4,5:1 contra cada color). En
-   * oscuro el negro es un gris lila: un circulo negro sobre negro no se ve. */
+   * oscuro el negro es un gris lila: un circulo negro sobre negro no se ve.
+   * El oro (`m`) es el multicolor: lo usa el punto de la fila "Multicolor" del
+   * rail, y se mide como los demas. */
   --mana-w: #efe3bf;
   --mana-u: #6fb3ea;
   --mana-b: #b9a8cf;
   --mana-r: #f08a6c;
   --mana-g: #6cc08a;
   --mana-c: #bdb7ad;
+  --mana-m: #e3b341;
   --mana-tinta: #141722;
 
   /* --------------------------------------------- atributos de Yu-Gi-Oh! (H9f)
@@ -228,6 +231,7 @@
     --mana-r: #a8361c;
     --mana-g: #226b3c;
     --mana-c: #5f5b55;
+    --mana-m: #85600c;
     --mana-tinta: #ffffff;
     --atributo-oscuridad: #5e3d8c;
     --atributo-luz: #7a6608;
@@ -288,6 +292,7 @@
   --mana-r: #a8361c;
   --mana-g: #226b3c;
   --mana-c: #5f5b55;
+  --mana-m: #85600c;
   --mana-tinta: #ffffff;
   --atributo-oscuridad: #5e3d8c;
   --atributo-luz: #7a6608;

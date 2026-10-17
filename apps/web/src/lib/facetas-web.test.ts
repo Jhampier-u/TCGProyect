@@ -48,6 +48,13 @@ describe('la web cubre el perfil, ni mas ni menos (F-2)', () => {
     }
   });
 
+  it('cada color de Magic tiene su punto de color, el multicolor tambien', () => {
+    const color = FACET_PROFILES.MTG.facets.find((f) => f.key === 'color')!;
+    const sinPunto = color.values.filter((v) => PRESENTACION.color.estilo?.(v) === undefined);
+    expect(sinPunto).toEqual([]);
+    expect(PRESENTACION.color.estilo?.('M')).toEqual({ '--tipo': 'var(--mana-m)' });
+  });
+
   it('Pokemon conserva los nombres de seccion de los que depende la suite E2E', () => {
     expect(FACET_PROFILES.PTCG.facets.map((f) => PRESENTACION[f.key].titulo('PTCG')))
       .toEqual([ES.rail.categoria, ES.rail.tipo, ES.rail.marca]);

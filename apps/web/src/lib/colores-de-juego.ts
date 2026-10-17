@@ -5,7 +5,8 @@ import type { CSSProperties } from 'react';
  * `tipos-pokemon.ts`: deja el color en `--tipo` y el CSS lo usa donde quiera.
  * Solo tokens medidos por `tools/contraste-tokens.test.ts`.
  */
-const MANA: Readonly<Record<string, string>> = { W: 'w', U: 'u', B: 'b', R: 'r', G: 'g', C: 'c' };
+// `M` es el multicolor del rail: el oro de las cartas de varios colores.
+const MANA: Readonly<Record<string, string>> = { W: 'w', U: 'u', B: 'b', R: 'r', G: 'g', C: 'c', M: 'm' };
 
 export function estiloDeMana(valor: string | null): CSSProperties | undefined {
   const token = valor ? MANA[valor] : undefined;
