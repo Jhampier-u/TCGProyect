@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import type { GameCode } from '@tcg/shared';
 import { ES } from '../i18n/es.js';
+import { SEGMENTO } from '../lib/juegos.js';
 
 /**
  * La raiz deja de ser un catalogo con filtro y pasa a ser una eleccion de juego
@@ -15,27 +16,14 @@ import { ES } from '../i18n/es.js';
  */
 interface Juego {
   codigo: GameCode;
-  atributo: string;
-  ruta: string;
-  nombre: string;
-  /** Que hace distinto a este juego, en una linea. */
-  resumen: string;
   listo: boolean;
 }
 
+/** El orden de las tarjetas. Ruta, `data-juego` y textos salen de `SEGMENTO`. */
 const JUEGOS: Juego[] = [
-  {
-    codigo: 'PTCG', atributo: 'ptcg', ruta: '/ptcg',
-    nombre: ES.juegos.ptcg.nombre, resumen: ES.juegos.ptcg.resumen, listo: true,
-  },
-  {
-    codigo: 'MTG', atributo: 'mtg', ruta: '/mtg',
-    nombre: ES.juegos.mtg.nombre, resumen: ES.juegos.mtg.resumen, listo: true,
-  },
-  {
-    codigo: 'YGO', atributo: 'ygo', ruta: '/ygo',
-    nombre: ES.juegos.ygo.nombre, resumen: ES.juegos.ygo.resumen, listo: true,
-  },
+  { codigo: 'PTCG', listo: true },
+  { codigo: 'MTG', listo: true },
+  { codigo: 'YGO', listo: true },
 ];
 
 export function Inicio() {
@@ -45,25 +33,29 @@ export function Inicio() {
       <p className="inicio-entradilla">{ES.inicio.entradilla}</p>
 
       <ul className="inicio-juegos">
-        {JUEGOS.map((j) => (
-          <li key={j.codigo} data-juego={j.atributo}>
-            {j.listo ? (
-              <Link to={j.ruta} className="tarjeta-juego">
-                <span className="tarjeta-juego-nombre">{j.nombre}</span>
-                <span className="tarjeta-juego-resumen">{j.resumen}</span>
-              </Link>
-            ) : (
-              /* Sin enlace y dicho: un enlace a una seccion que no existe es
-                 peor que no ofrecerla. Magic y Yu-Gi-Oh! llegan despues de que
-                 Pokemon valide el diseno (D-2 del spec). */
-              <div className="tarjeta-juego tarjeta-juego-pendiente" aria-disabled="true">
-                <span className="tarjeta-juego-nombre">{j.nombre}</span>
-                <span className="tarjeta-juego-resumen">{j.resumen}</span>
-                <span className="tarjeta-juego-pronto">{ES.inicio.enCamino}</span>
-              </div>
-            )}
-          </li>
-        ))}
+        {JUEGOS.map((j) => {
+          const segmento = SEGMENTO[j.codigo];
+          const { nombre, resumen } = ES.juegos[segmento];
+          return (
+            <li key={j.codigo} data-juego={segmento}>
+              {j.listo ? (
+                <Link to={`/${segmento}`} className="tarjeta-juego">
+                  <span className="tarjeta-juego-nombre">{nombre}</span>
+                  <span className="tarjeta-juego-resumen">{resumen}</span>
+                </Link>
+              ) : (
+                /* Sin enlace y dicho: un enlace a una seccion que no existe es
+                   peor que no ofrecerla. Magic y Yu-Gi-Oh! llegan despues de que
+                   Pokemon valide el diseno (D-2 del spec). */
+                <div className="tarjeta-juego tarjeta-juego-pendiente" aria-disabled="true">
+                  <span className="tarjeta-juego-nombre">{nombre}</span>
+                  <span className="tarjeta-juego-resumen">{resumen}</span>
+                  <span className="tarjeta-juego-pronto">{ES.inicio.enCamino}</span>
+                </div>
+              )}
+            </li>
+          );
+        })}
       </ul>
     </section>
   );
