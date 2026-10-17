@@ -218,3 +218,33 @@ código afirmaba lo contrario. Ahora se sirve con `dotfiles: 'ignore'`, y una pr
 real da 200 antes del arreglo y 404 después.
 
 Suite: 693 pruebas y 32 recorridos E2E en verde.
+
+## El foco del ritual: la carta, en grande
+
+Con la aplicación desplegada en local, el usuario abrió un sobre y lo dijo claro: *«las cartas deben
+salir en grande cuando van apareciendo, actualmente está muy simple»*. Tenía razón:
+- el spec 17 decía que la carta «se voltea y **vuela** a la bandeja»;
+- la implementación de H9e la volteaba directamente en la bandeja, a 140 px;
+- con cartas comunes no se veía ningún efecto de nivel.
+
+**Lo que cambió** (rama `h9e-foco`; enmienda en la sección 7 del spec 17):
+- **El foco.** Cada carta vuela del mazo al centro, a unos 340 px, y se voltea allí. Lleva un halo
+  del color de su nivel, un destello desde el nivel 2 y un anillo de rayos desde el 3. Las partículas
+  y los rayos de nivel 5 salen del foco. Debajo aparecen su nombre, su rareza y si es nueva.
+- **Anticipación.** La de los niveles 4 y 5 ocurre también en el foco: el dorso tiembla en grande
+  bajo el velo antes de voltearse.
+- **Ritmo.** La carta se queda hasta que el usuario avanza, y entonces vuela a la bandeja. **La última
+  también espera**, porque es la más rara.
+- **Dorsos.** Cada juego tiene el suyo, sólo con CSS y tokens: celosía, brillo, marco del acento y
+  anillo holográfico, con una estrella en Magic, anillos en Yu-Gi-Oh! y un estallido en Pokémon.
+- **Sin cambios** en «Saltar», el modo rápido (los sobres 2 y siguientes sólo se detienen en grande
+  en los niveles 4 y 5) y el movimiento reducido.
+
+**Las pruebas.** Las E2E siguen pasando sin tocar una aserción: cada carta sigue siendo un botón con
+`aria-pressed`, y la del foco cuenta como revelada. La revisión dejó cuatro casos de entrada:
+- un sobre vacío ya no se queda en una escena sin nada que pulsar;
+- un temblor del ratón ya no se traga el clic;
+- mantener `Intro` ya no se salta cartas;
+- se quitó el gesto vertical, que en táctil no podía dispararse.
+
+Suite: 705 pruebas y 32 recorridos E2E en verde.

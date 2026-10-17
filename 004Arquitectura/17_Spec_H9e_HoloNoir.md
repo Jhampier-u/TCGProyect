@@ -150,6 +150,19 @@ la apertura, la ficha y la colección.
 6. **Revelado** — con el efecto de su nivel; el 5 activa el lienzo.
 7. **Resumen** — la bandeja completa, las nuevas marcadas, «Abrir otro».
 
+> **Enmienda (S038, 2026-10-18), a petición del usuario.** El paso 4 se implementó en H9e volteando
+> la carta directamente en la bandeja, a unos 140 px, y nunca había un momento en que se viera en
+> grande. El usuario lo encontró «muy simple». Ahora **cada carta pasa por un foco**:
+> - vuela del mazo al centro de la escena, a unos 340 px, y se voltea allí con el efecto de su nivel;
+> - la anticipación de los niveles 4 y 5 ocurre también en el foco;
+> - se queda hasta que el usuario avanza (clic, deslizar o `Enter`), y entonces vuela a su hueco de
+>   la bandeja;
+> - **la última carta también espera**: es la más rara del sobre, y un temporizador le quitaría su
+>   momento.
+>
+> En el modo rápido sólo pasan por el foco los niveles 4 y 5. Los dorsos tienen diseño propio por
+> juego, todo en CSS.
+
 `lib/ritual.ts` es la máquina de estados pura de esa secuencia: sin React, probada transición a
 transición, incluido «Saltar» y el modo reducido.
 
