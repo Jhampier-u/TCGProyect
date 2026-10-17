@@ -2,6 +2,7 @@ import { useCallback, useEffect, useId, useMemo, useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import type { GameCode } from '@tcg/shared';
 import { imageUrl, type OpenedCard } from '../lib/api.js';
+import { ordenarPorEscasez } from '../lib/ritual.js';
 
 export interface PackRevealProps {
   game: GameCode;
@@ -14,32 +15,6 @@ export interface PackRevealProps {
 
 /** Retardo entre cartas al revelar todas. */
 const ESCALONADO_MS = 260;
-
-/**
- * Orden de revelado: de menos a mas escaso.
- *
- * La gracia de abrir un sobre real esta en el ORDEN — primero lo previsible y la
- * carta buena al final. Por eso NO se respeta el orden de los slots: en
- * Yu-Gi-Oh! el "hit" ya es el ultimo, pero en Magic la rara esta en el slot 10 y
- * los comodines en el 12 y 13, asi que revelar por posicion destriparia el final.
- *
- * Se exporta aparte de la vista porque es la decision de diseno que hace que la
- * animacion funcione, y merece un test que no dependa de un navegador.
- */
-export function ordenarPorEscasez<T extends { rarity: string; slotIndex: number }>(
-  cards: readonly T[],
-  tiers: Map<string, number>,
-): T[] {
-  return [...cards].sort((a, b) => {
-    // Una rareza desconocida (insertada al vuelo con tier 50 por el contrato de
-    // P-007) no debe colarse al final como si fuera lo mejor del sobre: sin
-    // dato, se trata como la mas comun.
-    const ta = tiers.get(a.rarity) ?? 0;
-    const tb = tiers.get(b.rarity) ?? 0;
-    if (ta !== tb) return ta - tb;
-    return a.slotIndex - b.slotIndex;
-  });
-}
 
 /**
  * Revelado de un sobre, carta a carta.
@@ -57,7 +32,7 @@ export function PackReveal({ game, cards, tiers, openingId, seed }: PackRevealPr
   const sinMovimiento = useReducedMotion();
   const [reveladas, setReveladas] = useState<Set<number>>(new Set());
 
-  const orden = useMemo(() => ordenarPorEscasez(cards, tiers), [cards, tiers]);
+  const orden = useMemo(() => ordenarPorEscasez(cards, tiers, game), [cards, tiers, game]);
 
   // Cada apertura empieza de cero. Sin esto, abrir un segundo sobre mostraria
   // las cartas ya reveladas del anterior.
