@@ -1,7 +1,7 @@
 # 05 — Continuar aquí
 
 **Punto de guardado:** 2026-10-16, en la sesión **S037**
-**Commit:** rama `h9e-holo-noir` (sin fusionar en `main`) · suite de Vitest y los 22 recorridos E2E en verde · `npm audit` limpio
+**Commit:** rama `h9e-holo-noir` (sin fusionar en `main`) · suite de Vitest y los 23 recorridos E2E en verde · `npm audit` limpio
 (el recuento exacto sale de `npm test`; publicarlo aqui solo servia para que se quedara viejo)
 
 Este documento existe para retomar el proyecto en otra máquina o en otra sesión sin releer todas las

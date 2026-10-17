@@ -381,3 +381,39 @@ vaciarlo. El fallo era de cupo, no de las pruebas.
   rama.
 - **Pendiente**: T-097, la hoja de ruta de la lluvia de ideas y el perfil de facetas por juego antes
   de Magic.
+
+## La revisión final de la rama, y lo que encontró entre tareas
+
+Una revisión de la rama entera (`fee44dd..HEAD`) buscó lo que ninguna revisión por tarea podía ver:
+
+- **Un sobre sin paleta salía transparente.** La reserva usaba `--dorso-*`, que sólo existe bajo
+  `[data-juego]`, y `/sobres` no lo pone. En local no se notaba porque la base ya tenía paletas. En
+  un clon recién hecho, que no tiene paletas hasta lanzar `npm run sobres:paleta`, se habría visto
+  en todos los sets. Se arregló de dos formas, cada una suficiente por sí sola:
+  - el ritual lleva su `data-juego`;
+  - la reserva tiene su propio valor por defecto.
+
+  Se añadió un recorrido E2E que borra las paletas con `page.route`. Fallaba sin el arreglo, y la
+  suite queda en **23 recorridos**.
+- **Una apertura que llegaba después de cambiar de juego se pintaba como el juego nuevo**, y el
+  ritual la congelaba así. La carrera ya existía antes de esta rama, pero ahora el error quedaba
+  fijo. La petición guarda su juego y la respuesta de otro juego se descarta.
+- **Correcciones menores:**
+  - Saltar ya no dispara los efectos.
+  - Los sobres en espera son `inert` y el activo se desplaza a la vista.
+  - La etiqueta «N nuevas» ya no destripa el sobre antes del resumen.
+  - Se quitaron dos tokens muertos.
+  - La carta sin imagen tiene estilo.
+  - El orden y los niveles se calculan una sola vez.
+  - «Sobre #» pasó a `es.ts`.
+
+**Quedan anotadas, sin hacer:**
+- partículas que nacen en el centro de la escena y no en la carta revelada;
+- `CartaConBrillo` en la Colección (spec §6);
+- el halo de nivel 3 con el color de tipo de Pokémon;
+- un reflejo del sobre que siga al puntero;
+- deslizar para voltear;
+- «Reintentar» si falla la apertura;
+- `pattern` en el esquema de `palette`.
+
+Ninguna rompe nada. Son el siguiente pulido.

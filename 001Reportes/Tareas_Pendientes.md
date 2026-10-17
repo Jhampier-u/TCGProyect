@@ -27,7 +27,7 @@ vistas fallar a propósito). Lo siguiente de H9 —las dos colecciones (H9c)— 
 Adelantado por decisión del usuario. T-098 a T-107 cerradas: paleta Holo Noir con contraste medido,
 escalera de rarezas por juego, brillo por nivel con el foil aparte, paleta y arte del set desde la
 misma plantilla que el motor, el sobre sellado, la máquina del ritual, la capa de efectos y el ritual
-completo en Sobres, con la suite E2E en 22 recorridos. Queda **del lado del usuario** generar las 25
+completo en Sobres, con la suite E2E en 23 recorridos. Queda **del lado del usuario** generar las 25
 ilustraciones con los prompts de `19_Prompts_Sobres.md`; hasta entonces cada sobre usa su reserva sin
 arte, que es un diseño terminado y no un hueco.
 
