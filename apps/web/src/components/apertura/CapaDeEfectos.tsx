@@ -1,8 +1,8 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect, useRef } from 'react';
 import { useReducedMotion } from 'framer-motion';
 import type { Nivel } from '../../lib/rareza.js';
 import {
-  avanzarParticulas, medidorNuevo, registrarFotograma,
+  avanzarParticulas, limitarDpr, limitarParticulas, medidorNuevo, registrarFotograma,
   type Medidor, type Particula,
 } from '../../lib/efectos.js';
 
@@ -35,7 +35,9 @@ export function CapaDeEfectos({ disparo, nivel }: Props) {
   const lienzo = useRef<HTMLCanvasElement>(null);
   /** El nivel vigente; el efecto de disparo lo lee sin depender de el. */
   const nivelActual = useRef(nivel);
-  nivelActual.current = nivel;
+  /** Ultimo disparo atendido: nace con el valor de montaje, asi montar nunca dispara. */
+  const ultimo = useRef(disparo);
+  useLayoutEffect(() => { nivelActual.current = nivel; }, [nivel]);
   const particulas = useRef<Particula[]>([]);
   const rayosHasta = useRef(0);
   const colorRayos = useRef('');
@@ -53,7 +55,7 @@ export function CapaDeEfectos({ disparo, nivel }: Props) {
     let anterior = 0;
 
     const ajustar = () => {
-      const escala = window.devicePixelRatio || 1;
+      const escala = limitarDpr(window.devicePixelRatio);
       c.width = Math.max(1, Math.round(c.clientWidth * escala));
       c.height = Math.max(1, Math.round(c.clientHeight * escala));
     };
@@ -64,11 +66,12 @@ export function CapaDeEfectos({ disparo, nivel }: Props) {
     const pintar = (ahora: number) => {
       marco = 0;
       if (document.hidden) return;
-      // Primer fotograma tras arrancar: no hay intervalo que medir.
-      if (anterior !== 0) medidor.current = registrarFotograma(medidor.current, ahora - anterior);
+      // Primer fotograma tras arrancar: dt 0, no hay intervalo que medir ni simular.
+      const dt = anterior !== 0 ? ahora - anterior : 0;
+      if (anterior !== 0) medidor.current = registrarFotograma(medidor.current, dt);
       anterior = ahora;
 
-      const escala = window.devicePixelRatio || 1;
+      const escala = limitarDpr(window.devicePixelRatio);
       ctx.clearRect(0, 0, c.width, c.height);
 
       const hayRayos = ahora < rayosHasta.current && colorRayos.current !== '';
@@ -89,7 +92,7 @@ export function CapaDeEfectos({ disparo, nivel }: Props) {
         ctx.restore();
       }
 
-      particulas.current = avanzarParticulas(particulas.current, escala);
+      particulas.current = avanzarParticulas(particulas.current, dt, escala);
       for (const p of particulas.current) {
         ctx.globalAlpha = Math.max(0, p.vida);
         ctx.fillStyle = p.color;
@@ -135,15 +138,17 @@ export function CapaDeEfectos({ disparo, nivel }: Props) {
   }, [reducido]);
 
   useEffect(() => {
-    if (reducido || disparo === 0) return;
-    const nivel = nivelActual.current;
+    if (reducido || disparo === ultimo.current) return;
+    ultimo.current = disparo;
+    if (disparo === 0) return;
+    const nivelRevelado = nivelActual.current;
     const c = lienzo.current;
     if (!c) return;
     const estilo = getComputedStyle(c);
     const leer = (n: number) => estilo.getPropertyValue(`--nivel-${n}`).trim();
 
-    const color = leer(nivel);
-    const n = Math.round(PARTICULAS[nivel] * medidor.current.carga);
+    const color = leer(nivelRevelado);
+    const n = Math.round(PARTICULAS[nivelRevelado] * medidor.current.carga);
     if (color !== '') {
       for (let i = 0; i < n; i += 1) {
         const angulo = Math.random() * Math.PI * 2;
@@ -155,10 +160,11 @@ export function CapaDeEfectos({ disparo, nivel }: Props) {
         });
       }
     }
-    if (nivel === 5) {
+    if (nivelRevelado === 5) {
       colorRayos.current = leer(5);
       if (colorRayos.current !== '') rayosHasta.current = performance.now() + RAYOS_MS;
     }
+    particulas.current = limitarParticulas(particulas.current);
     arrancar.current();
   }, [disparo, reducido]);
 

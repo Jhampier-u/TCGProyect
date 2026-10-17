@@ -45,15 +45,40 @@ export interface Particula {
   x: number; y: number; vx: number; vy: number; vida: number; color: string;
 }
 
-/** Un paso de la simulacion; `escala` es el devicePixelRatio. Devuelve solo las vivas. */
-export function avanzarParticulas(ps: readonly Particula[], escala: number): Particula[] {
+/** Tope de particulas vivas a la vez: dos revelados seguidos no apilan sin limite. */
+export const MAX_PARTICULAS = 300;
+/** Tope del devicePixelRatio: mas resolucion en un lienzo de luz no se ve y cuesta fotogramas. */
+export const DPR_MAXIMO = 2;
+/** Duracion de referencia de un fotograma (60 fps) en ms. */
+const FOTOGRAMA_REF = 1000 / 60;
+/** Un fotograma mas largo que esto se trata como 50 ms: ni saltos ni explosiones. */
+const DT_MAXIMO = 50;
+
+export function limitarDpr(dpr: number): number {
+  return Math.min(Number.isFinite(dpr) && dpr > 0 ? dpr : 1, DPR_MAXIMO);
+}
+
+/** Si pasa del tope, se descartan las mas antiguas (las del principio). */
+export function limitarParticulas(ps: Particula[], max: number = MAX_PARTICULAS): Particula[] {
+  return ps.length > max ? ps.slice(ps.length - max) : ps;
+}
+
+/**
+ * Un paso de la simulacion de `dt` ms (recortado a 0..50). Movimiento,
+ * gravedad y desvanecimiento escalan con `dt / 16.67`, asi que la luz dura lo
+ * mismo a 30, 60 o 144 fps. `escala` es el devicePixelRatio. Devuelve las vivas.
+ */
+export function avanzarParticulas(
+  ps: readonly Particula[], dt: number, escala = 1,
+): Particula[] {
+  const paso = Math.min(Math.max(dt, 0), DT_MAXIMO) / FOTOGRAMA_REF;
   const vivas: Particula[] = [];
   for (const p of ps) {
-    const vida = p.vida - 0.012;
+    const vida = p.vida - 0.012 * paso;
     if (vida <= 0) continue;
     vivas.push({
-      x: p.x + p.vx * escala, y: p.y + p.vy * escala,
-      vx: p.vx, vy: p.vy + 0.06, vida, color: p.color,
+      x: p.x + p.vx * escala * paso, y: p.y + p.vy * escala * paso,
+      vx: p.vx, vy: p.vy + 0.06 * paso, vida, color: p.color,
     });
   }
   return vivas;
