@@ -7,7 +7,9 @@ import { useAuth } from '../lib/auth.js';
 import { consultaRarezas } from '../lib/consultas.js';
 import { addCard, fromDeckDetail, toPayload } from '../lib/deck-draft.js';
 import { estiloDeTipo } from '../lib/tipos-pokemon.js';
+import { nivelDe } from '../lib/rareza.js';
 import { ES } from '../i18n/es.js';
+import { CartaConBrillo } from './apertura/CartaConBrillo.js';
 
 /**
  * Primer dia con marca de regulacion: el de Sword & Shield. Una carta sin marca
@@ -102,13 +104,16 @@ function Contenido({
   // Misma clave que el catalogo: llega de la cache, no hace otra peticion.
   const rarezas = useQuery(consultaRarezas(juego));
   const rareza = rarezas.data?.find((r) => r.code === carta.rarity)?.label ?? carta.rarity;
+  const tier = rarezas.data?.find((r) => r.code === carta.rarity)?.tier ?? 0;
   const tipos = datos.types ?? [];
   const nombreDeTipo = (t: string) => ES.pokemon.tipo[t] ?? t;
 
   return (
     <div className="ficha-rejilla">
       <figure className="ficha-imagen">
-        {src ? <img src={src} alt={carta.name} width={245} height={342} /> : <div className="miniatura-hueco" />}
+        {src
+          ? <CartaConBrillo imagePath={carta.imagePath} nombre={carta.name} nivel={nivelDe(juego, tier)} acabado="normal" />
+          : <div className="miniatura-hueco" />}
       </figure>
 
       <div className="ficha-datos">

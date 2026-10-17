@@ -1,0 +1,70 @@
+/*
+ * Los cinco niveles de brillo de H9e (spec, seccion 6) y la textura foil.
+ * Ni un literal de color: todo sale de `tokens.css` (`--nivel-*` y `--efecto-*`).
+ */
+.brillo {
+  --mx: 50%; --my: 50%; --rx: 0deg; --ry: 0deg;
+  position: relative; display: block; border-radius: 4.5% / 3.2%;
+  transform: perspective(700px) rotateX(var(--rx)) rotateY(var(--ry));
+  transition: transform 120ms ease-out;
+}
+.brillo img { display: block; inline-size: 100%; block-size: auto; border-radius: inherit; }
+.brillo-capa { position: absolute; inset: 0; border-radius: inherit; pointer-events: none; }
+
+/* 1 - base: nada. */
+.brillo-n1 .brillo-efecto, .brillo-n1 .brillo-reflejo { display: none; }
+
+/* 2 - destello: filo metalico y barrido periodico. */
+.brillo-n2 { outline: 1px solid var(--nivel-2); outline-offset: -1px; }
+.brillo-n2 .brillo-efecto {
+  background: linear-gradient(110deg, transparent 35%, var(--efecto-destello) 50%, transparent 65%);
+  background-size: 250% 100%; mix-blend-mode: overlay;
+  animation: brillo-barrido 3.2s ease-in-out infinite;
+}
+.brillo-n2 .brillo-reflejo { display: none; }
+@keyframes brillo-barrido { 0% { background-position: 120% 0 } 60%, 100% { background-position: -120% 0 } }
+
+/* 3 - holo: arcoiris que sigue al puntero. */
+.brillo-n3 { box-shadow: 0 0 26px color-mix(in srgb, var(--nivel-3) 55%, transparent); }
+.brillo-n3 .brillo-efecto {
+  background: linear-gradient(115deg, transparent 20%, var(--efecto-holo-1) 35%, var(--efecto-holo-2) 45%,
+    var(--efecto-holo-3) 55%, var(--efecto-holo-4) 65%, transparent 80%);
+  background-size: 220% 220%; background-position: var(--mx) var(--my);
+  mix-blend-mode: color-dodge; opacity: 0.8;
+}
+.brillo-n3 .brillo-reflejo, .brillo-n4 .brillo-reflejo, .brillo-n5 .brillo-reflejo {
+  background: radial-gradient(circle at var(--mx) var(--my), var(--efecto-reflejo), transparent 45%);
+  mix-blend-mode: overlay;
+}
+
+/* 4 - galeria: prisma suave e inclinacion fuerte (16 grados). */
+.brillo-n4 { box-shadow: 0 0 30px color-mix(in srgb, var(--nivel-4) 50%, transparent); }
+.brillo-n4 .brillo-efecto {
+  background: conic-gradient(from 0deg at var(--mx) var(--my), var(--efecto-prisma-1),
+    var(--efecto-prisma-2), var(--efecto-prisma-3), var(--efecto-prisma-4), var(--efecto-prisma-1));
+  mix-blend-mode: soft-light;
+}
+
+/* 5 - leyenda: oro y arcoiris. Los rayos y las chispas son del lienzo. */
+.brillo-n5 {
+  box-shadow: 0 0 40px color-mix(in srgb, var(--nivel-5) 70%, transparent),
+    0 0 80px color-mix(in srgb, var(--nivel-4) 40%, transparent);
+}
+.brillo-n5 .brillo-efecto {
+  background: linear-gradient(125deg, transparent 15%, var(--efecto-leyenda-1) 35%, var(--efecto-leyenda-2) 50%,
+    var(--efecto-leyenda-3) 62%, transparent 80%);
+  background-size: 240% 240%; background-position: var(--mx) var(--my);
+  mix-blend-mode: color-dodge;
+}
+
+/* El acabado, aparte: una trama brillante que no sube el nivel. */
+.brillo-foil {
+  background: repeating-linear-gradient(135deg, transparent 0 6px, var(--efecto-foil) 6px 8px);
+  mix-blend-mode: overlay;
+}
+
+/* Movimiento reducido: los brillos se quedan quietos y la carta no se inclina. */
+@media (prefers-reduced-motion: reduce) {
+  .brillo { transform: none !important; }
+  .brillo-capa { animation: none !important; }
+}

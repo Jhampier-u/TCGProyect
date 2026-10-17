@@ -132,6 +132,27 @@
   --nivel-3: #7cc8ff;
   --nivel-4: #b69cff;
   --nivel-5: #ffd65a;
+  /*
+   * Paradas de color de los brillos (brillos.css). Son luz compuesta con modos
+   * de mezcla, no superficie: no varian con el tema, asi que solo viven aqui.
+   * Solo las paradas son tokens; los degradados completos no, porque llevan
+   * var(--mx) y un var() dentro de una propiedad personalizada se resuelve en
+   * :root y no en la carta.
+   */
+  --efecto-destello: rgb(255 255 255 / 0.55);
+  --efecto-reflejo: rgb(255 255 255 / 0.45);
+  --efecto-holo-1: rgb(255 0 128 / 0.35);
+  --efecto-holo-2: rgb(255 214 0 / 0.35);
+  --efecto-holo-3: rgb(0 255 170 / 0.35);
+  --efecto-holo-4: rgb(0 140 255 / 0.35);
+  --efecto-prisma-1: rgb(255 120 200 / 0.22);
+  --efecto-prisma-2: rgb(120 200 255 / 0.22);
+  --efecto-prisma-3: rgb(160 255 200 / 0.22);
+  --efecto-prisma-4: rgb(255 240 140 / 0.22);
+  --efecto-leyenda-1: rgb(255 214 90 / 0.45);
+  --efecto-leyenda-2: rgb(255 120 200 / 0.35);
+  --efecto-leyenda-3: rgb(120 200 255 / 0.35);
+  --efecto-foil: rgb(180 220 255 / 0.30);
   --fuente-titulo: "Space Grotesk", var(--fuente);
 }
 

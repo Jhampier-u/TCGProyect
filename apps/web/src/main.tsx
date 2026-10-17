@@ -8,6 +8,7 @@ import '@fontsource/space-grotesk/600.css';
 import '@fontsource/space-grotesk/700.css';
 import './styles/tokens.css';
 import './styles.css';
+import './styles/brillos.css';
 
 const container = document.getElementById('root');
 if (!container) throw new Error('Falta #root en index.html');
