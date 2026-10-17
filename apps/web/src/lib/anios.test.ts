@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { agruparPorAnio } from './anios.js';
+import { agruparPorAnio, cuantosAnios } from './anios.js';
 import type { SetSummary } from './api.js';
 
 const set = (id: number, releasedAt: string | null): SetSummary => ({
@@ -17,5 +17,10 @@ describe('la portada por anio de salida (H9f, F-8)', () => {
   it('un set sin fecha va al final, en su propio grupo', () => {
     const g = agruparPorAnio([set(1, null), set(2, '2010-01-01')]);
     expect(g.map((x) => x.anio)).toEqual(['2010', null]);
+  });
+
+  it('el recuento de anios no cuenta el grupo sin fecha: no es un anio', () => {
+    expect(cuantosAnios(agruparPorAnio([set(1, null), set(2, '2010-01-01'), set(3, '2011-01-01')]))).toBe(2);
+    expect(cuantosAnios(agruparPorAnio([set(1, null)]))).toBe(0);
   });
 });

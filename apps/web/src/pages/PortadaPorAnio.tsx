@@ -3,7 +3,7 @@ import { Link, useOutletContext } from 'react-router-dom';
 import type { GameCode } from '@tcg/shared';
 import { imageUrl } from '../lib/api.js';
 import { consultaSets } from '../lib/consultas.js';
-import { agruparPorAnio } from '../lib/anios.js';
+import { agruparPorAnio, cuantosAnios } from '../lib/anios.js';
 import { SEGMENTO } from '../lib/juegos.js';
 import { ES } from '../i18n/es.js';
 
@@ -30,7 +30,7 @@ export function PortadaPorAnio() {
     <section className="portada">
       <header className="portada-cabecera">
         <h1>{ES.juegos[segmento].nombre}</h1>
-        <p className="portada-entradilla">{ES.portadaAnio.entradilla(conCartas.length, grupos.length)}</p>
+        <p className="portada-entradilla">{ES.portadaAnio.entradilla(conCartas.length, cuantosAnios(grupos))}</p>
         <nav className="portada-accesos">
           <Link className="acceso-directo" to={`/${segmento}/catalogo`}>{ES.navegacion.catalogo}</Link>
           <Link className="acceso-directo" to="/sobres">{ES.navegacion.sobres}</Link>

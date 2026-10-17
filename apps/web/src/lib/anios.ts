@@ -26,3 +26,8 @@ export function agruparPorAnio(sets: readonly SetSummary[]): AnioConSets[] {
     .sort(([a], [b]) => (a === null ? 1 : b === null ? -1 : b.localeCompare(a)))
     .map(([anio, delAnio]) => ({ anio, sets: delAnio }));
 }
+
+/** Cuantos anios hay de verdad: el grupo de los sets sin fecha no es un anio. */
+export function cuantosAnios(grupos: readonly AnioConSets[]): number {
+  return grupos.filter((g) => g.anio !== null).length;
+}
