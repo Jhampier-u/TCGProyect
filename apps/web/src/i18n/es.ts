@@ -327,6 +327,8 @@ export const ES = {
       Equip: 'Equipo', Ritual: 'Ritual', Counter: 'Contraefecto',
     } as Record<string, string>,
     coste: (v: string) => `Coste ${v}`,
+    /** Bajo la sección de coste: por qué sus tramos suman menos que el total. */
+    costeNota: 'Las cartas sin coste real, como los reversos, no se cuentan aquí.',
     nivel: (v: string) => `Nivel o rango ${v}`,
     link: (v: string) => `LINK-${v}`,
   },

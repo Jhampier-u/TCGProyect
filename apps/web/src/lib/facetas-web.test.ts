@@ -55,6 +55,13 @@ describe('la web cubre el perfil, ni mas ni menos (F-2)', () => {
     expect(PRESENTACION.color.estilo?.('M')).toEqual({ '--tipo': 'var(--mana-m)' });
   });
 
+  it('el coste de Magic explica por que sus tramos suman menos que el total', () => {
+    const coste = FACET_PROFILES.MTG.facets.find((f) => f.key === 'cost')!;
+    for (const v of coste.values) expect(PRESENTACION.cost.nota?.(v), v).toBeUndefined();
+    expect(PRESENTACION.cost.notaDeSeccion).toMatch(/\S/);
+    expect(PRESENTACION.cost.notaDeSeccion).toBe(ES.facetas.costeNota);
+  });
+
   it('Pokemon conserva los nombres de seccion de los que depende la suite E2E', () => {
     expect(FACET_PROFILES.PTCG.facets.map((f) => PRESENTACION[f.key].titulo('PTCG')))
       .toEqual([ES.rail.categoria, ES.rail.tipo, ES.rail.marca]);

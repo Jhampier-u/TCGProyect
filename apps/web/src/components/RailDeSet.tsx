@@ -85,6 +85,9 @@ export function RailDeSet({ id, abierto, juego, facetas, filtros, rarezas, conSe
                 nota={p.nota?.(f.value)}
               />
             ))}
+            {p.notaDeSeccion && (
+              <li><p className="rail-nota-fila">{p.notaDeSeccion}</p></li>
+            )}
           </Seccion>
         );
       })}

@@ -21,6 +21,8 @@ export interface PresentacionDeFaceta {
   estilo?: (valor: string) => CSSProperties | undefined;
   /** Una nota bajo la fila del valor ("Sin marca"). */
   nota?: (valor: string) => string | undefined;
+  /** Una nota al pie de la seccion entera, con el mismo aspecto que la de fila. */
+  notaDeSeccion?: string;
 }
 
 const de = (tabla: Record<string, string>) => (valor: string) => tabla[valor] ?? valor;
@@ -41,7 +43,13 @@ export const PRESENTACION: Readonly<Record<FacetKey, PresentacionDeFaceta>> = {
     titulo: (juego) => (juego === 'YGO' ? ES.facetas.titulo.clase : ES.rail.tipo),
     etiqueta: de(ES.facetas.kind),
   },
-  cost: { titulo: () => ES.facetas.titulo.coste, etiqueta: ES.facetas.coste },
+  cost: {
+    titulo: () => ES.facetas.titulo.coste,
+    etiqueta: ES.facetas.coste,
+    // Los reversos y demas cartas sin coste real no caen en ningun tramo
+    // (facetas-sql.ts): sin esta nota la suma no cuadra con el total.
+    notaDeSeccion: ES.facetas.costeNota,
+  },
   frame: { titulo: () => ES.facetas.titulo.marco, etiqueta: de(ES.facetas.frame) },
   attribute: {
     titulo: () => ES.facetas.titulo.atributo, etiqueta: de(ES.facetas.attribute), estilo: estiloDeAtributo,
