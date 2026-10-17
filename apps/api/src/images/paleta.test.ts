@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import sharp from 'sharp';
-import { paletaDe } from './paleta.js';
+import { paletaDe, RECORTES } from './paleta.js';
 
 const HEX = /^#[0-9a-f]{6}$/;
 const liso = (color: string) =>
@@ -38,7 +38,8 @@ describe('la paleta de un set (H9e)', () => {
 
   it('con un solo color, el secundario es una version oscura del primario', async () => {
     const p = await paletaDe(await liso('#30a050'));
-    expect(p.secundario).not.toBe(p.primario);
+    const suma = (h: string) => parseInt(h.slice(1, 3), 16) + parseInt(h.slice(3, 5), 16) + parseInt(h.slice(5, 7), 16);
+    expect(suma(p.secundario)).toBeLessThan(suma(p.primario));
   });
 
   async function carta(fondo: string, color: string, r: { left: number; top: number; width: number; height: number }) {
@@ -60,10 +61,33 @@ describe('la paleta de un set (H9e)', () => {
     expect(rojizo((await paletaDe(img)).primario)).toBe(true);
   });
 
-  it('una imagen gris sigue dando dos colores', async () => {
-    const p = await paletaDe(await liso('#808080'));
+  it('una imagen de un solo canal no revienta ni lee canales ajenos', async () => {
+    const gris = await sharp({ create: { width: 32, height: 32, channels: 3, background: '#808080' } })
+      .toColourspace('b-w')
+      .png()
+      .toBuffer();
+    expect((await sharp(gris).metadata()).channels).toBe(1);
+    const p = await paletaDe(gris);
     expect(p.primario).toMatch(HEX);
     expect(p.secundario).toMatch(HEX);
-    expect(p.secundario).not.toBe(p.primario);
+  });
+
+  it('un icono pequeno no se recorta', async () => {
+    const img = await carta('#808080', '#d03030', { left: 0, top: 0, width: 20, height: 20 });
+    const chico = await sharp(img).resize(64, 64, { fit: 'fill' }).png().toBuffer();
+    expect(rojizo((await paletaDe(chico)).primario)).toBe(true);
+  });
+
+  it('es determinista', async () => {
+    const img = await partido('#d02020', '#2040d0');
+    expect(await paletaDe(img)).toEqual(await paletaDe(img));
+  });
+
+  it('YGO mira mas abajo que PTCG', async () => {
+    expect(RECORTES.YGO).not.toEqual(RECORTES.PTCG);
+    // Color solo en y 80..90 de 140: dentro de la caja de YGO, fuera de la de PTCG.
+    const img = await carta('#808080', '#d03030', { left: 20, top: 80, width: 60, height: 10 });
+    expect(rojizo((await paletaDe(img, RECORTES.YGO)).primario)).toBe(true);
+    expect(rojizo((await paletaDe(img, RECORTES.PTCG)).primario)).toBe(false);
   });
 });

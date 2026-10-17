@@ -1,9 +1,9 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { GAME_IDS, isGameCode } from '@tcg/shared';
+import { GAME_CODES, GAME_IDS, isGameCode } from '@tcg/shared';
 import { loadConfig } from '../config.js';
 import { Database } from '../db/index.js';
-import { paletaDe } from '../images/paleta.js';
+import { RECORTES, paletaDe } from '../images/paleta.js';
 
 /**
  * `npm run sobres:paleta [-- --game PTCG] [-- --recalcular]` (H9e, T-102).
@@ -32,8 +32,14 @@ async function main(): Promise<void> {
   let fallidas = 0;
 
   try {
-    const sets = await db.select<{ id: number; code: string; ruta: string | null }>(
-      `SELECT s.id, s.code,
+    const sets = await db.select<{
+      id: number;
+      code: string;
+      game_id: number;
+      ruta: string | null;
+      icono: string | null;
+    }>(
+      `SELECT s.id, s.code, s.game_id, s.icon_local_path AS icono,
               COALESCE(
                 (SELECT p.image_local_path
                    FROM card_prints p JOIN rarities r ON r.id = p.rarity_id
@@ -53,8 +59,17 @@ async function main(): Promise<void> {
         sinImagen += 1;
         continue;
       }
+      const juego = GAME_CODES.find((g) => GAME_IDS[g] === set.game_id);
+      const recorte = RECORTES[juego ?? 'PTCG'];
       try {
-        const paleta = await paletaDe(await readFile(join(config.storagePath, set.ruta)));
+        let paleta;
+        try {
+          paleta = await paletaDe(await readFile(join(config.storagePath, set.ruta)), recorte);
+        } catch (e) {
+          // La carta falla: el icono del set todavia puede dar color.
+          if (!set.icono || set.icono === set.ruta) throw e;
+          paleta = await paletaDe(await readFile(join(config.storagePath, set.icono)), recorte);
+        }
         await db.query('UPDATE sets SET palette = ? WHERE id = ?', [JSON.stringify(paleta), set.id]);
         hechas += 1;
       } catch (e) {
@@ -64,6 +79,7 @@ async function main(): Promise<void> {
       }
     }
     console.log(`Paletas: ${hechas} calculadas, ${sinImagen} sets sin imagen, ${fallidas} fallidas.`);
+    if (fallidas > 0) process.exitCode = 1;
   } finally {
     await db.close();
   }

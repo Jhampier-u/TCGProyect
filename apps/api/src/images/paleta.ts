@@ -1,9 +1,27 @@
 import sharp from 'sharp';
+import type { GameCode } from '@tcg/shared';
 
 export interface Paleta {
   primario: string;
   secundario: string;
 }
+
+/** Caja de la ilustracion, en fracciones de la imagen. */
+export interface Recorte {
+  x0: number;
+  x1: number;
+  y0: number;
+  y1: number;
+}
+
+export const RECORTE_POR_DEFECTO: Recorte = { x0: 0.12, x1: 0.88, y0: 0.11, y1: 0.55 };
+
+/** El arte de Yu-Gi-Oh! esta mas abajo que el de Pokemon y Magic. */
+export const RECORTES: Record<GameCode, Recorte> = {
+  PTCG: RECORTE_POR_DEFECTO,
+  MTG: RECORTE_POR_DEFECTO,
+  YGO: { x0: 0.13, x1: 0.87, y0: 0.19, y1: 0.66 },
+};
 
 type Rgb = readonly [number, number, number];
 
@@ -14,8 +32,8 @@ const distancia = (a: Rgb, b: Rgb) => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] 
 /**
  * Dos colores de una imagen: el que mas pesa y el primero que se distinga de el.
  *
- * Solo se mira la ILUSTRACION: se recorta el centro de la carta (12% a 88% del
- * ancho, 11% a 55% del alto), donde esta la caja de arte, para que el marco
+ * Solo se mira la ILUSTRACION: se recorta el centro de la carta (por defecto 12% a 88% del
+ * ancho, 11% a 55% del alto; cada juego tiene su caja en `RECORTES`), donde esta la caja de arte, para que el marco
  * amarillo de una carta Pokemon no sea "el color" del set. Una imagen pequena
  * (un icono, menos de 100px) no se recorta. Luego se reduce a 32x32 y se agrupa
  * en cubos de 3 bits por canal. Cada pixel pesa saturacion^2 * brillo y los
@@ -24,26 +42,28 @@ const distancia = (a: Rgb, b: Rgb) => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] 
  * verdad) se usa el peso antiguo, para devolver siempre dos colores.
  * Determinista y sin red: lee la imagen que ya esta en `storage/`.
  */
-export async function paletaDe(imagen: Buffer): Promise<Paleta> {
+export async function paletaDe(imagen: Buffer, recorte: Recorte = RECORTE_POR_DEFECTO): Promise<Paleta> {
   const meta = await sharp(imagen).metadata();
   const ancho = meta.width ?? 0;
   const alto = meta.height ?? 0;
   let tubo = sharp(imagen);
   if (ancho >= 100 && alto >= 100) {
-    const left = Math.round(ancho * 0.12);
-    const top = Math.round(alto * 0.11);
+    const left = Math.round(ancho * recorte.x0);
+    const top = Math.round(alto * recorte.y0);
     tubo = tubo.extract({
       left,
       top,
-      width: Math.max(1, Math.round(ancho * 0.88) - left),
-      height: Math.max(1, Math.round(alto * 0.55) - top),
+      width: Math.max(1, Math.round(ancho * recorte.x1) - left),
+      height: Math.max(1, Math.round(alto * recorte.y1) - top),
     });
   }
   const { data, info } = await tubo
     .resize(32, 32, { fit: 'cover' })
+    .toColourspace('srgb')
     .removeAlpha()
     .raw()
     .toBuffer({ resolveWithObject: true });
+  if (info.channels !== 3) throw new Error(`se esperaban 3 canales y hay ${info.channels}`);
 
   type Cubo = { r: number; g: number; b: number; peso: number };
   const estricto = new Map<number, Cubo>();
