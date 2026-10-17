@@ -276,8 +276,6 @@ export const ES = {
       Trainer: 'Entrenador',
       Energy: 'Energía',
     } as Record<string, string>,
-    /** Orden fijo de las categorías: que no bailen cuando cambian los recuentos. */
-    ordenSupertipo: ['Pokémon', 'Trainer', 'Energy'],
     marca: (m: string) => `Marca ${m}`,
   },
 

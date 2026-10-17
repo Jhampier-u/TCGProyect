@@ -1,7 +1,7 @@
 import { useEffect, useId, useRef, useState, type ReactElement } from 'react';
 import { Link } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { GameCode, MtgGameData, PtcgGameData, YgoGameData } from '@tcg/shared';
+import { facetOf, type GameCode, type MtgGameData, type PtcgGameData, type YgoGameData } from '@tcg/shared';
 import { api, imageUrl, type CardDetail } from '../lib/api.js';
 import { useAuth } from '../lib/auth.js';
 import { consultaRarezas } from '../lib/consultas.js';
@@ -199,6 +199,9 @@ function Nada(): null {
   return null;
 }
 
+/** El supertipo "Pokemon", tal cual lo guarda la base: el primero del perfil. */
+const SUPERTIPO_POKEMON = facetOf('PTCG', 'supertype')?.values[0];
+
 const nombreDeTipo = (t: string) => ES.pokemon.tipo[t] ?? t;
 
 /** Pokemon, dentro de la cabecera: los tipos, los PS y de quien evoluciona. Igual que en T-094. */
@@ -256,9 +259,9 @@ function CuerpoPtcg({ carta }: { carta: CardDetail }) {
       )}
 
       {/* Debilidad, resistencia y retirada son de los Pokemon: un Entrenador o
-          una Energia no las tienen. El valor se compara con el de `i18n`
+          una Energia no las tienen. El valor se compara con el del perfil
           porque lleva tilde y el codigo es ASCII. */}
-      {datos.supertype !== undefined && ES.pokemon.ordenSupertipo[0] === datos.supertype && (
+      {datos.supertype !== undefined && SUPERTIPO_POKEMON === datos.supertype && (
         <dl className="ficha-tira">
           <div>
             <dt>{ES.ficha.debilidad}</dt>
