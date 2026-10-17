@@ -12,7 +12,7 @@ import { ES } from '../i18n/es.js';
 import { CartaConBrillo } from './apertura/CartaConBrillo.js';
 import { Mana } from './Mana.js';
 import { estiloDeAtributo } from '../lib/colores-de-juego.js';
-import { cifraDeCombate, nombreDeRaza } from '../lib/ygo.js';
+import { cifraDeCombate, llevaCombate, nombreDeRaza } from '../lib/ygo.js';
 import { FlechasLink, NivelYgo } from './NivelYgo.js';
 
 /**
@@ -381,7 +381,7 @@ function CuerpoYgo({ carta }: { carta: CardDetail }) {
   return (
     <>
       <Reglas titulo={ES.ficha.efecto} texto={carta.rulesText} />
-      {textoDe(f.kind) === 'monster' && (
+      {llevaCombate(textoDe(f.kind)) && (
         <dl className="ficha-tira">
           <div>
             <dt>{ES.ficha.atk}</dt>

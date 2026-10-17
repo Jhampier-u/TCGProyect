@@ -27,6 +27,14 @@ export function cifraDeCombate(n: number | null | undefined): string | null {
   return n === -1 ? ES.simbolo.desconocido : String(n);
 }
 
+/**
+ * Si la carta lleva ATK y DEF: los monstruos y tambien las fichas (tokens),
+ * que en Yu-Gi-Oh! son monstruos de pleno derecho aunque su clase sea otra.
+ */
+export function llevaCombate(kind: string | null): boolean {
+  return kind === 'monster' || kind === 'token';
+}
+
 /** Las ocho flechas de un Link, en el orden de una rejilla de 3x3; el centro es null. */
 export const FLECHAS = [
   'Top-Left', 'Top', 'Top-Right',

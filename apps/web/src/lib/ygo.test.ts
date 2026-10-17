@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { cifraDeCombate, flechasDeLink, marcaDeNivel, nombreDeRaza } from './ygo.js';
+import { cifraDeCombate, flechasDeLink, llevaCombate, marcaDeNivel, nombreDeRaza } from './ygo.js';
 import { ES } from '../i18n/es.js';
 
 describe('nivel, rango y link de Yu-Gi-Oh! (H9f)', () => {
@@ -29,6 +29,15 @@ describe('nivel, rango y link de Yu-Gi-Oh! (H9f)', () => {
     expect(cifraDeCombate(0)).toBe('0');
     expect(cifraDeCombate(null)).toBeNull();
     expect(cifraDeCombate(undefined)).toBeNull();
+  });
+
+  it('ATK y DEF son de los monstruos y de las fichas (tokens), no del resto', () => {
+    expect(llevaCombate('monster')).toBe(true);
+    expect(llevaCombate('token')).toBe(true);
+    expect(llevaCombate('spell')).toBe(false);
+    expect(llevaCombate('trap')).toBe(false);
+    expect(llevaCombate('skill')).toBe(false);
+    expect(llevaCombate(null)).toBe(false);
   });
 
   it('la DEF de un Link no existe: no sale como "?" ni como 0', () => {
@@ -70,7 +79,7 @@ describe('la raza y el subtipo de Yu-Gi-Oh!, en castellano (H9f)', () => {
 
   it('se traduce lo conocido', () => {
     expect(nombreDeRaza('Fiend')).toBe('Demonio');
-    expect(nombreDeRaza('Quick-Play')).toBe('Rápida');
+    expect(nombreDeRaza('Quick-Play')).toBe('Juego Rápido');
     expect(nombreDeRaza('Counter')).toBe('Contraefecto');
   });
 
