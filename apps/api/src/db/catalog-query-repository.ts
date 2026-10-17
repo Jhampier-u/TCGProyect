@@ -4,6 +4,7 @@ import {
   COLUMNAS_DE_FILA, FACET_SQL, condicionDeFaceta, repartir, type FacetCount, type FilaDeRecuento,
 } from './facetas-sql.js';
 import type { Database } from './connection.js';
+import { SIN_CACHE, type CacheDeRecuentos } from './cache-de-facetas.js';
 import type { Paleta } from '../images/paleta.js';
 import { ORDEN_DE_PLANTILLA, PLANTILLA_DE_EPOCA_O_LINEA, artKeyDe } from './plantilla-sql.js';
 
@@ -168,7 +169,15 @@ export interface SetSummary {
  * tienen patrones de acceso opuestos y mezclarlas complicaria las dos.
  */
 export class CatalogQueryRepository {
-  constructor(private readonly db: Database) {}
+  /**
+   * `recuentosBase` cachea los recuentos del rail que no dependen del usuario
+   * (ver `cache-de-facetas.ts`). Por defecto no cachea: los tests y los CLI
+   * ven siempre la base tal cual, y solo la API lo enchufa.
+   */
+  constructor(
+    private readonly db: Database,
+    private readonly recuentosBase: CacheDeRecuentos = SIN_CACHE,
+  ) {}
 
   async listGames(): Promise<Array<{ code: string; name: string }>> {
     return this.db.select(`SELECT code, name FROM games ORDER BY id`);
@@ -465,34 +474,44 @@ export class CatalogQueryRepository {
                   GROUP BY p.rarity_id) x
            JOIN rarities r ON r.id = x.rarity_id`;
 
-    /**
-     * Un recuento y, con sesion, su pareja de tenencia, en paralelo. Se cruzan
-     * por el valor del grupo: la pareja solo trae los grupos donde el usuario
-     * tiene algo, y uno ausente es un cero.
-     */
-    const contarConTenencia = async (base: (desde: string, medida: 'n' | 'tengo') => string) => {
-      const [filas, mias] = await Promise.all([
-        this.db.select<FilaDeRecuento>(base(DESDE_EL_CATALOGO, 'n'), params),
-        conTenencia
-          ? this.db.select<FilaDeRecuento>(base(DESDE_LA_COLECCION, 'tengo'), [userId, ...params])
-          : Promise.resolve([]),
-      ]);
-      if (!conTenencia) return filas;
-      const clave = (v: FilaDeRecuento['valor']) => (v === null ? '\u0000' : String(v));
-      const tenidas = new Map(mias.map((f) => [clave(f.valor), Number(f.tengo ?? 0)]));
-      return filas.map((f) => ({ ...f, tengo: tenidas.get(clave(f.valor)) ?? 0 }));
-    };
-
     // Una consulta por faceta del perfil, mas la de rareza, en paralelo: cuatro
     // en Pokemon y en Magic, seis en Yu-Gi-Oh!, el doble con sesion. El orden
     // ya no lo pone MySQL: lo pone el perfil (`repartir`).
     const perfil = FACET_PROFILES[game];
-    const [rarezas = [], ...porFaceta] = await Promise.all([
-      contarConTenencia(contarRarezas),
-      ...perfil.facets.map((f) =>
-        contarConTenencia((desde, medida) => contar(FACET_SQL[f.key].grupo, desde, medida)),
-      ),
+    const consultas = [
+      contarRarezas,
+      ...perfil.facets.map((f) => (desde: string, medida: 'n' | 'tengo') =>
+        contar(FACET_SQL[f.key].grupo, desde, medida)),
+    ];
+
+    // LA PARTE BASE SE CACHEA, LA TENENCIA NO. Los recuentos base son iguales
+    // para todos hasta la proxima ingesta y son lo caro (0,2-0,25 s cada uno
+    // en Magic sin set); la tenencia es de cada usuario y barata. La clave es
+    // juego y set: lo unico que entra en `filtro`. JSON y no una concatenacion
+    // para que ningun id de set pueda fabricar la clave de otro.
+    const clave = JSON.stringify(['facetas', game, set ?? null]);
+    const [bases, mias] = await Promise.all([
+      this.recuentosBase.obtener(clave, () =>
+        Promise.all(consultas.map((c) => this.db.select<FilaDeRecuento>(c(DESDE_EL_CATALOGO, 'n'), params)))),
+      conTenencia
+        ? Promise.all(consultas.map((c) =>
+            this.db.select<FilaDeRecuento>(c(DESDE_LA_COLECCION, 'tengo'), [userId, ...params])))
+        : Promise.resolve(null),
     ]);
+
+    /**
+     * Se cruzan por el valor del grupo: la pareja solo trae los grupos donde
+     * el usuario tiene algo, y uno ausente es un cero. SIEMPRE SOBRE COPIAS:
+     * las filas base pueden venir de la cache y son compartidas; escribir
+     * `tengo` en ellas filtraria la coleccion de un usuario al siguiente.
+     */
+    const cruzar = (filas: readonly FilaDeRecuento[], propias: readonly FilaDeRecuento[] | undefined) => {
+      if (!propias) return filas;
+      const deClave = (v: FilaDeRecuento['valor']) => (v === null ? '\u0000' : String(v));
+      const tenidas = new Map(propias.map((f) => [deClave(f.valor), Number(f.tengo ?? 0)]));
+      return filas.map((f) => ({ ...f, tengo: tenidas.get(deClave(f.valor)) ?? 0 }));
+    };
+    const [rarezas = [], ...porFaceta] = bases.map((filas, i) => cruzar(filas, mias?.[i]));
 
     const facetas: Partial<Record<FacetKey, FacetCount[]>> = {};
     perfil.facets.forEach((f, i) => {

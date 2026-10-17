@@ -5,6 +5,7 @@ import { IngestService, type IngestReport } from '../ingest/index.js';
 import { ScryfallAdapter } from '../adapters/scryfall/index.js';
 import { YgoprodeckAdapter } from '../adapters/ygoprodeck/index.js';
 import { PokemonTcgAdapter } from '../adapters/pokemontcg/index.js';
+import { marcarCatalogoCambiado } from '../db/cache-de-facetas.js';
 import { ImageHarvester, SharpImageEncoder, FileImageStore, ICON_WIDTH } from '../images/index.js';
 import type { GameAdapter, GameCode, IngestWarning } from '@tcg/shared';
 
@@ -134,6 +135,19 @@ async function main(): Promise<void> {
         // Pokemon, por ejemplo, es intermitentemente inestable (P-016).
         console.error(`  [${game}] abortado: ${error instanceof Error ? error.message : String(error)}`);
       }
+    }
+  }
+
+  // La API cachea los recuentos del rail de facetas y no puede enterarse de
+  // esta ingesta, que es otro proceso: la marca en STORAGE_PATH es el aviso.
+  // Tambien tras un juego abortado, que puede haber escrito sets antes de caer,
+  // y tras `--images-only` si la reclasificacion cambio algo. Si no se puede
+  // escribir no se aborta: el TTL de la cache acota el retraso.
+  if (!opciones.imagesOnly || reclasificados > 0) {
+    try {
+      await marcarCatalogoCambiado(config.storagePath);
+    } catch (error) {
+      console.warn(`[facetas] no se pudo marcar el catalogo como cambiado: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 

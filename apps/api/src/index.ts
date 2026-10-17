@@ -6,6 +6,7 @@ import { UserRepository, warmUp } from './auth/index.js';
 import { PackService } from './packs/index.js';
 import { revisarAlmacen, FileImageStore } from './images/index.js';
 import { buildFullServer } from './api/index.js';
+import { CacheEnMemoria, generacionEnFichero, rutaDeLaMarca } from './db/cache-de-facetas.js';
 
 /**
  * Arranque del servidor.
@@ -43,7 +44,16 @@ async function main(): Promise<void> {
   await warmUp();
 
   const app = await buildFullServer({
-    catalog: new CatalogQueryRepository(db),
+    // Los recuentos base del rail se cachean en memoria del proceso: la API
+    // corre en un solo contenedor. La ingesta los invalida dejando una marca
+    // nueva en STORAGE_PATH al terminar (ver cache-de-facetas.ts).
+    catalog: new CatalogQueryRepository(
+      db,
+      new CacheEnMemoria({
+        ttlMs: config.facetasCacheTtlMs,
+        generacion: generacionEnFichero(rutaDeLaMarca(config.storagePath)),
+      }),
+    ),
     logger: true,
     storagePath: config.storagePath,
     auth: {
