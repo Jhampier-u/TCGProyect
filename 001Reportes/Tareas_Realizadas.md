@@ -1,6 +1,6 @@
 # Tareas Realizadas
 
-**Última actualización:** 2026-10-16 (S037)
+**Última actualización:** 2026-10-18 (S038)
 
 | ID | Tarea | Agente | Fecha | Sesión | Evidencia |
 |---|---|---|---|---|---|
@@ -137,3 +137,11 @@
 | T-105 | **La capa de efectos**: lienzo de partículas y rayos que nunca recibe un clic, no existe con movimiento reducido, se para con la pestaña oculta, simula por tiempo y no por fotograma, y limita el `devicePixelRatio` a 2 | Frontend | 2026-10-16 | S037 | `apps/web/src/components/apertura/CapaDeEfectos.tsx`, `apps/web/src/lib/efectos.ts` |
 | T-106 | **El ritual en Sobres**, sustituyendo a `PackReveal`: sobres en secuencia, foco que sigue a la carta de arriba, anuncio de cada revelado en una región viva, marca de carta nueva y espera a que lleguen las rarezas antes de ordenar. Medido: caja de 24 de *151* a 59-60 fps con la anticipación y los rayos | Frontend | 2026-10-16 | S037 | `apps/web/src/components/apertura/Ritual.tsx`, `apps/web/src/pages/Sobres.tsx` |
 | T-107 | **Pruebas E2E del ritual**: teclado con foco real, Saltar, sin lienzo con movimiento reducido, P-001 en el sobre y en las cartas, arte de *151* desde la plantilla del motor y la región viva. **23 recorridos**, con el sobre sin paleta; cada garantía rota a mano y vista fallar | QA | 2026-10-16 | S037 | `e2e/src/ritual.spec.ts` |
+| T-108 | **El perfil de facetas en `@tcg/shared`**: facetas, modos de filtro, valores en orden y celdas de los tres juegos, como datos. La revisión mutó el perfil y 6 de 9 mutaciones pasaban: se fijó todo con igualdad exacta | Arquitectura | 2026-10-18 | S038 | `packages/shared/src/facet-profile.ts` |
+| T-109 | **Migración 0029**: `kind`, `frame`, `color_count`, `attribute` y `link_val`, generadas e indexadas, con la guarda en la clave JSON exclusiva de cada juego porque una columna STORED no puede leer `game_id`. Recuentos y `EXPLAIN` medidos (bitácora de S038) | Base de Datos | 2026-10-18 | S038 | `db/migrations/0029_*` |
+| T-110 | **La API al perfil**: `facetas` en filas y recuentos, 400 que nombra la clave de otro juego, cobertura comprobada en los dos sentidos. **El raíl de Magic sin set bajó de ~0,5 s a ~0,25 s** contando rarezas por id y la tenencia desde la colección, con resultados idénticos a los de antes en cinco casos reales | Backend | 2026-10-18 | S038 | `apps/api/src/db/facetas-sql.ts` |
+| T-111 | **La web al perfil**: un solo catálogo, raíl, fila y chips que recorren el perfil. Pokémon migrado con su suite E2E intacta, sin tocar una aserción | Frontend | 2026-10-18 | S038 | `apps/web/src/lib/facetas-web.ts`, `apps/web/src/lib/celdas.ts` |
+| T-112 | **Magic**: símbolos de maná propios dibujados en CSS desde `{2}{B}` (híbridos, pirexianos, dos caras), con nombre accesible, tokens medidos en los dos temas, y su ficha | Frontend | 2026-10-18 | S038 | `apps/web/src/lib/mana.ts`, `apps/web/src/components/Mana.tsx` |
+| T-113 | **Yu-Gi-Oh!**: atributos con color, ★ nivel, ☆ rango y LINK-n con sus flechas, «?» para ATK -1, razas y subtipos en español, y su ficha | Frontend | 2026-10-18 | S038 | `apps/web/src/lib/ygo.ts`, `apps/web/src/components/NivelYgo.tsx` |
+| T-114 | **Portadas por año, rutas `/mtg` y `/ygo`, inicio activado**. De paso, las rarezas de Magic con su nombre impreso y un test de teclado que fallaba por carrera | Frontend | 2026-10-18 | S038 | `apps/web/src/pages/PortadaPorAnio.tsx` |
+| T-115 | **E2E de los dos catálogos**: color + tipo + «me faltan» con el recuento del raíl igual a las filas, atributo + marco, una ficha de cada juego, la portada enlazando al catálogo filtrado y el 400. **32 recorridos**, cada garantía rota a mano y vista fallar; una aserción del plan que no podía fallar se cambió por un recuento exacto | QA | 2026-10-18 | S038 | `e2e/src/catalogos.spec.ts` |

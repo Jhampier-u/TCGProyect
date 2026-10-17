@@ -32,7 +32,7 @@ C:\ProyectoTCG\
 ├── docker\e2e.Dockerfile        <- imagen de la suite E2E (ADR-009)
 ├── e2e\                         <- suite Playwright. NO es workspace de npm
 │   ├── playwright.config.ts
-│   └── src\  fixtures · humo · sobres (T-040) · mazos (T-053) · iconos (T-066) · catalogo (T-095) · ritual (T-107)
+│   └── src\  fixtures · humo · sobres (T-040) · mazos (T-053) · iconos (T-066) · catalogo (T-095) · ritual (T-107) · catalogos (T-115)
 ├── Claude.md                    <- este archivo (Orquestador)
 ├── 00Master\                    <- contexto absoluto, verdad única
 │   ├── 00_Contexto_Global.md
@@ -162,6 +162,7 @@ C:\ProyectoTCG\
 │       │                   types · predicates · aggregate · mtg · ygo · ptcg
 │       ├── deck-formats\    codecs de import/export, uno por juego (T-048)
 │       │                   types · mtg (texto) · ygo (.ydk) · ptcg (PTCG Live)
+│       ├── facet-profile.ts perfil de facetas y celdas por juego, como datos (T-108)
 │       ├── normalize.ts     normalizeRarityCode, toJsonNumber, ...
 │       ├── normalize.test.ts
 │       └── index.ts
@@ -184,6 +185,7 @@ C:\ProyectoTCG\
 │       │                       catalog-query-repository (H3) · pack-repository (H4)
 │       │                       collection-repository (H6)
 │       │                       deck-repository (H7)
+│       │                       facetas-sql: cada clave del perfil con su SQL (T-110)
 │       │                       plantilla-sql: la plantilla del set, una sola para motor y arte (T-101)
 │       ├── cli\                ingest.ts: CLI para poblar el catalogo
 │       │                       paleta.ts: `npm run sobres:paleta`, dos colores por set (T-102)
@@ -210,10 +212,13 @@ C:\ProyectoTCG\
 │       │          filtros-url (estado del catalogo en la URL) · consultas (claves de cache, P-043)
 │       │          rareza (nivel por juego, T-099) · ritual (maquina de estados, T-104)
 │       │          efectos (particulas por tiempo, T-105) · arte-sobres (arte local, T-103)
-│       ├── pages\ Catalogo · Acceso · Sobres · Coleccion · Mazos · MazoEditor
+│       │          facetas-web · celdas (el perfil en pantalla, T-111) · mana (T-112) · ygo (T-113)
+│       │          juegos · anios (rutas y portada por año, T-114) · colores-de-juego
+│       ├── pages\ Catalogo · PortadaPorAnio · Acceso · Sobres · Coleccion · Mazos · MazoEditor
 │       └── components\ CardTile · DeckBuscador · DeckZona ·
 │                     DeckValidacion · DeckTransferencia · SelectorDeSet ·
 │                     RailDeSet · FilaDeCarta · FichaDeCarta · LimiteDeError
+│                     celdas · Mana · NivelYgo (H9f)
 │                     apertura\ CartaConBrillo · Sobre · CapaDeEfectos · Ritual (H9e)
 └── package.json                 <- npm workspaces
 ```

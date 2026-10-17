@@ -1,7 +1,7 @@
 # 05 — Continuar aquí
 
 **Punto de guardado:** 2026-10-16, en la sesión **S037**
-**Commit:** rama `main`, con H9e fusionado en local el 2026-10-16 (sin subir al remoto) · suite de Vitest y los 26 recorridos E2E en verde · `npm audit` limpio
+**Commit:** rama `main`, con H9e fusionado en local el 2026-10-16 (sin subir al remoto) · suite de Vitest y los 32 recorridos E2E en verde · `npm audit` limpio
 (el recuento exacto sale de `npm test`; publicarlo aqui solo servia para que se quedara viejo)
 
 Este documento existe para retomar el proyecto en otra máquina o en otra sesión sin releer todas las
@@ -201,10 +201,10 @@ son útiles para la lógica, pero **la fidelidad de sus datos determina lo que e
    los sets abribles de los tres juegos. Una nueva se convierte a WebP (640 px de ancho, calidad 82,
    150 KB como mucho), se deja en `apps/web/public/sobres/<juego>/` y su clave va a `DISPONIBLES`;
    `tools/arte-sobres.test.ts` comprueba que lista y disco coinciden.
-2. **H9f, el perfil de facetas y los catálogos de Magic y Yu-Gi-Oh!**: spec escrito en S038
-   (`20_Spec_H9f_FacetasPorJuego.md`), revisado por el usuario, y plan escrito y revisado
-   (`21_Plan_H9f_FacetasPorJuego.md`, T-108 a T-115). Empezar por T-108. T-110 y T-111 van seguidas:
-   entre las dos el catálogo de Pokémon cambia de forma.
+2. **H9f está hecho** (T-108 a T-115) en la rama `h9f-facetas`, sin fusionar: fusionarla es decisión
+   del usuario. Magic y Yu-Gi-Oh! tienen portada por año y catálogo con su raíl, su fila y su ficha;
+   Pokémon pasó al mismo perfil sin cambiar de comportamiento. Antes de **H9c** hay que resolver
+   **P-044**: la base de desarrollo tiene una colección real y precios que no están en el repositorio.
 3. **T-097**, en cuanto haya clave de Pokémon en `.env` y tiempo para una reingesta larga.
 
 **Cómo se ejecuta la suite:**

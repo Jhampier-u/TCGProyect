@@ -117,3 +117,48 @@ el cronometrado de T-110.
 
 El de nivel elige `idx_cards_lvl`, el índice fantasma de P-044, en vez del nuevo `idx_cards_level`.
 En una base limpia sólo existe el nuevo: otra razón para resolver P-044.
+
+### T-110 — La API, y el raíl por debajo de 400 ms
+
+Se hizo como estaba en el plan. Al cronometrar, el raíl de Magic sin set no cumplía el criterio del
+spec:
+
+- **sin sesión**, la rareza tardaba 0,40 s;
+- **con sesión**, cada recuento tardaba entre 0,43 y 0,51 s, porque la tenencia se comprobaba
+  impresión a impresión con `EXISTS`.
+
+Dos cambios, fuera del plan y con el mismo resultado:
+
+1. **las rarezas se cuentan por `rarity_id`** y luego se cruzan con su código;
+2. **la tenencia se cuenta desde la colección del usuario**, en una consulta aparte que corre en
+   paralelo, con `DISTINCT` por impresión, porque una carta normal y foil son dos filas.
+
+Se compararon los resultados viejos y nuevos con igualdad profunda en cinco casos reales (Magic con y
+sin set, Pokémon con y sin set, y Yu-Gi-Oh!), con y sin usuario: **idénticos**. La consulta más
+lenta, ya por HTTP, tarda unos 0,25 s.
+
+El conjunto de conexiones subió de 10 a 16, porque el raíl de Yu-Gi-Oh! con sesión lanza 12
+consultas a la vez.
+
+### T-111 a T-114 — La web
+
+- **T-111.** Pokémon pasó al perfil sin tocar una aserción de su suite E2E, y la ficha conserva su
+  orden de T-094.
+- **T-112 y T-113.** Los símbolos de maná y los atributos llevan tokens medidos en los dos temas.
+- **T-114 y la revisión de pantallas encontraron tres cosas:**
+  - las rarezas de Magic salían con su código («rare»), porque la semilla 0002 guarda la cadena de
+    Scryfall tal cual. Se presentan en la web con su nombre impreso, sin tocar la regla de la
+    semilla;
+  - los tipos de Yu-Gi-Oh! salían mitad en inglés, «Fiend · Monstruo». Se tradujeron las razas y los
+    subtipos, con un test que cubre cada valor medido en la base;
+  - un test de `iconos.spec.ts` fallaba por una carrera: pulsaba antes de que llegara la lista de
+    sets.
+
+### T-115 — Los E2E
+
+Se añadieron seis recorridos, y la suite pasa a **32, todos en verde**. Cada garantía se rompió a mano
+y se vio fallar. La del filtro de tipo, tal como venía en el plan, **no podía fallar**: entre un clic
+y la respuesta la tabla se queda vacía un instante, y «ninguna fila de otro tipo» se cumplía sobre
+cero filas. Ahora espera el número exacto de filas que da la API.
+
+Las fichas de Magic y de Yu-Gi-Oh!, y el 400, también se vieron fallar.

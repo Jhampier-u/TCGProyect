@@ -1,6 +1,6 @@
 # Tareas Pendientes
 
-**Última actualización:** 2026-10-18 (S038) · **Total abiertas:** 9 — las ocho de H9f y T-097, datos de Pokémon
+**Última actualización:** 2026-10-18 (S038) · **Total abiertas:** 1 — T-097, datos de Pokémon
 
 Leyenda de prioridad: 🔴 crítica · 🟠 alta · 🟡 media · ⚪ baja
 
@@ -31,21 +31,12 @@ completo en Sobres, con la suite E2E en 23 recorridos. Queda **del lado del usua
 ilustraciones con los prompts de `19_Prompts_Sobres.md`; hasta entonces cada sobre usa su reserva sin
 arte, que es un diseño terminado y no un hueco.
 
-### H9f — Perfil de facetas por juego, y los catálogos de Magic y Yu-Gi-Oh!
+### H9f — Perfil de facetas, y los catálogos de Magic y Yu-Gi-Oh! ✅ COMPLETADO (S038)
 
-Spec `20_Spec_H9f_FacetasPorJuego.md` y plan `21_Plan_H9f_FacetasPorJuego.md`, ambos de S038. Va antes que H9c por decisión del usuario. Ocho tareas en
-orden; se puede parar limpio después de cualquiera.
-
-| ID | Tarea | Agente | Prio |
-|---|---|---|---|
-| T-108 | **El perfil en `@tcg/shared`**: facetas y celdas por juego, como datos | Arquitectura | 🟠 |
-| T-109 | **Migración 0029**: `kind`, `frame`, `color_count`, `attribute` y `link_val`, indexadas y medidas con `EXPLAIN` | Base de Datos | 🟠 |
-| T-110 | **La API al perfil**: `facetas` en filas y recuentos, Pokémon migrado, cobertura comprobada y 400 a la clave de otro juego | Backend | 🟠 |
-| T-111 | **La web al perfil**: raíl, fila, chips y URL, con Pokémon migrado y su suite E2E intacta | Frontend | 🟠 |
-| T-112 | **Magic**: símbolos de maná propios, celdas y ficha | Frontend | 🟠 |
-| T-113 | **Yu-Gi-Oh!**: atributos, nivel/rango/link, celdas y ficha | Frontend | 🟠 |
-| T-114 | **Portada por año**, rutas `/mtg` y `/ygo`, e inicio activado | Frontend | 🟡 |
-| T-115 | **E2E de los dos catálogos**, cada garantía vista fallar, y cierre | QA | 🟠 |
+T-108 a T-115 cerradas: el perfil declarativo en `@tcg/shared`, la migración 0029 medida, la API y la
+web recorriendo el perfil (Pokémon migrado sin cambiar de comportamiento), Magic con sus símbolos de
+maná, Yu-Gi-Oh! con atributos, nivel, rango y link, las portadas por año, y la suite E2E en 32
+recorridos. Lo siguiente de H9 —las colecciones (H9c)— necesita su spec, y antes resolver P-044.
 
 ### Datos de Pokémon que el catálogo no tiene
 
