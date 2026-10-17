@@ -162,3 +162,35 @@ y la respuesta la tabla se queda vacía un instante, y «ninguna fila de otro ti
 cero filas. Ahora espera el número exacto de filas que da la API.
 
 Las fichas de Magic y de Yu-Gi-Oh!, y el 400, también se vieron fallar.
+
+### La revisión final de la rama
+
+La revisión de la rama entera, código contra base real, dio **lista para fusionar**, sin nada crítico
+ni importante. Comprobó que los valores del perfil coinciden exactamente con los que producen las
+columnas de la 0029, y que filtro y recuento usan el mismo predicado en cada faceta.
+
+Se arreglaron once detalles menores antes de fusionar. El más relevante: **la ficha usaba el juego de
+la ruta y no el de la carta**, y un enlace `/mtg/catalogo?carta=<una de Yu-Gi-Oh!>` la habría pintado
+con las piezas de Magic y ofrecido mazos de Magic. Los demás:
+
+- el multicolor con su propio dorado;
+- la nota de la sección de coste;
+- el ATK/DEF de las fichas (tokens);
+- «Juego Rápido», el nombre oficial de la mágica Quick-Play;
+- un parámetro de faceta vacío que ya no da 400.
+
+Queda anotado, sin hacer: **cachear los recuentos anónimos del raíl**. Con sesión, el raíl de
+Yu-Gi-Oh! lanza 12 consultas contra un conjunto de 16 conexiones, y un segundo usuario simultáneo
+espera en cola.
+
+### Un reloj que retrocedió
+
+A mitad de sesión el reloj del equipo saltó un día atrás (del 2026-10-18 al 2026-10-17). Dos efectos:
+
+- **el límite de altas**, que vive en memoria, calculó una espera de un día. Se vació reiniciando la
+  API;
+- **`tsc --build` dejó de recompilar**: los ficheros compilados quedaron con fecha «futura», más
+  nuevos que su fuente. La API siguió sirviendo código viejo hasta un `tsc --build --force`. Se notó
+  porque un arreglo verificado en los tests no aparecía al pedirlo a la API.
+
+Si vuelve a pasar: compilar con `--force` antes de reiniciar.
