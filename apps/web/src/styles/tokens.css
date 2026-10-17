@@ -153,6 +153,14 @@
   --efecto-leyenda-2: rgb(255 120 200 / 0.35);
   --efecto-leyenda-3: rgb(120 200 255 / 0.35);
   --efecto-foil: rgb(180 220 255 / 0.30);
+  /* El sobre es siempre un objeto oscuro, en los dos temas: su tinta y sus sombras no varian con el tema. */
+  --sobre-tinta: #ffffff;
+  --sobre-oscuro: #07080c;
+  --sobre-sombra: rgb(0 0 0 / 0.6);
+  --sobre-reflejo: rgb(255 255 255 / 0.28);
+  --sobre-reflejo-holo: rgb(173 140 255 / 0.22);
+  --sobre-halo-icono: rgb(255 255 255 / 0.4);
+  --sobre-tira: rgb(255 255 255 / 0.85);
   --fuente-titulo: "Space Grotesk", var(--fuente);
 }
 

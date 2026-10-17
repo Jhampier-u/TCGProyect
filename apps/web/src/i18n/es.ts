@@ -278,6 +278,16 @@ export const ES = {
     tienes: (n: number) => `tienes ${n}`,
   },
 
+  /** El ritual de apertura (H9e-4). */
+  ritual: {
+    rasgar: (set: string) => `Rasgar el sobre de ${set}`,
+    pista: 'Arrastra por el borde para rasgarlo, o pulsa.',
+    saltar: 'Saltar',
+    sinRevelar: (n: number) => `Carta ${n} sin revelar`,
+    nuevas: (n: number) => (n === 1 ? '1 nueva' : `${n} nuevas`),
+    semilla: 'Semilla de la apertura: la hace reproducible',
+  },
+
   error: {
     paginaNoEncontrada: 'Página no encontrada.',
     pantallaRota: 'Algo ha fallado en esta pantalla. El resto de la aplicación sigue funcionando.',

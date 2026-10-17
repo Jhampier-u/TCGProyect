@@ -71,3 +71,41 @@
   .carta-brillo-capa { animation: none !important; }
   .carta-brillo-n2 .carta-brillo-efecto { background-position: 50% 0; }
 }
+
+/* ------------------------------------------------- el sobre sellado (H9e-2) */
+.sobre-armazon { position: relative; display: grid; place-items: center; padding-top: 18px; }
+.sobre-sellado {
+  position: relative; inline-size: 210px; block-size: 340px; padding: 34px 16px 28px;
+  display: flex; flex-direction: column; align-items: center; justify-content: space-between;
+  border: 0; border-radius: 6px; color: var(--sobre-tinta); font-family: var(--fuente-titulo);
+  background:
+    linear-gradient(160deg, color-mix(in srgb, var(--paleta-1) 85%, transparent), color-mix(in srgb, var(--paleta-2) 90%, var(--sobre-oscuro))),
+    var(--fondo);
+  box-shadow: 0 30px 60px var(--sobre-sombra), 0 0 60px color-mix(in srgb, var(--paleta-1) 35%, transparent);
+  clip-path: polygon(0 3%, 4% 0, 8% 3%, 12% 0, 16% 3%, 20% 0, 24% 3%, 28% 0, 32% 3%, 36% 0, 40% 3%, 44% 0, 48% 3%,
+    52% 0, 56% 3%, 60% 0, 64% 3%, 68% 0, 72% 3%, 76% 0, 80% 3%, 84% 0, 88% 3%, 92% 0, 96% 3%, 100% 0, 100% 97%,
+    96% 100%, 92% 97%, 88% 100%, 84% 97%, 80% 100%, 76% 97%, 72% 100%, 68% 97%, 64% 100%, 60% 97%, 56% 100%,
+    52% 97%, 48% 100%, 44% 97%, 40% 100%, 36% 97%, 32% 100%, 28% 97%, 24% 100%, 20% 97%, 16% 100%, 12% 97%,
+    8% 100%, 4% 97%, 0 100%);
+  cursor: pointer;
+}
+/* Con arte: la ilustracion de epoca, tenida por la paleta del set. */
+.sobre-sellado.con-arte {
+  background:
+    linear-gradient(160deg, color-mix(in srgb, var(--paleta-1) 45%, transparent), color-mix(in srgb, var(--paleta-2) 55%, transparent)),
+    var(--arte) center / cover;
+  background-blend-mode: color, normal;
+}
+.sobre-sellado::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(115deg, transparent 25%, var(--sobre-reflejo) 42%, var(--sobre-reflejo-holo) 48%, transparent 60%);
+  mix-blend-mode: screen;
+}
+.sobre-marca { font-size: 10px; letter-spacing: 0.24em; text-transform: uppercase; opacity: 0.8; }
+.sobre-icono { inline-size: 84px; block-size: 84px; object-fit: contain; filter: drop-shadow(0 0 14px var(--sobre-halo-icono)); }
+.sobre-nombre { font-size: 18px; font-weight: 700; text-align: center; text-wrap: balance; }
+.sobre-tira {
+  position: absolute; inset-block-start: 18px; inline-size: 210px; block-size: 18px; z-index: 2;
+  background: repeating-linear-gradient(90deg, var(--sobre-tira) 0 6px, transparent 6px 10px);
+  opacity: 0.55; cursor: grab; border-radius: 2px;
+}
