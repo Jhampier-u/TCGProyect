@@ -5,7 +5,7 @@ import { IngestService, type IngestReport } from '../ingest/index.js';
 import { ScryfallAdapter } from '../adapters/scryfall/index.js';
 import { YgoprodeckAdapter } from '../adapters/ygoprodeck/index.js';
 import { PokemonTcgAdapter } from '../adapters/pokemontcg/index.js';
-import { marcarCatalogoCambiado } from '../db/cache-de-facetas.js';
+import { conMarcaAlTerminar, marcarCatalogoCambiado } from '../db/cache-de-facetas.js';
 import { ImageHarvester, SharpImageEncoder, FileImageStore, ICON_WIDTH } from '../images/index.js';
 import type { GameAdapter, GameCode, IngestWarning } from '@tcg/shared';
 
@@ -101,55 +101,53 @@ async function main(): Promise<void> {
     },
   ];
 
-  // T-069. Barato e idempotente, asi que corre siempre: sin esto, los sets ya
-  // ingestados se quedarian con el valor por defecto hasta que alguien
-  // reingestara los tres juegos enteros.
-  const reclasificados = await repo.reclasificarSets();
-  if (reclasificados > 0) {
-    console.log(`[sets] ${reclasificados} han cambiado de "abrible" tras reclasificar.`);
-  }
-
-  if (!opciones.imagesOnly) {
-    for (const { game, adapter } of adaptadores) {
-      if (opciones.game !== 'ALL' && opciones.game !== game) continue;
-
-      console.log(`\n[${game}] ingestando hasta ${opciones.sets} sets...`);
-      try {
-        const informe: IngestReport = await new IngestService({
-          repository: repo,
-          maxSetsPerRun: opciones.sets,
-          onWarning: (w) => avisos.push(w),
-          onProgress: (e) => {
-            if (e.type === 'set_done') console.log(`  ${e.set}: ${e.prints} impresiones`);
-            if (e.type === 'set_failed') console.log(`  ${e.set}: FALLO — ${e.reason.slice(0, 90)}`);
-          },
-        }).ingest(adapter, { soloSets: opciones.soloSets });
-
-        console.log(
-          `  via=${informe.via} · sets descubiertos ${informe.setsDescubiertos} · ` +
-            `procesados ${informe.setsProcesados} · fallidos ${informe.setsFallidos} · ` +
-            `impresiones ${informe.impresiones}`,
-        );
-      } catch (error) {
-        // Un juego que falla no debe impedir ingestar los otros dos. La API de
-        // Pokemon, por ejemplo, es intermitentemente inestable (P-016).
-        console.error(`  [${game}] abortado: ${error instanceof Error ? error.message : String(error)}`);
-      }
-    }
-  }
-
   // La API cachea los recuentos del rail de facetas y no puede enterarse de
   // esta ingesta, que es otro proceso: la marca en STORAGE_PATH es el aviso.
-  // Tambien tras un juego abortado, que puede haber escrito sets antes de caer,
-  // y tras `--images-only` si la reclasificacion cambio algo. Si no se puede
-  // escribir no se aborta: el TTL de la cache acota el retraso.
-  if (!opciones.imagesOnly || reclasificados > 0) {
-    try {
-      await marcarCatalogoCambiado(config.storagePath);
-    } catch (error) {
-      console.warn(`[facetas] no se pudo marcar el catalogo como cambiado: ${error instanceof Error ? error.message : String(error)}`);
+  // conMarcaAlTerminar la deja al salir de aqui aunque un error lo corte a
+  // medias, porque lo que ya se escribio cuenta. Un Ctrl+C no pasa por el
+  // finally (el CLI no maneja SIGINT): ahi solo queda el TTL de la cache.
+  await conMarcaAlTerminar(() => marcarCatalogoCambiado(config.storagePath), async (tocar) => {
+    // Se toca ANTES de empezar: cualquier error a partir de aqui puede llegar
+    // con sets ya escritos.
+    if (!opciones.imagesOnly) tocar();
+    // T-069. Barato e idempotente, asi que corre siempre: sin esto, los sets ya
+    // ingestados se quedarian con el valor por defecto hasta que alguien
+    // reingestara los tres juegos enteros.
+    const reclasificados = await repo.reclasificarSets();
+    if (reclasificados > 0) {
+      tocar();
+      console.log(`[sets] ${reclasificados} han cambiado de "abrible" tras reclasificar.`);
     }
-  }
+
+    if (!opciones.imagesOnly) {
+      for (const { game, adapter } of adaptadores) {
+        if (opciones.game !== 'ALL' && opciones.game !== game) continue;
+
+        console.log(`\n[${game}] ingestando hasta ${opciones.sets} sets...`);
+        try {
+          const informe: IngestReport = await new IngestService({
+            repository: repo,
+            maxSetsPerRun: opciones.sets,
+            onWarning: (w) => avisos.push(w),
+            onProgress: (e) => {
+              if (e.type === 'set_done') console.log(`  ${e.set}: ${e.prints} impresiones`);
+              if (e.type === 'set_failed') console.log(`  ${e.set}: FALLO — ${e.reason.slice(0, 90)}`);
+            },
+          }).ingest(adapter, { soloSets: opciones.soloSets });
+
+          console.log(
+            `  via=${informe.via} · sets descubiertos ${informe.setsDescubiertos} · ` +
+              `procesados ${informe.setsProcesados} · fallidos ${informe.setsFallidos} · ` +
+              `impresiones ${informe.impresiones}`,
+          );
+        } catch (error) {
+          // Un juego que falla no debe impedir ingestar los otros dos. La API de
+          // Pokemon, por ejemplo, es intermitentemente inestable (P-016).
+          console.error(`  [${game}] abortado: ${error instanceof Error ? error.message : String(error)}`);
+        }
+      }
+    }
+  });
 
   if (opciones.retryFailed) {
     // El contador de T-019 no distingue causas: si el origen estuvo caido una

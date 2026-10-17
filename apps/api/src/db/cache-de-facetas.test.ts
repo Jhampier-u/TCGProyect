@@ -5,8 +5,9 @@ import { join } from 'node:path';
 import { CatalogQueryRepository } from './catalog-query-repository.js';
 import type { Database } from './connection.js';
 import {
-  CacheEnMemoria, SIN_CACHE, generacionEnFichero, marcarCatalogoCambiado, rutaDeLaMarca,
+  CacheEnMemoria, SIN_CACHE, conMarcaAlTerminar, generacionEnFichero, marcarCatalogoCambiado, rutaDeLaMarca,
 } from './cache-de-facetas.js';
+import { mkdir } from 'node:fs/promises';
 
 /**
  * Cache de los recuentos BASE del rail de facetas.
@@ -187,6 +188,36 @@ describe('CacheEnMemoria', () => {
     expect(await cache.obtener('k', async () => 7)).toBe(7);
   });
 
+  it('si el calculo compartido falla, fallan los dos y la entrada se va', async () => {
+    const cache = new CacheEnMemoria({ ttlMs: 60_000 });
+    let calculos = 0;
+    const falla = async (): Promise<number> => {
+      calculos += 1;
+      await new Promise((r) => setTimeout(r, 5));
+      throw new Error('caida');
+    };
+    const [a, b] = await Promise.allSettled([cache.obtener('k', falla), cache.obtener('k', falla)]);
+    expect(a.status).toBe('rejected');
+    expect(b.status).toBe('rejected');
+    expect(calculos).toBe(1);
+    expect(await cache.obtener('k', async () => 7)).toBe(7);
+  });
+
+  it('una entrada calculada con la generacion vieja se descarta aunque acabe despues del cambio', async () => {
+    let gen = 'a';
+    const cache = new CacheEnMemoria({ ttlMs: 60_000, generacion: async () => gen });
+    let soltar!: () => void;
+    const pendiente = new Promise<void>((r) => { soltar = r; });
+    let calculos = 0;
+    const lento = cache.obtener('k', async () => { calculos += 1; await pendiente; return 'viejo'; });
+    await new Promise((r) => setTimeout(r, 0));
+    gen = 'b'; // la ingesta acaba mientras se calcula
+    soltar();
+    expect(await lento).toBe('viejo');
+    expect(await cache.obtener('k', async () => { calculos += 1; return 'nuevo'; })).toBe('nuevo');
+    expect(calculos).toBe(2);
+  });
+
   it('TTL 0 desactiva la cache', async () => {
     const cache = new CacheEnMemoria({ ttlMs: 0 });
     let calculos = 0;
@@ -236,5 +267,53 @@ describe('la marca de generacion en disco (invalidacion entre procesos)', () => 
     } finally {
       await rm(dir, { recursive: true, force: true });
     }
+  });
+
+  it('una marca que existe pero no se puede leer avisa UNA vez; si no existe, calla', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'tcg-gen-'));
+    try {
+      const avisos: string[] = [];
+      const ausente = generacionEnFichero(join(dir, 'no-existe'), (m) => avisos.push(m));
+      await ausente();
+      expect(avisos).toEqual([]);
+
+      // Un directorio en lugar del fichero: existe y readFile falla (EISDIR).
+      const ruta = join(dir, 'es-un-directorio');
+      await mkdir(ruta);
+      const ilegible = generacionEnFichero(ruta, (m) => avisos.push(m));
+      expect(await ilegible()).toBe(await ilegible());
+      await ilegible();
+      expect(avisos).toHaveLength(1);
+      expect(avisos[0]).toContain(ruta);
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
+});
+
+describe('conMarcaAlTerminar (la ingesta)', () => {
+  it('marca aunque el trabajo falle, si ya habia tocado el catalogo, y relanza el error', async () => {
+    let marcas = 0;
+    await expect(conMarcaAlTerminar(async () => { marcas += 1; }, async (tocar) => {
+      tocar();
+      throw new Error('a medias');
+    })).rejects.toThrow('a medias');
+    expect(marcas).toBe(1);
+  });
+
+  it('no marca si el trabajo no toco el catalogo', async () => {
+    let marcas = 0;
+    expect(await conMarcaAlTerminar(async () => { marcas += 1; }, async () => 5)).toBe(5);
+    expect(marcas).toBe(0);
+  });
+
+  it('un fallo al marcar no tapa el resultado ni el error del trabajo', async () => {
+    const avisos: string[] = [];
+    const marcarRoto = async () => { throw new Error('disco lleno'); };
+    expect(await conMarcaAlTerminar(marcarRoto, async (tocar) => { tocar(); return 1; }, (m) => avisos.push(m))).toBe(1);
+    await expect(conMarcaAlTerminar(marcarRoto, async (tocar) => { tocar(); throw new Error('original'); }, (m) => avisos.push(m)))
+      .rejects.toThrow('original');
+    expect(avisos).toHaveLength(2);
+    expect(avisos[0]).toContain('disco lleno');
   });
 });

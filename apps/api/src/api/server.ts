@@ -272,6 +272,11 @@ export async function buildFullServer(options: ApiOptions & { auth: NonNullable<
       // inmutables. Un ano de cache evita miles de peticiones condicionales.
       maxAge: '365d',
       immutable: true,
+      // El plugin sirve los ficheros ocultos por defecto ('allow'). En
+      // STORAGE_PATH vive tambien la marca de generacion del catalogo
+      // (cache-de-facetas.ts), que no es publica; y con la cache de arriba un
+      // navegador la guardaria un ano. Nada oculto sale por aqui.
+      dotfiles: 'ignore',
     });
   }
 

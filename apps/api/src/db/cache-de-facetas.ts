@@ -126,17 +126,36 @@ function congelar<T>(valor: T): T {
  * migracion nueva solo para un contador. Si la marca no se puede leer o
  * escribir, el TTL sigue acotando cuanto dura un recuento viejo.
  *
- * Fichero con punto delante: @fastify/static no sirve ficheros ocultos.
+ * Fichero con punto delante y `dotfiles: 'ignore'` en el registro de
+ * @fastify/static (server.ts): su defecto es 'allow', asi que sin esa opcion
+ * /images/.catalogo-generacion se serviria, y con la cache de un ano.
  */
 export function rutaDeLaMarca(storagePath: string): string {
   return join(storagePath, '.catalogo-generacion');
 }
 
-export function generacionEnFichero(ruta: string): () => Promise<string> {
+/**
+ * La API crea UN lector al arrancar, asi que "una vez por lector" es una vez
+ * por proceso. Que no exista la marca es normal (nunca se ha ingestado con
+ * esta version) y calla. Que exista y no se pueda leer -- permisos, un
+ * directorio con ese nombre -- deja la invalidacion muerta en silencio y solo
+ * quedaria el TTL: eso se avisa, pero una vez, que se lee en cada peticion.
+ */
+export function generacionEnFichero(
+  ruta: string,
+  avisar: (mensaje: string) => void = (m) => console.warn(m),
+): () => Promise<string> {
+  let avisado = false;
   return async () => {
     try {
       return (await readFile(ruta, 'utf8')).trim();
-    } catch {
+    } catch (error) {
+      const codigo = (error as NodeJS.ErrnoException).code;
+      if (codigo !== 'ENOENT' && !avisado) {
+        avisado = true;
+        avisar(`[facetas] la marca ${ruta} existe pero no se puede leer (${codigo ?? String(error)}): ` +
+          'las ingestas no invalidaran la cache, solo caducara por TTL.');
+      }
       return '';
     }
   };
@@ -146,4 +165,34 @@ export function generacionEnFichero(ruta: string): () => Promise<string> {
 export async function marcarCatalogoCambiado(storagePath: string): Promise<void> {
   await mkdir(storagePath, { recursive: true });
   await writeFile(rutaDeLaMarca(storagePath), `${randomUUID()}\n`, 'utf8');
+}
+
+/**
+ * Envuelve la parte de la ingesta que escribe el catalogo. El trabajo llama a
+ * `tocar()` cuando puede haber cambiado algo, y al salir -- bien o MAL -- se
+ * deja la marca. Por eso un `finally`: una ingesta que cae a medias ya ha
+ * escrito sets, y sin marca la API seguiria enseniando los recuentos de antes
+ * hasta el TTL. Si el trabajo no toco nada (`--images-only` sin sets
+ * reclasificados) no se marca: vaciar la cache de todos para nada es coste.
+ *
+ * Un fallo al marcar se avisa y no se propaga: no debe tapar ni el resultado
+ * ni el error original de la ingesta, que es el que hay que leer.
+ */
+export async function conMarcaAlTerminar<T>(
+  marcar: () => Promise<void>,
+  trabajo: (tocar: () => void) => Promise<T>,
+  avisar: (mensaje: string) => void = (m) => console.warn(m),
+): Promise<T> {
+  let tocado = false;
+  try {
+    return await trabajo(() => { tocado = true; });
+  } finally {
+    if (tocado) {
+      try {
+        await marcar();
+      } catch (error) {
+        avisar(`[facetas] no se pudo marcar el catalogo como cambiado: ${error instanceof Error ? error.message : String(error)}`);
+      }
+    }
+  }
 }
