@@ -70,7 +70,7 @@ function volteadores(page: Page): Locator {
   return sobre(page).locator('button[aria-pressed]');
 }
 
-async function abrirUnSobre(page: Page, nombreDeSet: string): Promise<void> {
+async function abrirUnSobre(page: Page, nombreDeSet: string, rasgar = true): Promise<void> {
   await page.goto('/sobres');
   await expect(page.getByRole('heading', { name: 'Abrir sobres' })).toBeVisible();
 
@@ -85,6 +85,10 @@ async function abrirUnSobre(page: Page, nombreDeSet: string): Promise<void> {
 
   await page.getByRole('button', { name: 'Abrir' }).click();
   await expect(sobre(page)).toBeVisible();
+
+  // Desde H9e el sobre llega SELLADO: las cartas no existen hasta rasgarlo. Con
+  // movimiento reducido no hay ritual ni sobre que rasgar, y el paso no aplica.
+  if (rasgar) await sobre(page).getByRole('button', { name: /^Rasgar el sobre/ }).click();
 }
 
 test('las cartas llegan boca abajo y el volteo TERMINA', async ({ browser, request, usuario }) => {
@@ -124,14 +128,14 @@ test('T-040 no es vacuo: con movimiento reducido NO hay volteo que probar', asyn
   usuario,
 }) => {
   // Si este test se comportara igual que el anterior, el anterior no estaria
-  // tocando el camino de la animacion. `PackReveal` llama a `useReducedMotion()`
-  // y con movimiento reducido revela TODAS las cartas de golpe.
+  // tocando el camino de la animacion. El ritual (`Ritual`) llama a
+  // `useReducedMotion()` y con movimiento reducido revela TODAS las cartas de golpe.
   const { page, cerrar } = await paginaCon(browser, 'reduce');
   try {
     const set = await setAbribleDeYgo(request);
     await iniciarSesion(page, usuario.token);
 
-    await abrirUnSobre(page, set.name);
+    await abrirUnSobre(page, set.name, false);
 
     // Ya reveladas, sin un solo clic.
     const cartas = volteadores(page);

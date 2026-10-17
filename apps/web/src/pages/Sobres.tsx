@@ -4,7 +4,7 @@ import type { GameCode } from '@tcg/shared';
 import { api, ApiError, type PackOpening } from '../lib/api.js';
 import { useAuth } from '../lib/auth.js';
 import { consultaRarezas, consultaSets } from '../lib/consultas.js';
-import { PackReveal } from '../components/PackReveal.js';
+import { Ritual } from '../components/apertura/Ritual.js';
 import { SelectorDeSet } from '../components/SelectorDeSet.js';
 import { ES } from '../i18n/es.js';
 
@@ -45,6 +45,8 @@ export function Sobres() {
   //
   // Mejor no ofrecerlo que dejar al usuario chocar con el error.
   const abribles = (sets.data ?? []).filter((s) => s.poolSize > 0 && s.isOpenable);
+  // El set del sobre: su arte, su paleta y su icono visten el sobre sellado.
+  const setElegido = abribles.find((s) => s.id === setId) ?? null;
 
   const abrir = useMutation({
     mutationFn: async () => {
@@ -132,14 +134,17 @@ export function Sobres() {
         </div>
       )}
 
-      {aperturas.map((a) => (
-        <PackReveal
+      {/* El primer sobre, ritual completo; del segundo en adelante, modo rapido (spec, seccion 7). */}
+      {aperturas.map((a, i) => (
+        <Ritual
           key={a.openingId}
           game={game}
           cards={a.cards}
           tiers={tiers}
           openingId={a.openingId}
           seed={a.seed}
+          set={setElegido}
+          rapido={i > 0}
         />
       ))}
     </>

@@ -138,9 +138,11 @@ export function CapaDeEfectos({ disparo, nivel }: Props) {
   }, [reducido]);
 
   useEffect(() => {
-    if (reducido || disparo === ultimo.current) return;
+    if (disparo === ultimo.current) return;
+    // Se anota ANTES de mirar `reducido`: un revelado hecho con movimiento
+    // reducido queda atendido, y no estalla tarde al quitar la preferencia.
     ultimo.current = disparo;
-    if (disparo === 0) return;
+    if (reducido || disparo === 0) return;
     const nivelRevelado = nivelActual.current;
     const c = lienzo.current;
     if (!c) return;
