@@ -110,3 +110,26 @@ export type {
   DeckExportEntry,
   DeckCodec,
 } from './deck-formats/index.js';
+
+export {
+  FACET_KEYS,
+  FACET_PROFILES,
+  CELL_KEYS,
+  CELL_FIELDS,
+  ROW_FIELDS,
+  ROW_FIELD_KIND,
+  SIN_VALOR,
+  isFacetKey,
+  facetOf,
+  rowFieldsOf,
+} from './facet-profile.js';
+export type {
+  FacetKey,
+  FacetMode,
+  FacetDef,
+  FacetProfile,
+  FacetValues,
+  CellKey,
+  RowField,
+  RowFacets,
+} from './facet-profile.js';
