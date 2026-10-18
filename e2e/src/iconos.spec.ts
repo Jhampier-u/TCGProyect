@@ -71,11 +71,18 @@ test('el selector se maneja entero con el teclado', async ({ page, usuario }) =>
   // Abrir con flecha, bajar una y elegir con Enter. Es lo minimo que un
   // `<select>` nativo hace y lo primero que se pierde al sustituirlo.
   await page.keyboard.press('ArrowDown');
-  await expect(page.getByRole('listbox', { name: 'Set' })).toBeVisible();
+  const lista = page.getByRole('listbox', { name: 'Set' });
+  await expect(lista).toBeVisible();
+  // Los sets llegan de la API: hasta entonces la lista solo tiene la opcion
+  // vacia, y "bajar una" no tendria adonde ir. Se espera a que haya sets, que
+  // es lo que haria una persona; si nunca llegan, el test falla aqui y lo dice.
+  await expect
+    .poll(() => lista.getByRole('option').count(), { message: 'la lista de sets no llego a cargarse' })
+    .toBeGreaterThan(1);
   await page.keyboard.press('ArrowDown');
   await page.keyboard.press('Enter');
 
-  await expect(page.getByRole('listbox', { name: 'Set' })).toBeHidden();
+  await expect(lista).toBeHidden();
   // El foco vuelve al boton: sin esto, el teclado se queda en ninguna parte.
   await expect(boton).toBeFocused();
   // Y ha elegido algo de verdad, no el hueco vacio: el nombre lo dice.
