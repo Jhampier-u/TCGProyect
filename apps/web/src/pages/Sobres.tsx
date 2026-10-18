@@ -204,7 +204,7 @@ export function Sobres() {
       )}
 
       {error && (
-        <div className="aviso error">
+        <div className="aviso error" role="alert">
           {error}
           {fallida && (
             <>

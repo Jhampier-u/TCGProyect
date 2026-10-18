@@ -68,6 +68,9 @@ export function CapaDeEfectos({ disparo, nivel, cartaRevelada }: Props) {
       const escala = limitarDpr(window.devicePixelRatio);
       c.width = Math.max(1, Math.round(c.clientWidth * escala));
       c.height = Math.max(1, Math.round(c.clientHeight * escala));
+      // Con otro tamano el origen medido ya no apunta a la carta: los rayos
+      // vuelven al centro en vez de quedarse en un punto que se ha desplazado.
+      origenRayos.current = null;
     };
     ajustar();
     const observador = new ResizeObserver(ajustar);

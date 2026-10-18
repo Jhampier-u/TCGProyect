@@ -118,13 +118,14 @@
 .sobre-icono { inline-size: 84px; block-size: 84px; object-fit: contain; filter: drop-shadow(0 0 14px var(--sobre-halo-icono)); }
 /* La sigla del set en lugar del icono: una insignia de cristal en el circulo del
    emblema. El sobre es oscuro en los dos temas, asi que tira de los tokens
-   `--sobre-*` y no de los de cristal (que se aclaran en tema claro). La talla
-   baja con el largo: 104px / letras, con techo de 30px, deja hueco a 6 o mas. */
+   `--sobre-*` y no de los de cristal (que se aclaran en tema claro). La caja de
+   contenido mide 72px (84 menos el relleno): 88px / letras, entre 11 y 30px.
+   Hoy la sigla mas larga de YGO tiene 4 letras (22px); 6 o mas siguen cabiendo. */
 .sobre-sigla {
   display: grid; place-items: center; border-radius: 50%; overflow: hidden;
   padding-inline: 6px; box-sizing: border-box;
   font-family: var(--fuente-titulo); font-weight: 700; line-height: 1; letter-spacing: 0.04em;
-  font-size: min(30px, calc(104px / var(--sigla-largo, 4))); text-transform: uppercase;
+  font-size: max(11px, min(30px, calc(88px / var(--sigla-largo, 4)))); text-transform: uppercase;
   color: var(--sobre-tinta); text-wrap: nowrap;
   background:
     linear-gradient(150deg, var(--sobre-reflejo), transparent 55%),
@@ -201,3 +202,6 @@
 }
 /* "Abrir otro" mientras se pide: inerte pero enfocable (aria-disabled, no disabled). */
 .sobre-cabecera button[aria-disabled="true"] { opacity: 0.45; cursor: progress; }
+
+/* Reintentar en un aviso mientras se repite: inerte pero enfocable (aria-disabled). */
+.aviso button[aria-disabled="true"] { opacity: 0.45; cursor: progress; }

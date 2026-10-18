@@ -206,5 +206,31 @@ test('el sobre de Yu-Gi-Oh! lleva la sigla del set, no una foto de producto', as
   const sellado = region(page).getByRole('button', { name: /^Rasgar el sobre/ });
   await expect(sellado).toBeVisible();
   await expect(sellado.locator('img')).toHaveCount(0);
-  await expect(sellado).toContainText(set!.code);
+  // El emblema exacto: decorativo (aria-hidden) y con la sigla, nada mas.
+  const emblema = sellado.locator('[aria-hidden="true"]', { hasText: set!.code });
+  await expect(emblema).toHaveCount(1);
+  await expect(emblema).toHaveText(set!.code);
+});
+
+test('cambiar de juego tras un fallo quita el aviso y Reintentar', async ({ page, request, usuario }) => {
+  // Reintentar tras cambiar de juego abriria un sobre que la guarda de juego
+  // descartaria al llegar: el aviso tiene que irse con el juego.
+  await page.route('**/api/packs/open', (ruta) =>
+    ruta.fulfill({ status: 500, json: { error: 'internal', message: 'Fallo simulado' } }),
+  );
+  const set = await setAbribleDeYgo(request);
+  await iniciarSesion(page, usuario.token);
+  await page.goto('/sobres');
+  await page.getByRole('combobox', { name: 'Juego' }).selectOption('YGO');
+  await page.getByRole('button', { name: /^Set:/ }).click();
+  await page.getByRole('listbox', { name: 'Set' }).getByRole('option', { name: set.name }).first().click();
+  await page.getByRole('button', { name: 'Abrir', exact: true }).click();
+
+  const aviso = page.getByRole('alert').filter({ hasText: 'Fallo simulado' });
+  await expect(aviso).toBeVisible();
+  await expect(aviso.getByRole('button', { name: 'Reintentar' })).toBeVisible();
+
+  await page.getByRole('combobox', { name: 'Juego' }).selectOption('PTCG');
+  await expect(aviso).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Reintentar' })).toHaveCount(0);
 });
