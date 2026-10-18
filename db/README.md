@@ -67,6 +67,7 @@ mysql -u root -p < db/migrations/0001_initial_schema.down.sql
 | `0026_the_list_y_slot_de_tierra` | `pack_slots.card_filter` y las entradas `{"set":...}` (T-085) | ✅ rollback probado |
 | `0027_ptcg_facetas` | Columnas generadas e índices para tipo, categoría y marca de regulación de Pokémon (T-091) | ✅ rollback ejecutado y reaplicado |
 | `0028_set_palette` | `sets.palette` JSON NULL: los dos colores con que se tiñe el sobre de cada set (T-101) | ✅ rollback ejecutado y reaplicado |
+| `0029_facetas_mtg_ygo` | Columnas generadas e índices para las facetas de Magic y Yu-Gi-Oh! (`kind`, `frame`, `color_count`, `attribute`, `link_val`) y el índice del nivel (T-109) | ✅ rollback ejecutado y reaplicado |
 
 > Esta tabla es un índice, no la fuente de verdad. **La cabecera de cada migración lleva su
 > razonamiento completo** —qué se midió, de dónde sale cada peso, qué se descartó y por qué—, y es
