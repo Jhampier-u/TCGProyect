@@ -1,4 +1,6 @@
+import { useEffect, useState } from 'react';
 import { NavLink, Navigate, Route, Routes, useLocation } from 'react-router-dom';
+import type { GameCode } from '@tcg/shared';
 import { useAuth } from './lib/auth.js';
 import { Catalogo } from './pages/Catalogo.js';
 import { Acceso } from './pages/Acceso.js';
@@ -8,7 +10,9 @@ import { Mazos } from './pages/Mazos.js';
 import { MazoEditor } from './pages/MazoEditor.js';
 import { Inicio } from './pages/Inicio.js';
 import { Portada } from './pages/ptcg/Portada.js';
+import { PortadaPorAnio } from './pages/PortadaPorAnio.js';
 import { JuegoLayout } from './layouts/JuegoLayout.js';
+import { SEGMENTO, juegoDeRuta } from './lib/juegos.js';
 import { ES } from './i18n/es.js';
 import { LimiteDeError } from './components/LimiteDeError.js';
 
@@ -27,13 +31,24 @@ export function App() {
   // La clave reinicia el limite al cambiar de pagina: si no, tras un fallo
   // seguiria ensenando el error aunque el usuario navegara a otra parte.
   const { pathname } = useLocation();
+  // "Catalogo" lleva al del juego en el que se esta; fuera de uno, al del
+  // ultimo juego visitado en esta sesion; y si no ha habido ninguno, a elegir
+  // juego (H9f). Lo segundo es lo que hace que ir de Pokemon a "Mis mazos" y
+  // volver por el menu no te saque de Pokemon: lo comprueba humo.spec.ts.
+  const juegoActual = juegoDeRuta(pathname);
+  const [ultimoJuego, setUltimoJuego] = useState<GameCode | null>(juegoActual);
+  useEffect(() => {
+    if (juegoActual) setUltimoJuego(juegoActual);
+  }, [juegoActual]);
+  const juegoDelMenu = juegoActual ?? ultimoJuego;
+  const destinoCatalogo = juegoDelMenu ? `/${SEGMENTO[juegoDelMenu]}/catalogo` : '/';
 
   return (
     <>
       <header className="cabecera">
         <NavLink to="/" className="marca">{ES.navegacion.marca}</NavLink>
         <nav className="nav">
-          <NavLink to="/ptcg/catalogo" className={({ isActive }) => (isActive ? 'activo' : '')}>
+          <NavLink to={destinoCatalogo} end={destinoCatalogo === '/'} className={({ isActive }) => (isActive ? 'activo' : '')}>
             {ES.navegacion.catalogo}
           </NavLink>
           <NavLink to="/sobres" className={({ isActive }) => (isActive ? 'activo' : '')}>
@@ -66,10 +81,18 @@ export function App() {
           <Route path="/" element={<Inicio />} />
           <Route path="/acceso" element={<Acceso />} />
 
-          {/* Lo de cada juego cuelga de su ruta y su `data-juego`. Hoy solo
-              Pokemon: Magic y Yu-Gi-Oh! llegan cuando este valide el diseno. */}
+          {/* Lo de cada juego cuelga de su ruta y su `data-juego`. Pokemon tiene
+              su portada por epocas; Magic y Yu-Gi-Oh!, la de anios (H9f). */}
           <Route path="/ptcg" element={<JuegoLayout juego="PTCG" />}>
             <Route index element={<Portada />} />
+            <Route path="catalogo" element={<Catalogo />} />
+          </Route>
+          <Route path="/mtg" element={<JuegoLayout juego="MTG" />}>
+            <Route index element={<PortadaPorAnio />} />
+            <Route path="catalogo" element={<Catalogo />} />
+          </Route>
+          <Route path="/ygo" element={<JuegoLayout juego="YGO" />}>
+            <Route index element={<PortadaPorAnio />} />
             <Route path="catalogo" element={<Catalogo />} />
           </Route>
 

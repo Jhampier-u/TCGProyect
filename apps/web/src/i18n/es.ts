@@ -119,6 +119,13 @@ export const ES = {
     },
   },
 
+  /** La portada por año de Magic y Yu-Gi-Oh! (H9f, F-8). */
+  portadaAnio: {
+    entradilla: (sets: number, anios: number) =>
+      `${sets} sets publicados a lo largo de ${anios} ${anios === 1 ? 'año' : 'años'}.`,
+    sinFecha: 'Sin fecha',
+  },
+
   catalogo: {
     todasLasRarezas: 'Todas las rarezas',
     buscarPlaceholder: 'Buscar por nombre o texto…',

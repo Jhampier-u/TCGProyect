@@ -726,7 +726,8 @@ a.tarjeta-juego:hover { border-color: var(--juego-acento, var(--acento)); text-d
 .mana-caras { color: var(--texto-tenue); font-size: var(--paso-00); padding-inline: 2px; }
 .ficha-insignias .mana-simbolo { inline-size: 22px; block-size: 22px; font-size: 12px; }
 .col-mana { inline-size: 7em; }
-.col-fr { inline-size: 4.5em; text-align: center; }
+/* Sin salto: "Lealtad 3" partido en dos lineas descuadraba la fila (T-114). */
+.col-fr { inline-size: 5.5em; text-align: center; white-space: nowrap; }
 .tabla-consulta th.col-fr { text-align: center; }
 
 /* ------------------------------------- nivel, rango y link de Yu-Gi-Oh! (H9f) */

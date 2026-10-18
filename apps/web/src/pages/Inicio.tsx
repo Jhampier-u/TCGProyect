@@ -30,11 +30,11 @@ const JUEGOS: Juego[] = [
   },
   {
     codigo: 'MTG', atributo: 'mtg', ruta: '/mtg',
-    nombre: ES.juegos.mtg.nombre, resumen: ES.juegos.mtg.resumen, listo: false,
+    nombre: ES.juegos.mtg.nombre, resumen: ES.juegos.mtg.resumen, listo: true,
   },
   {
     codigo: 'YGO', atributo: 'ygo', ruta: '/ygo',
-    nombre: ES.juegos.ygo.nombre, resumen: ES.juegos.ygo.resumen, listo: false,
+    nombre: ES.juegos.ygo.nombre, resumen: ES.juegos.ygo.resumen, listo: true,
   },
 ];
 
