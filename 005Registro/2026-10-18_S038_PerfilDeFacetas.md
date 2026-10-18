@@ -78,3 +78,42 @@ aplicadas entre el 2026-08-30 y el 2026-09-01 que no existen en ningún sitio de
 colección real, los precios y las entidades HTML. Cae en el hueco sin bitácora entre S036 y S037, y
 parece trabajo de H9c hecho en otra copia. Queda abierto como P-044 hasta que el usuario diga de
 dónde sale.
+
+## Ejecución
+
+### T-108 — El perfil
+
+Se hizo tal como estaba en el plan. La revisión probó las pruebas mutando el perfil, y **6 de 9
+mutaciones pasaban**: valores reordenados, valores borrados, el `allowsNone` del nivel. Se añadió una
+prueba que fija, con igualdad exacta, las facetas, los modos, los valores y las celdas de los tres
+juegos. Las cinco mutaciones repetidas fallan ya.
+
+### T-109 — La migración 0029, medida
+
+Se aplicó a la base de desarrollo en unos 20 s y luego se probó la vuelta atrás y la reaplicación.
+Todos los recuentos coinciden con los del plan:
+
+- **Magic, por tipo**: criatura 20.002, otra 3.320 y el resto como en el spec.
+- **Magic, por número de colores**: 0 → 7.769, 1 → 25.922, 2 → 4.053.
+- **Yu-Gi-Oh!**: 9.098 monstruos repartidos en ocho marcos, y atributos y link como en el spec.
+- **Pokémon**: todas sus filas nulas en las columnas nuevas.
+
+`EXPLAIN`, sobre `cards`:
+
+| Filtro | Índice | Filas estimadas |
+|---|---|---|
+| `'U' MEMBER OF colors` | `idx_cards_mtg_colors` | 7.302 |
+| `color_count = 0 AND kind <> 'other'` | `idx_cards_color_count` | 14.796 |
+| `color_count >= 2` | `idx_cards_color_count` (rango) | 8.962 |
+| Yu-Gi-Oh! `kind = 'spell'` | `idx_cards_kind` | 2.812 |
+| `frame = 'xyz'` | `idx_cards_frame` | 596 |
+| `attribute = 'DARK'` | `idx_cards_attribute` | 2.601 |
+| `link_val = 2` | `idx_cards_link_val` | 220 |
+| `lvl = 4 AND NOT (frame <=> 'link')` | `idx_cards_lvl` (el de P-044) | 2.568 |
+| Magic `kind = 'creature'`, tramos de coste | `uq_cards_game_oracle` | 36.337 |
+
+Los dos filtros poco selectivos recorren Magic por `game_id`, como el plan aceptaba. Su garantía es
+el cronometrado de T-110.
+
+El de nivel elige `idx_cards_lvl`, el índice fantasma de P-044, en vez del nuevo `idx_cards_level`.
+En una base limpia sólo existe el nuevo: otra razón para resolver P-044.

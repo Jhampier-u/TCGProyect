@@ -149,7 +149,8 @@ C:\ProyectoTCG\
 │       ├── 0025_mtg_epocas_de_sobre.{up,down}.sql
 │       ├── 0026_the_list_y_slot_de_tierra.{up,down}.sql
 │       ├── 0027_ptcg_facetas.{up,down}.sql
-│       └── 0028_set_palette.{up,down}.sql
+│       ├── 0028_set_palette.{up,down}.sql
+│       └── 0029_facetas_mtg_ygo.{up,down}.sql
 │
 ├── packages\shared\             <- @tcg/shared: contrato de dominio
 │   └── src\
