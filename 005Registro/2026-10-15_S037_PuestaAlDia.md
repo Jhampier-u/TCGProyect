@@ -470,3 +470,42 @@ accesible del botón.
 - ninguno llega a recortarse.
 
 Revisado en pantalla: todos quedan dentro de la franja tranquila del arte.
+
+## Pulido del ritual (2026-10-18)
+
+De lo que dejó anotado la revisión final:
+
+- **Las partículas nacen en la carta revelada**, no en el centro de la escena. La geometría vive en
+  `origenRelativo` (`lib/efectos.ts`), que es pura y está probada: pasa a píxeles del lienzo con el
+  mismo tope de `devicePixelRatio` y deja el punto siempre dentro. Mide el hueco de la bandeja y no
+  el botón, porque el botón aún lleva la transformación del viaje desde el mazo. Los rayos giran
+  sobre el mismo origen.
+- **«Reintentar» si falla la apertura.** Repite la misma petición (juego, set y cantidad). Cambiar
+  de juego borra el error, y la guarda que descarta respuestas de otro juego se mantiene.
+- **El emblema de Yu-Gi-Oh! es la sigla del set** (LOB, RA05, BP01) en una insignia de cristal, no
+  la foto del producto, que sobre el arte parecía una pegatina. Lo mismo para cualquier set sin
+  icono. Magic y Pokémon conservan su icono.
+- `CartaConBrillo` cancela su fotograma pendiente al desmontarse, y el esquema de `palette` gana
+  `pattern`. Es hexadecimal sin distinguir mayúsculas, como `paletaValida`.
+
+**Tres recorridos E2E nuevos**, y la suite pasa a 26. Los tres se vieron fallar sin su arreglo:
+
+- uno que responde 500 a la primera apertura y exige que Reintentar repita la petición idéntica;
+- otro que usa un set de Yu-Gi-Oh! **con** icono, para probar que la foto se descarta a propósito.
+- otro que cambia de juego tras un fallo y exige que desaparezcan el aviso y Reintentar.
+
+Al mirarlo en pantalla, el guion de captura repitió el error que S037 cazó en T-107: pulsaba la
+carta antes de que el mazo estuviera pintado y no revelaba ninguna.
+
+El brillo de rareza en la Colección no entra aquí: va con H9c, que rehace esa página.
+
+La revisión de este pulido dejó cuatro detalles menores, ya aplicados:
+
+- la sigla mide lo que cabe en el círculo;
+- el aviso de error es `role="alert"`;
+- Reintentar se ve deshabilitado mientras espera;
+- la prueba del emblema mira la sigla exacta.
+
+Y cazó uno de fondo: los rayos guardaban el punto de origen en píxeles, y revelar la carta puede
+añadir una fila a la bandeja y cambiar el tamaño del lienzo. Ahora guardan **la carta** y la vuelven a
+medir en cada fotograma, así que la siguen.

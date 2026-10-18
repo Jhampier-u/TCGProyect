@@ -1,7 +1,7 @@
 # 05 — Continuar aquí
 
 **Punto de guardado:** 2026-10-16, en la sesión **S037**
-**Commit:** rama `main`, con H9e fusionado en local el 2026-10-16 (sin subir al remoto) · suite de Vitest y los 23 recorridos E2E en verde · `npm audit` limpio
+**Commit:** rama `main`, con H9e fusionado en local el 2026-10-16 (sin subir al remoto) · suite de Vitest y los 26 recorridos E2E en verde · `npm audit` limpio
 (el recuento exacto sale de `npm test`; publicarlo aqui solo servia para que se quedara viejo)
 
 Este documento existe para retomar el proyecto en otra máquina o en otra sesión sin releer todas las
