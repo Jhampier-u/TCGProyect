@@ -33,7 +33,7 @@ arte, que es un diseño terminado y no un hueco.
 
 ### H9f — Perfil de facetas por juego, y los catálogos de Magic y Yu-Gi-Oh!
 
-Spec `20_Spec_H9f_FacetasPorJuego.md` (S038). Va antes que H9c por decisión del usuario. Ocho tareas en
+Spec `20_Spec_H9f_FacetasPorJuego.md` y plan `21_Plan_H9f_FacetasPorJuego.md`, ambos de S038. Va antes que H9c por decisión del usuario. Ocho tareas en
 orden; se puede parar limpio después de cualquiera.
 
 | ID | Tarea | Agente | Prio |

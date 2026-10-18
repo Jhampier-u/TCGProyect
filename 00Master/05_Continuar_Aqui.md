@@ -202,8 +202,9 @@ son útiles para la lógica, pero **la fidelidad de sus datos determina lo que e
    150 KB como mucho), se deja en `apps/web/public/sobres/<juego>/` y su clave va a `DISPONIBLES`;
    `tools/arte-sobres.test.ts` comprueba que lista y disco coinciden.
 2. **H9f, el perfil de facetas y los catálogos de Magic y Yu-Gi-Oh!**: spec escrito en S038
-   (`20_Spec_H9f_FacetasPorJuego.md`), decidido con el usuario sección a sección. Falta su revisión
-   escrita del spec y después el plan (será el documento 21), T-108 a T-115.
+   (`20_Spec_H9f_FacetasPorJuego.md`), revisado por el usuario, y plan escrito y revisado
+   (`21_Plan_H9f_FacetasPorJuego.md`, T-108 a T-115). Empezar por T-108. T-110 y T-111 van seguidas:
+   entre las dos el catálogo de Pokémon cambia de forma.
 3. **T-097**, en cuanto haya clave de Pokémon en `.env` y tiempo para una reingesta larga.
 
 **Cómo se ejecuta la suite:**
@@ -235,6 +236,7 @@ Las ocho tareas de H8c están cerradas. Lo que queda abierto salió de hacerlas,
 |---|---|---|
 | **P-016** | 🟠 | La API de Pokémon responde 200 sólo ~30 % de las veces. **Riesgo operativo permanente**, no algo que se arregle: por eso la ingesta se reanuda |
 | **P-042** | 🟠 | Las **habilidades** de Pokémon no están en el catálogo: el adaptador nunca las leyó. El arreglo es T-097 (una línea más una reingesta de ~20.000 cartas) |
+| **P-044** | 🟠 | La base de desarrollo tiene **cinco migraciones que no están en el repositorio** (colección real, precios…), aplicadas entre el 2026-08-30 y el 2026-09-01. Hay que saber de dónde salieron antes de empezar H9c |
 
 Los 43 problemas —**41 cerrados**, cada uno con su medición— están en
 `003Problemas/Registro_Problemas.md`.

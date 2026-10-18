@@ -70,7 +70,8 @@ C:\ProyectoTCG\
 │   ├── 17_Spec_H9e_HoloNoir.md      <- spec de H9e: Holo Noir, sobres, rarezas y ritual (S037)
 │   ├── 18_Plan_H9e_HoloNoir.md      <- plan de implementacion, 10 tareas (T-098 a T-107)
 │   ├── 19_Prompts_Sobres.md         <- prompts de los 25 sobres para Nano Banana Pro (T-103)
-│   └── 20_Spec_H9f_FacetasPorJuego.md <- spec de H9f: perfil de facetas, catalogos de Magic y Yu-Gi-Oh!
+│   ├── 20_Spec_H9f_FacetasPorJuego.md <- spec de H9f: perfil de facetas, catalogos de Magic y Yu-Gi-Oh!
+│   └── 21_Plan_H9f_FacetasPorJuego.md <- plan de implementacion, 8 tareas (T-108 a T-115)
 ├── 005Registro\
 │   ├── 2026-08-25_S001_Inicializacion.md
 │   ├── 2026-08-25_S002_DDL_MySQL.md

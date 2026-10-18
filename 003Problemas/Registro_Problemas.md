@@ -1,6 +1,6 @@
 # Registro de Problemas
 
-**Última actualización:** 2026-10-15 (S037) · **Abiertos:** 2 · **Cerrados:** 41 · **Total:** 43
+**Última actualización:** 2026-10-18 (S038) · **Abiertos:** 3 · **Cerrados:** 41 · **Total:** 44
 
 Severidad: 🔴 crítica · 🟠 alta · 🟡 media · ⚪ baja
 
@@ -1601,3 +1601,45 @@ divergente.
 
 **Lección.** Una caché compartida es un contrato entre pantallas que no aparece en ningún tipo:
 TypeScript ve dos `useQuery` correctos por separado.
+
+---
+
+## P-044 🟠 · La base de desarrollo tiene cinco migraciones que no existen en el repositorio
+**Estado:** ABIERTO desde el 2026-10-18 (S038) — lo decide el usuario
+**Severidad:** 🟠
+**Origen:** el plan de H9f (S038), al medir los índices de `cards` antes de escribir la migración 0029.
+
+**Detalle.** La tabla `schema_migrations` de la base de desarrollo (`proyecto-tcg-mysql-1`) registra
+cinco migraciones aplicadas que no existen en ninguna rama local ni en el remoto, y que tampoco están
+en ningún otro sitio del disco donde se buscaron:
+
+| Migración | Aplicada |
+|---|---|
+| 0028_ygo_indice_de_nivel | 2026-08-30 |
+| 0029_coleccion_real | 2026-08-31 |
+| 0030_precios | 2026-08-31 |
+| 0031_intercalacion_precios | 2026-09-01 |
+| 0032_entidades_html | 2026-09-01 |
+
+Crearon, entre otras cosas, el índice `idx_cards_lvl` y las tablas `card_print_prices` y
+`user_real_collection`. Las fechas caen entre S036 (2026-08-28) y S037 (2026-10-15), en un hueco sin
+bitácora. **Parece trabajo de H9c (la colección real) y de precios hecho en otra copia del proyecto que
+nunca llegó a este repositorio.**
+
+**Qué rompe hoy.** Nada visible:
+- el migrador registra por nombre de fichero e ignora las filas sin fichero;
+- ningún nombre choca con las migraciones del repositorio: la 0028 del repositorio es la de paletas,
+  y la de H9f se llamará de otra forma que la 0029 fantasma.
+
+**Lo que sí rompe:**
+- una base recién creada desde el repositorio **no** tiene ese esquema, así que las mediciones hechas
+  sobre la de desarrollo pueden no reproducirse;
+- y si ese trabajo existe en otra parte, se está rehaciendo sin saberlo: H9c es el siguiente hito.
+
+**Qué hace falta.** Que el usuario diga si ese trabajo existe en otro sitio, en otro equipo, en otra
+carpeta o en una rama sin subir:
+- **si existe**, se recupera antes de empezar H9c;
+- **si no**, se decide si se reconstruye la base de desarrollo desde el repositorio.
+
+Mientras tanto, el plan de H9f evita las colisiones: su índice de nivel se llama `idx_cards_level`.
+
