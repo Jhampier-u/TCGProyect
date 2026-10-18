@@ -3,7 +3,7 @@ import type { FacetKey, GameCode } from '@tcg/shared';
 import { SIN_VALOR } from '@tcg/shared';
 import { ES } from '../i18n/es.js';
 import { estiloDeTipo } from './tipos-pokemon.js';
-import { estiloDeMana } from './colores-de-juego.js';
+import { estiloDeAtributo, estiloDeMana } from './colores-de-juego.js';
 
 /**
  * Cada clave del perfil, en la pantalla (H9f, F-2).
@@ -43,7 +43,9 @@ export const PRESENTACION: Readonly<Record<FacetKey, PresentacionDeFaceta>> = {
   },
   cost: { titulo: () => ES.facetas.titulo.coste, etiqueta: ES.facetas.coste },
   frame: { titulo: () => ES.facetas.titulo.marco, etiqueta: de(ES.facetas.frame) },
-  attribute: { titulo: () => ES.facetas.titulo.atributo, etiqueta: de(ES.facetas.attribute) },
+  attribute: {
+    titulo: () => ES.facetas.titulo.atributo, etiqueta: de(ES.facetas.attribute), estilo: estiloDeAtributo,
+  },
   level: { titulo: () => ES.facetas.titulo.nivel, etiqueta: ES.facetas.nivel },
   link: { titulo: () => ES.facetas.titulo.link, etiqueta: ES.facetas.link },
 };

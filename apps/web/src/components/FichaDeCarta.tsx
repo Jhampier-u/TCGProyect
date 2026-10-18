@@ -1,7 +1,7 @@
 import { useEffect, useId, useRef, useState, type ReactElement } from 'react';
 import { Link } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { GameCode, MtgGameData, PtcgGameData } from '@tcg/shared';
+import type { GameCode, MtgGameData, PtcgGameData, YgoGameData } from '@tcg/shared';
 import { api, imageUrl, type CardDetail } from '../lib/api.js';
 import { useAuth } from '../lib/auth.js';
 import { consultaRarezas } from '../lib/consultas.js';
@@ -11,6 +11,9 @@ import { nivelDe } from '../lib/rareza.js';
 import { ES } from '../i18n/es.js';
 import { CartaConBrillo } from './apertura/CartaConBrillo.js';
 import { Mana } from './Mana.js';
+import { estiloDeAtributo } from '../lib/colores-de-juego.js';
+import { cifraDeCombate } from '../lib/ygo.js';
+import { FlechasLink, NivelYgo } from './NivelYgo.js';
 
 /**
  * Primer dia con marca de regulacion: el de Sword & Shield. Una carta sin marca
@@ -326,15 +329,85 @@ function CuerpoMtg({ carta }: { carta: CardDetail }) {
   return <Reglas titulo={ES.ficha.reglas} texto={reglas} />;
 }
 
-/** Yu-Gi-Oh! hasta T-113: el texto de la carta, sin mas. */
-function ReglasDeLaCarta({ carta }: { carta: CardDetail }) {
-  return <Reglas titulo={ES.ficha.reglas} texto={carta.rulesText} />;
+/** Un dato de la fila como texto o como numero, o null si no lo es. */
+const textoDe = (v: string | number | null | undefined) => (typeof v === 'string' ? v : null);
+const numeroDe = (v: string | number | null | undefined) => (typeof v === 'number' ? v : null);
+
+/**
+ * Yu-Gi-Oh!, dentro de la cabecera (H9f): atributo, nivel/rango/link con sus
+ * flechas (solo aqui: en la fila es "LINK-n"), y la raza con la clase.
+ *
+ * Lee los mismos datos que la fila (`facetas`), para que fila y ficha no
+ * puedan discrepar; de `gameData` solo saca lo que la fila no lleva: las
+ * flechas.
+ */
+function CabeceraYgo({ carta }: { carta: CardDetail }) {
+  const datos = carta.gameData as YgoGameData;
+  const f = carta.facetas;
+  const frame = textoDe(f.frame);
+  const kind = textoDe(f.kind);
+  const atributo = textoDe(f.attribute);
+  const linkVal = numeroDe(f.linkVal);
+  const tipo = ES.catalogo.tipoYgo(textoDe(f.race), kind ? ES.facetas.kind[kind] ?? kind : null);
+  // Una magica o una trampa no tiene atributo ni nivel: no se pinta un hueco.
+  const esMonstruo = atributo !== null || numeroDe(f.level) !== null || linkVal !== null;
+  return (
+    <>
+      {esMonstruo && (
+        <div className="ficha-insignias">
+          {atributo && (
+            <span className="chip-tipo" style={estiloDeAtributo(atributo)}>
+              {ES.facetas.attribute[atributo] ?? atributo}
+            </span>
+          )}
+          <NivelYgo frame={frame} level={numeroDe(f.level)} linkVal={linkVal} />
+          {frame === 'link' && linkVal !== null && <FlechasLink markers={datos.link_markers} valor={linkVal} />}
+        </div>
+      )}
+      {tipo !== '' && <p className="ficha-linea">{tipo}</p>}
+    </>
+  );
+}
+
+/**
+ * Yu-Gi-Oh!, el cuerpo: el efecto, y ATK/DEF con el "?" del -1 y la escala del
+ * pendulo. Un Link no tiene DEF: no se pinta, ni como "?" ni como hueco.
+ */
+function CuerpoYgo({ carta }: { carta: CardDetail }) {
+  const datos = carta.gameData as YgoGameData;
+  const f = carta.facetas;
+  const esLink = textoDe(f.frame) === 'link';
+  return (
+    <>
+      <Reglas titulo={ES.ficha.efecto} texto={carta.rulesText} />
+      {textoDe(f.kind) === 'monster' && (
+        <dl className="ficha-tira">
+          <div>
+            <dt>{ES.ficha.atk}</dt>
+            <dd>{cifraDeCombate(numeroDe(f.atk)) ?? ES.simbolo.vacio}</dd>
+          </div>
+          {!esLink && (
+            <div>
+              <dt>{ES.ficha.def}</dt>
+              <dd>{cifraDeCombate(numeroDe(f.def)) ?? ES.simbolo.vacio}</dd>
+            </div>
+          )}
+          {typeof datos.scale === 'number' && (
+            <div>
+              <dt>{ES.ficha.escala}</dt>
+              <dd>{datos.scale}</dd>
+            </div>
+          )}
+        </dl>
+      )}
+    </>
+  );
 }
 
 const FICHAS: Readonly<Record<GameCode, PiezasDeFicha>> = {
   PTCG: { cabecera: CabeceraPtcg, cuerpo: CuerpoPtcg, detalles: DetallesPtcg },
   MTG: { cabecera: CabeceraMtg, cuerpo: CuerpoMtg, detalles: Nada },
-  YGO: { cabecera: Nada, cuerpo: ReglasDeLaCarta, detalles: Nada },
+  YGO: { cabecera: CabeceraYgo, cuerpo: CuerpoYgo, detalles: Nada },
 };
 
 /** El coste como fila de puntos del color de cada tipo, con su lectura en texto. */

@@ -114,6 +114,9 @@ const TIPOS = [
 /** Los cinco colores de Magic y el incoloro (H9f, F-9). */
 const MANA = ['w', 'u', 'b', 'r', 'g', 'c'] as const;
 
+/** Los siete atributos de Yu-Gi-Oh! (H9f): pintan la chip del atributo, que es texto. */
+const ATRIBUTOS = ['oscuridad', 'luz', 'tierra', 'agua', 'fuego', 'viento', 'divinidad'] as const;
+
 describe.each([
   ['oscuro', OSCURO],
   ['claro', CLARO],
@@ -142,6 +145,16 @@ describe.each([
         ...(letra < 4.5 ? [`letra sobre mana-${m} ${letra.toFixed(2)}:1`] : []),
       ];
     });
+    expect(flojos).toEqual([]);
+  });
+
+  it('los siete atributos se leen como texto sobre la superficie y sobre el fondo', () => {
+    const flojos = ATRIBUTOS.flatMap((a) =>
+      (['superficie', 'fondo'] as const)
+        .map((f) => ({ f, r: razon(valor(tema, `atributo-${a}`), valor(tema, f)) }))
+        .filter((x) => x.r < 4.5)
+        .map((x) => `atributo-${a} sobre ${x.f} ${x.r.toFixed(2)}:1`),
+    );
     expect(flojos).toEqual([]);
   });
 });

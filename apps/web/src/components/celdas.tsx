@@ -6,6 +6,9 @@ import { estiloDeTipo } from '../lib/tipos-pokemon.js';
 import { ES } from '../i18n/es.js';
 import { Mana } from './Mana.js';
 import { tieneSimbolos } from '../lib/mana.js';
+import { estiloDeAtributo } from '../lib/colores-de-juego.js';
+import { cifraDeCombate } from '../lib/ygo.js';
+import { NivelYgo } from './NivelYgo.js';
 
 /**
  * Como se pinta cada celda de la fila (H9f, F-2).
@@ -39,6 +42,11 @@ function Vacio() {
 /** Un dato de la fila como texto, o null si no lo tiene. */
 function texto(v: string | number | null | undefined): string | null {
   return v === null || v === undefined ? null : String(v);
+}
+
+/** Un dato numerico de la fila, o null si no lo es. */
+function numero(v: string | number | null | undefined): number | null {
+  return typeof v === 'number' ? v : null;
 }
 
 export const CELDAS: Readonly<Record<CellKey, (p: PropsDeCelda) => ReactElement>> = {
@@ -135,13 +143,20 @@ export const CELDAS: Readonly<Record<CellKey, (p: PropsDeCelda) => ReactElement>
 
   attribute: ({ carta }) => {
     const a = texto(carta.facetas.attribute);
-    return <Td celda="attribute">{a ? ES.facetas.attribute[a] ?? a : <Vacio />}</Td>;
+    return (
+      <Td celda="attribute">
+        {a ? <span className="chip-tipo" style={estiloDeAtributo(a)}>{ES.facetas.attribute[a] ?? a}</span> : <Vacio />}
+      </Td>
+    );
   },
 
   levelRankLink: ({ carta }) => {
     const f = carta.facetas;
-    const n = texto(f.frame === 'link' ? f.linkVal : f.level);
-    return <Td celda="levelRankLink">{n ?? <Vacio />}</Td>;
+    return (
+      <Td celda="levelRankLink">
+        <NivelYgo frame={texto(f.frame)} level={numero(f.level)} linkVal={numero(f.linkVal)} />
+      </Td>
+    );
   },
 
   ygoType: ({ carta }) => {
@@ -151,8 +166,8 @@ export const CELDAS: Readonly<Record<CellKey, (p: PropsDeCelda) => ReactElement>
   },
 
   atkDef: ({ carta }) => {
-    const a = texto(carta.facetas.atk);
-    const d = texto(carta.facetas.def);
+    const a = cifraDeCombate(numero(carta.facetas.atk));
+    const d = cifraDeCombate(numero(carta.facetas.def));
     return (
       <Td celda="atkDef">
         {a === null && d === null ? <Vacio /> : ES.catalogo.atkDef(a ?? ES.simbolo.vacio, d ?? ES.simbolo.vacio)}

@@ -39,6 +39,8 @@ export const ES = {
     cerrar: '×',
     /** Entre los dos costes de una carta de dos caras. */
     caras: ' // ',
+    /** El ATK o DEF variable: la base lo guarda como -1. */
+    desconocido: '?',
   },
 
   navegacion: {
@@ -197,6 +199,10 @@ export const ES = {
     fuerzaResistencia: 'Fuerza/Resistencia',
     lealtad: 'Lealtad',
     otraCara: 'Esta carta tiene otra cara; aquí se muestra la primera.',
+    efecto: 'Efecto',
+    atk: 'ATK',
+    def: 'DEF',
+    escala: 'Escala de péndulo',
     evolucionaDe: (nombre: string) => `Evoluciona de ${nombre}`,
     habilidades: 'Habilidades',
     ataques: 'Ataques',
@@ -305,6 +311,25 @@ export const ES = {
     costeEtiqueta: 'Coste: ',
     /** El nombre accesible del coste entero, simbolo a simbolo. */
     coste: (lecturas: string[]) => `Coste: ${lecturas.join(', ')}`,
+  },
+
+  /** Nivel, rango, link y flechas de Yu-Gi-Oh! (H9f). */
+  ygo: {
+    nivel: (n: number) => `Nivel ${n}`,
+    rango: (n: number) => `Rango ${n}`,
+    link: (n: number) => `Link ${n}`,
+    /** Lo que se ve en la fila: estrella llena el nivel, hueca el rango. */
+    corto: {
+      nivel: (n: number) => `★${n}`,
+      rango: (n: number) => `☆${n}`,
+      link: (n: number) => `LINK-${n}`,
+    },
+    flecha: {
+      'Top-Left': 'arriba a la izquierda', Top: 'arriba', 'Top-Right': 'arriba a la derecha',
+      Left: 'izquierda', Right: 'derecha',
+      'Bottom-Left': 'abajo a la izquierda', Bottom: 'abajo', 'Bottom-Right': 'abajo a la derecha',
+    } as Record<string, string>,
+    flechas: (lista: string[]) => `Flechas: ${lista.join(', ')}`,
   },
 
   coleccion: {

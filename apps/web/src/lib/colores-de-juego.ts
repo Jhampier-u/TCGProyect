@@ -11,3 +11,14 @@ export function estiloDeMana(valor: string | null): CSSProperties | undefined {
   const token = valor ? MANA[valor] : undefined;
   return token ? ({ '--tipo': `var(--mana-${token})` } as CSSProperties) : undefined;
 }
+
+/** Los siete atributos de Yu-Gi-Oh!, como los guarda la base, a su token. */
+const ATRIBUTO: Readonly<Record<string, string>> = {
+  DARK: 'oscuridad', LIGHT: 'luz', EARTH: 'tierra', WATER: 'agua',
+  FIRE: 'fuego', WIND: 'viento', DIVINE: 'divinidad',
+};
+
+export function estiloDeAtributo(valor: string | null): CSSProperties | undefined {
+  const token = valor ? ATRIBUTO[valor] : undefined;
+  return token ? ({ '--tipo': `var(--atributo-${token})` } as CSSProperties) : undefined;
+}
