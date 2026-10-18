@@ -46,8 +46,12 @@ export function CapaDeEfectos({ disparo, nivel, cartaRevelada }: Props) {
   /** Por ref, como el nivel: el padre rehace la funcion en cada render. */
   const buscarCarta = useRef(cartaRevelada);
   useLayoutEffect(() => { buscarCarta.current = cartaRevelada; }, [cartaRevelada]);
-  /** Centro de los rayos, en pixeles del lienzo: el de la carta que los disparo. */
-  const origenRayos = useRef<{ x: number; y: number } | null>(null);
+  /**
+   * La carta que disparo los rayos. Se guarda el elemento y no un punto: al
+   * revelarla la bandeja puede ganar una fila y el lienzo cambia de tamano, asi
+   * que el centro se vuelve a medir en cada fotograma y los rayos la siguen.
+   */
+  const cartaRayos = useRef<Element | null>(null);
   const particulas = useRef<Particula[]>([]);
   const rayosHasta = useRef(0);
   const colorRayos = useRef('');
@@ -68,9 +72,6 @@ export function CapaDeEfectos({ disparo, nivel, cartaRevelada }: Props) {
       const escala = limitarDpr(window.devicePixelRatio);
       c.width = Math.max(1, Math.round(c.clientWidth * escala));
       c.height = Math.max(1, Math.round(c.clientHeight * escala));
-      // Con otro tamano el origen medido ya no apunta a la carta: los rayos
-      // vuelven al centro en vez de quedarse en un punto que se ha desplazado.
-      origenRayos.current = null;
     };
     ajustar();
     const observador = new ResizeObserver(ajustar);
@@ -90,7 +91,10 @@ export function CapaDeEfectos({ disparo, nivel, cartaRevelada }: Props) {
       const hayRayos = ahora < rayosHasta.current && colorRayos.current !== '';
       if (hayRayos) {
         ctx.save();
-        const o = origenRayos.current ?? { x: c.width / 2, y: c.height / 2 };
+        const carta = cartaRayos.current;
+        const o = carta?.isConnected
+          ? origenRelativo(carta.getBoundingClientRect(), c.getBoundingClientRect(), window.devicePixelRatio)
+          : { x: c.width / 2, y: c.height / 2 };
         ctx.translate(o.x, o.y);
         ctx.rotate(ahora / 2400);
         ctx.globalAlpha = RAYOS_ALFA;
@@ -185,7 +189,7 @@ export function CapaDeEfectos({ disparo, nivel, cartaRevelada }: Props) {
     }
     if (nivelRevelado === 5) {
       colorRayos.current = leer(5);
-      origenRayos.current = origen;
+      cartaRayos.current = carta?.isConnected ? carta : null;
       if (colorRayos.current !== '') rayosHasta.current = performance.now() + RAYOS_MS;
     }
     particulas.current = limitarParticulas(particulas.current);
