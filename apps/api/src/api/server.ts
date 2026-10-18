@@ -3,7 +3,8 @@ import fastifyJwt from '@fastify/jwt';
 import fastifyRateLimit from '@fastify/rate-limit';
 import fastifyStatic from '@fastify/static';
 import type { GameCode } from '@tcg/shared';
-import type { CatalogQueryRepository } from '../db/catalog-query-repository.js';
+import { facetOf, isFacetKey, type FacetValues } from '@tcg/shared';
+import type { CardQuery, CatalogQueryRepository } from '../db/catalog-query-repository.js';
 import type { CollectionRepository } from '../db/collection-repository.js';
 import type { DeckRepository } from '../db/deck-repository.js';
 import type { UserRepository } from '../auth/user-repository.js';
@@ -135,11 +136,33 @@ function registrarRutasDeCatalogo(app: FastifyInstance, options: ApiOptions): vo
   app.get<{
     Querystring: {
       game?: GameCode; set?: string; rarity?: string; q?: string;
-      type?: string; supertype?: string; mark?: string; owned?: 'yes' | 'no';
-      cursor?: string; limit?: number;
-    };
+      owned?: 'yes' | 'no'; cursor?: string; limit?: number;
+    } & FacetValues;
   }>('/api/cards', { schema: SEARCH_CARDS, preValidation: identificarSiHay }, async (request, reply) => {
-    const { owned, ...filtros } = request.query;
+    const { owned, game, ...resto } = request.query;
+
+    const facetas: FacetValues = {};
+    const otros: Record<string, unknown> = {};
+    for (const [clave, valor] of Object.entries(resto)) {
+      if (!isFacetKey(clave)) {
+        otros[clave] = valor;
+        continue;
+      }
+      if (typeof valor !== 'string') continue;
+      if (!game || !facetOf(game, clave)) {
+        // Una clave de otro juego es un error de quien pregunta, no un filtro
+        // que se ignora: `?color=U` en Pokemon devolveria el catalogo entero
+        // como si filtrara (spec 7).
+        return reply.code(400).send({
+          error: 'bad_request',
+          message: game
+            ? `La faceta "${clave}" no es de ${game}`
+            : `La faceta "${clave}" exige indicar el juego`,
+        });
+      }
+      facetas[clave] = valor;
+    }
+
     if (owned && !request.usuario) {
       // Sin usuario no hay coleccion contra la que comparar. Devolver el
       // catalogo entero como "lo que te falta" seria contestar otra pregunta
@@ -151,7 +174,9 @@ function registrarRutasDeCatalogo(app: FastifyInstance, options: ApiOptions): vo
     }
     const usuario = request.usuario;
     const page = await catalog.searchCards({
-      ...filtros,
+      ...(otros as Pick<CardQuery, 'set' | 'rarity' | 'q' | 'cursor' | 'limit'>),
+      ...(game ? { game } : {}),
+      ...(Object.keys(facetas).length > 0 ? { facetas } : {}),
       ...(usuario ? { viewerId: usuario.id } : {}),
       ...(owned && usuario ? { owner: { userId: usuario.id, owned: owned === 'yes' } } : {}),
     });

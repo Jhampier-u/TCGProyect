@@ -1,5 +1,8 @@
-import type { GameCode } from '@tcg/shared';
-import { GAME_IDS, isGameCode } from '@tcg/shared';
+import type { FacetKey, FacetValues, GameCode, RowFacets, RowField } from '@tcg/shared';
+import { FACET_PROFILES, GAME_IDS, ROW_FIELD_KIND, facetOf, isGameCode, rowFieldsOf } from '@tcg/shared';
+import {
+  COLUMNAS_DE_FILA, FACET_SQL, condicionDeFaceta, repartir, type FacetCount, type FilaDeRecuento,
+} from './facetas-sql.js';
 import type { Database } from './connection.js';
 import type { Paleta } from '../images/paleta.js';
 import { ORDEN_DE_PLANTILLA, PLANTILLA_DE_EPOCA_O_LINEA, artKeyDe } from './plantilla-sql.js';
@@ -13,15 +16,6 @@ import { ORDEN_DE_PLANTILLA, PLANTILLA_DE_EPOCA_O_LINEA, artKeyDe } from './plan
  * letras es ademas lo que el usuario espera mientras teclea.
  */
 export const MIN_FULLTEXT_LENGTH = 3;
-
-/**
- * Valor de `mark` que pide las cartas SIN marca de regulacion.
- *
- * No es un hueco de datos: la marca no existia antes de Sword & Shield (2019),
- * asi que 12.250 de las 20.434 cartas de Pokemon no la tienen y nunca la
- * tendran. Poder pedirlas es tan legitimo como pedir las de la marca I.
- */
-export const SIN_MARCA = 'ninguna';
 
 /**
  * "Esta impresion la tiene este usuario", con cualquier acabado (T-093).
@@ -63,18 +57,12 @@ export interface CardSummary {
   imagePath: string | null;
   printId: number;
   /**
-   * Facetas del juego, para que la rejilla no tenga que pedir la ficha de cada
-   * carta (T-092). Hoy son las de Pokemon y llegan nulas en Magic y Yu-Gi-Oh!.
-   *
-   * PLANAS Y NO ANIDADAS, a sabiendas. Cuando le toque a Magic querra `cmc`,
-   * `colors` y `legalities`, y con cuatro campos por juego esto se convierte en
-   * una lista de nulos. Ese sera el momento de moverlo a un objeto `facetas`
-   * por juego; hacerlo hoy seria disenar para un juego que aun no existe.
+   * Los datos que pintan las celdas de la fila de SU juego (H9f): PS, tipo y
+   * marca en Pokemon; coste, tipo y F/R en Magic; atributo, nivel, ATK/DEF en
+   * Yu-Gi-Oh!. Salen del perfil (`rowFieldsOf`), y el esquema de la API declara
+   * la union de los tres: la prueba de P-024 compara las dos cosas.
    */
-  hp: number | null;
-  supertype: string | null;
-  elemType: string | null;
-  regMark: string | null;
+  facetas: RowFacets;
   /**
    * Si quien mira tiene esta impresion (T-093). `null` cuando nadie mira -- sin
    * sesion, o en la ficha --, que no es lo mismo que `false`: "no lo se" no
@@ -97,13 +85,11 @@ export interface CardQuery {
   rarity?: string;
   q?: string;
   /**
-   * Facetas de Pokemon (T-092). Las tres se apoyan en las columnas generadas de
-   * la 0027, asi que filtrar por ellas usa indice en vez de escanear el JSON.
+   * Facetas del perfil del juego (H9f): clave -> valor. Exigen `game`. Una clave
+   * que no es del juego no llega aqui -- el servidor contesta 400 --, y si
+   * llegara el repositorio lanza en vez de ignorarla.
    */
-  type?: string;
-  supertype?: string;
-  /** `sinMarca` pide las que NO tienen marca, que es un caso distinto de no filtrar. */
-  mark?: string;
+  facetas?: FacetValues;
   /**
    * Tener o no tener la impresion, contra la coleccion de UN usuario (T-093).
    * El `userId` lo pone la ruta a partir del token, nunca la query: si viniera
@@ -123,20 +109,11 @@ export interface CardPage {
   nextCursor: string | null;
 }
 
-/** Un valor de faceta y cuantas cartas lo tienen, para el rail (T-092). */
-export interface FacetCount {
-  value: string;
-  count: number;
-  /** Cuantas de esas tiene el usuario. `null` sin sesion: no es un cero. */
-  owned: number | null;
-}
+export type { FacetCount } from './facetas-sql.js';
 
 export interface FacetCounts {
-  types: FacetCount[];
-  supertypes: FacetCount[];
-  marks: FacetCount[];
-  /** Cuantas NO tienen marca. Anteriores a 2019: no es un hueco. */
-  withoutMark: number;
+  /** Una lista por faceta del perfil, en el orden del perfil. */
+  facetas: Partial<Record<FacetKey, FacetCount[]>>;
   rarities: FacetCount[];
   /** Impresiones del contexto -- el set, o el juego entero -- y cuantas tiene. */
   total: number;
@@ -271,23 +248,17 @@ export class CatalogQueryRepository {
       where.push('r.code = ?');
       params.push(query.rarity);
     }
-    if (query.type) {
-      where.push('c.elem_type = ?');
-      params.push(query.type);
-    }
-    if (query.supertype) {
-      where.push('c.supertype = ?');
-      params.push(query.supertype);
-    }
-    if (query.mark) {
-      // `sinMarca` no es una marca: es preguntar por las anteriores a 2019, que
-      // legitimamente no la tienen. Sin este caso no habria forma de pedirlas,
-      // porque omitir el filtro devuelve TODAS.
-      if (query.mark === SIN_MARCA) where.push('c.reg_mark IS NULL');
-      else {
-        where.push('c.reg_mark = ?');
-        params.push(query.mark);
+    for (const [clave, valor] of Object.entries(query.facetas ?? {})) {
+      if (valor === undefined || valor === '') continue;
+      const def = query.game ? facetOf(query.game, clave) : undefined;
+      if (!def) {
+        // El servidor ya contesta 400 a esto. Si llega, es un fallo de codigo
+        // propio, y una condicion inventada lo esconderia.
+        throw new Error(`La faceta "${clave}" no es de ${query.game ?? 'ningun juego indicado'}`);
       }
+      const condicion = condicionDeFaceta(def, valor);
+      where.push(condicion.sql);
+      params.push(...condicion.params);
     }
     if (query.owner) {
       where.push(query.owner.owned ? TENENCIA : `NOT ${TENENCIA}`);
@@ -326,7 +297,7 @@ export class CatalogQueryRepository {
               s.code AS set_code, s.name AS set_name,
               p.id AS print_id, p.collector_number, p.image_local_path,
               r.code AS rarity,
-              c.hp, c.supertype, c.elem_type, c.reg_mark${columnaTengo}
+              ${COLUMNAS_DE_FILA}${columnaTengo}
        FROM cards c
        JOIN card_prints p ON p.card_id = c.id AND p.withdrawn_at IS NULL
        JOIN sets s ON s.id = p.set_id
@@ -372,7 +343,7 @@ export class CatalogQueryRepository {
               -- el mismo mapeador, asi que omitirlas aqui no da un campo vacio
               -- sino NaN, que el esquema rechaza y convierte la ficha en un 500.
               -- Paso exactamente eso al declararlas en T-092.
-              c.hp, c.supertype, c.elem_type, c.reg_mark
+              ${COLUMNAS_DE_FILA}
        FROM card_prints p
        JOIN cards c ON c.id = p.card_id
        JOIN sets s ON s.id = p.set_id
@@ -466,49 +437,46 @@ export class CatalogQueryRepository {
     const tengo = conTenencia ? `, SUM(${TENENCIA}) AS tengo` : '';
     const argumentos = conTenencia ? [userId, ...params] : params;
 
-    const contar = async (columna: string) =>
-      this.db.select<{ valor: string | null; n: number; tengo?: number | string | null }>(
-        `SELECT ${columna} AS valor, COUNT(*) AS n${tengo}
+    const contar = async (expresion: string) =>
+      this.db.select<FilaDeRecuento>(
+        `SELECT ${expresion} AS valor, COUNT(*) AS n${tengo}
            FROM cards c
            JOIN card_prints p ON p.card_id = c.id
            JOIN sets s ON s.id = p.set_id
           WHERE ${filtro}
-          GROUP BY valor
-          ORDER BY n DESC`,
+          GROUP BY valor`,
         argumentos,
       );
 
-    const [tipos, supertipos, marcas, rarezas] = await Promise.all([
-      contar('c.elem_type'),
-      contar('c.supertype'),
-      contar('c.reg_mark'),
+    // Una consulta por faceta del perfil, mas la de rareza, en paralelo: cuatro
+    // en Pokemon y en Magic, seis en Yu-Gi-Oh!. El orden ya no lo pone MySQL:
+    // lo pone el perfil (`repartir`).
+    const perfil = FACET_PROFILES[game];
+    const [rarezas = [], ...porFaceta] = await Promise.all([
       contar('(SELECT r.code FROM rarities r WHERE r.id = p.rarity_id)'),
+      ...perfil.facets.map((f) => contar(FACET_SQL[f.key].grupo)),
     ]);
 
-    // `SUM` de MySQL llega como cadena DECIMAL por mysql2; `Number` lo arregla.
-    const tenidas = (f: { tengo?: number | string | null }) =>
-      conTenencia ? Number(f.tengo ?? 0) : null;
+    const facetas: Partial<Record<FacetKey, FacetCount[]>> = {};
+    perfil.facets.forEach((f, i) => {
+      facetas[f.key] = repartir(porFaceta[i] ?? [], f, conTenencia);
+    });
 
-    const limpiar = (filas: Array<{ valor: string | null; n: number; tengo?: number | string | null }>) =>
-      filas
-        .filter((f) => f.valor !== null)
-        .map((f) => ({ value: f.valor as string, count: Number(f.n), owned: tenidas(f) }));
-
-    // El total sale de la categoria y no de otra consulta: cada impresion cae
-    // en exactamente una fila del GROUP BY, la NULL incluida.
-    const total = supertipos.reduce((acc, f) => acc + Number(f.n), 0);
-    const ownedTotal = conTenencia
-      ? supertipos.reduce((acc, f) => acc + Number(f.tengo ?? 0), 0)
-      : null;
+    // El total sale de la rareza: toda impresion tiene exactamente una, asi que
+    // sus grupos son una particion. Ninguna faceta de Magic lo es (corrige el
+    // calculo de T-093, que usaba la categoria de Pokemon).
+    const total = rarezas.reduce((acc, f) => acc + Number(f.n), 0);
+    const ownedTotal = conTenencia ? rarezas.reduce((acc, f) => acc + Number(f.tengo ?? 0), 0) : null;
 
     return {
-      types: limpiar(tipos),
-      supertypes: limpiar(supertipos),
-      // Las SIN marca se cuentan aparte y con su nombre: son 12.250 cartas
-      // anteriores a 2019, no un hueco.
-      marks: limpiar(marcas),
-      withoutMark: Number(marcas.find((f) => f.valor === null)?.n ?? 0),
-      rarities: limpiar(rarezas),
+      facetas,
+      rarities: rarezas
+        .filter((f) => f.valor !== null)
+        .map((f) => ({
+          value: String(f.valor),
+          count: Number(f.n),
+          owned: conTenencia ? Number(f.tengo ?? 0) : null,
+        })),
       total,
       ownedTotal,
     };
@@ -523,15 +491,16 @@ export class CatalogQueryRepository {
   }
 }
 
-export interface CardRow {
+export type CardRow = {
   id: number; oracle_key: string; game_id: number; name: string; type_line: string | null;
   set_code: string; set_name: string; print_id: number;
   collector_number: string; image_local_path: string | null; rarity: string;
-  /** Facetas de Pokemon (T-091). Nulas en los otros dos juegos. */
-  hp: number | null; supertype: string | null; elem_type: string | null; reg_mark: string | null;
   /** Solo si alguien mira (T-093). Ausente en la ficha, que no tiene usuario. */
   tengo?: number | string | null;
-}
+} & {
+  /** Los datos de fila, con el alias de `COLUMNAS_DE_FILA`. */
+  [K in RowField as `ff_${K}`]?: string | number | null;
+};
 
 /**
  * Fila cruda -> resumen de carta.
@@ -544,6 +513,14 @@ export interface CardRow {
  */
 export function toSummary(row: CardRow): CardSummary {
   const game = gameCodeOf(Number(row.game_id));
+  // Solo los datos de las celdas de SU juego: una fila de Magic no lleva
+  // `hp: null` (H9f). El esquema declara la union de los tres.
+  const facetas: RowFacets = {};
+  for (const campo of rowFieldsOf(game)) {
+    const crudo = row[`ff_${campo}`];
+    facetas[campo] =
+      crudo === undefined || crudo === null ? null : ROW_FIELD_KIND[campo] === 'int' ? Number(crudo) : String(crudo);
+  }
   return {
     cardId: Number(row.id),
     oracleKey: row.oracle_key,
@@ -557,12 +534,7 @@ export function toSummary(row: CardRow): CardSummary {
     // SOLO la ruta local. `image_source_url` ni se selecciona (P-001).
     imagePath: row.image_local_path,
     printId: Number(row.print_id),
-    // Facetas. Son de Pokemon y llegan nulas en los otros dos juegos: la
-    // rejilla las pinta si estan y las ignora si no.
-    hp: row.hp === null ? null : Number(row.hp),
-    supertype: row.supertype,
-    elemType: row.elem_type,
-    regMark: row.reg_mark,
+    facetas,
     // Ausente -> null, explicitamente. `Number(undefined) === 1` daria `false`,
     // y una ficha diria "no la tienes" a quien si la tiene.
     owned: row.tengo === undefined || row.tengo === null ? null : Number(row.tengo) === 1,

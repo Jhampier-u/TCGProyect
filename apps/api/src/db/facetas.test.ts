@@ -1,8 +1,10 @@
 import { describe, it, expect } from 'vitest';
+import { SIN_VALOR } from '@tcg/shared';
 import {
-  CatalogQueryRepository, SIN_MARCA, encodeCursor, toSummary, type CardQuery,
+  CatalogQueryRepository, encodeCursor, toSummary, type CardQuery,
 } from './catalog-query-repository.js';
 import type { Database } from './connection.js';
+import { ROW_FIELD_SQL } from './facetas-sql.js';
 
 /**
  * T-092 - los filtros de faceta, comprobados por el SQL que producen.
@@ -34,14 +36,14 @@ describe('filtros de faceta en la busqueda (T-092)', () => {
   it('filtra por tipo elemental usando la columna generada, no el JSON', async () => {
     // Si esto acabara mirando `game_data`, el indice de la 0027 no serviria de
     // nada y volveriamos al escaneo de 34.200 filas que midio T-091.
-    const { sql, params } = await sqlDe({ game: 'PTCG', type: 'Grass' });
+    const { sql, params } = await sqlDe({ game: 'PTCG', facetas: { type: 'Grass' } });
     expect(sql).toContain('c.elem_type = ?');
     expect(sql).not.toContain('$.types');
     expect(params).toContain('Grass');
   });
 
   it('filtra por categoria y por marca', async () => {
-    const { sql, params } = await sqlDe({ game: 'PTCG', supertype: 'Trainer', mark: 'I' });
+    const { sql, params } = await sqlDe({ game: 'PTCG', facetas: { supertype: 'Trainer', mark: 'I' } });
     expect(sql).toContain('c.supertype = ?');
     expect(sql).toContain('c.reg_mark = ?');
     expect(params).toEqual(expect.arrayContaining(['Trainer', 'I']));
@@ -51,13 +53,13 @@ describe('filtros de faceta en la busqueda (T-092)', () => {
     // Las 12.250 cartas anteriores a 2019 no tienen marca y nunca la tendran.
     // Sin este caso no habria forma de pedirlas: omitir el filtro devuelve
     // todas, y `mark=''` no es lo mismo que "las que no tienen".
-    const { sql, params } = await sqlDe({ game: 'PTCG', mark: SIN_MARCA });
+    const { sql, params } = await sqlDe({ game: 'PTCG', facetas: { mark: SIN_VALOR } });
     expect(sql).toContain('c.reg_mark IS NULL');
-    expect(params).not.toContain(SIN_MARCA);
+    expect(params).not.toContain(SIN_VALOR);
   });
 
   it('los filtros se ACUMULAN, no se pisan', async () => {
-    const { sql } = await sqlDe({ game: 'PTCG', set: 'BLK', rarity: 'common', type: 'Fire' });
+    const { sql } = await sqlDe({ game: 'PTCG', set: 'BLK', rarity: 'common', facetas: { type: 'Fire' } });
     for (const cond of ['c.game_id = ?', 's.external_id = ?', 'r.code = ?', 'c.elem_type = ?']) {
       expect(sql).toContain(cond);
     }
@@ -68,18 +70,18 @@ describe('filtros de faceta en la busqueda (T-092)', () => {
     // impresiones degrada hasta ser inusable, y el desempate por
     // `card_prints.id` es lo que impide que desaparezcan filas en silencio
     // cuando dos impresiones comparten carta (P-013).
-    const { sql } = await sqlDe({ game: 'PTCG', type: 'Water' });
+    const { sql } = await sqlDe({ game: 'PTCG', facetas: { type: 'Water' } });
     expect(sql).toContain('ORDER BY c.name ASC, p.id ASC');
     expect(sql).not.toContain('OFFSET');
   });
 
   it('el cursor sigue desempatando por la IMPRESION con filtros puestos', async () => {
     const { repo, consultas } = repoEspia();
-    await repo.searchCards({ game: 'PTCG', type: 'Water' });
+    await repo.searchCards({ game: 'PTCG', facetas: { type: 'Water' } });
     // Se usa la funcion REAL de la paginacion, no una copia del formato: un
     // cursor inventado a mano probaria mi suposicion, no el codigo.
     const cursor = encodeCursor('Pikachu', 42);
-    await repo.searchCards({ game: 'PTCG', type: 'Water', cursor });
+    await repo.searchCards({ game: 'PTCG', facetas: { type: 'Water' }, cursor });
     const conCursor = consultas[1]!;
     expect(conCursor.sql).toContain('c.name = ? AND p.id > ?');
     expect(conCursor.params).toContain(42);
@@ -139,7 +141,9 @@ describe('las dos consultas que alimentan `toSummary` (T-092)', () => {
    *
    * Lo cazó la suite E2E, al no poder anadir una carta a un mazo.
    */
-  const COLUMNAS = ['c.hp', 'c.supertype', 'c.elem_type', 'c.reg_mark'];
+  // Desde H9f salen de una sola lista (`COLUMNAS_DE_FILA`); la prueba sigue
+  // mirando las dos consultas, que es donde se rompio.
+  const COLUMNAS = Object.values(ROW_FIELD_SQL);
 
   it('la busqueda selecciona todas las facetas', async () => {
     const { sql } = await sqlDe({ game: 'PTCG' });
@@ -196,8 +200,7 @@ describe('"las que me faltan" (T-093)', () => {
     const fila = {
       id: 1, oracle_key: 'sv1-1', game_id: 3, name: 'Sprigatito', type_line: null,
       set_code: 'SVI', set_name: 'Scarlet & Violet', print_id: 9, collector_number: '13',
-      image_local_path: null, rarity: 'common', hp: 70, supertype: 'Pokemon',
-      elem_type: 'Grass', reg_mark: 'G',
+      image_local_path: null, rarity: 'common', ff_type: 'Grass', ff_hp: 70, ff_mark: 'G',
     };
     expect(toSummary({ ...fila, tengo: 1 }).owned).toBe(true);
     expect(toSummary({ ...fila, tengo: 0 }).owned).toBe(false);
@@ -230,26 +233,71 @@ describe('"las que me faltan" (T-093)', () => {
     expect(r.ownedTotal).toBeNull();
   });
 
-  it('el total del contexto sale de sumar las categorias, incluida la nula', async () => {
-    // Toda carta de Pokemon tiene `supertype` (20.434 de 20.434, medido en
-    // T-091), pero el total no puede depender de que eso siga siendo verdad:
-    // la fila NULL tambien suma. Asi no hace falta una quinta consulta.
+  it('el total del contexto sale de sumar las rarezas: es la unica particion que queda', async () => {
+    // Antes salia de la categoria de Pokemon. En Magic ninguna faceta es una
+    // particion -- una bicolor cuenta dos veces, el coste aparta los reversos --
+    // y la rareza si: toda impresion tiene exactamente una (`rarity_id NOT NULL`).
+    // Asi no hace falta una consulta mas.
     const db = {
       select: async (sql: string) =>
-        sql.includes('c.supertype AS valor')
+        sql.includes('r.code')
           ? [
-              { valor: 'Pokemon', n: 120, tengo: 30 },
-              { valor: 'Trainer', n: 40, tengo: 5 },
-              { valor: null, n: 2, tengo: 1 },
+              { valor: 'common', n: 120, tengo: 30 },
+              { valor: 'rare', n: 42, tengo: 6 },
             ]
-          : [],
+          : sql.includes('c.supertype AS valor')
+            ? [
+                { valor: 'Trainer', n: 40, tengo: 5 },
+                { valor: 'Pokémon', n: 120, tengo: 30 },
+                { valor: null, n: 2, tengo: 1 },
+              ]
+            : [],
     } as unknown as Database;
     const r = await new CatalogQueryRepository(db).listFacets('PTCG', 'sv1', 7);
     expect(r.total).toBe(162);
     expect(r.ownedTotal).toBe(36);
-    expect(r.supertypes).toEqual([
-      { value: 'Pokemon', count: 120, owned: 30 },
+    // El orden es el del perfil, no el de la consulta; y un NULL en una faceta
+    // sin "sin valor" no se pinta.
+    expect(r.facetas.supertype).toEqual([
+      { value: 'Pokémon', count: 120, owned: 30 },
       { value: 'Trainer', count: 40, owned: 5 },
     ]);
+  });
+});
+
+describe('Magic y Yu-Gi-Oh! en la busqueda y en el rail (H9f)', () => {
+  it('el color concreto va por el indice multivaluado, con el valor como parametro', async () => {
+    const { sql, params } = await sqlDe({ game: 'MTG', facetas: { color: 'U', kind: 'creature' } });
+    expect(sql).toContain("? MEMBER OF (c.game_data->'$.colors')");
+    expect(sql).toContain('c.kind = ?');
+    expect(params).toEqual(expect.arrayContaining(['U', 'creature']));
+    expect(sql).toContain('ORDER BY c.name ASC, p.id ASC');
+  });
+
+  it('una clave que no es del juego no se convierte en condicion: se rechaza', async () => {
+    const { repo } = repoEspia();
+    await expect(repo.searchCards({ game: 'PTCG', facetas: { color: 'U' } })).rejects.toThrow('color');
+  });
+
+  it('el rail cuenta la rareza y cada faceta del perfil: cuatro consultas en Magic, seis en Yu-Gi-Oh!', async () => {
+    const mtg = repoEspia();
+    await mtg.repo.listFacets('MTG');
+    expect(mtg.consultas).toHaveLength(4);
+    const ygo = repoEspia();
+    await ygo.repo.listFacets('YGO', 'LOB');
+    expect(ygo.consultas).toHaveLength(6);
+    for (const c of ygo.consultas) expect(c.sql).toContain('s.external_id = ?');
+  });
+
+  it('una fila de Magic lleva sus datos y no los de Pokemon', () => {
+    const fila = {
+      id: 1, oracle_key: 'o', game_id: 1, name: 'Llanowar Elves', type_line: 'Creature - Elf Druid',
+      set_code: 'DOM', set_name: 'Dominaria', print_id: 9, collector_number: '168',
+      image_local_path: null, rarity: 'common',
+      ff_manaCost: '{G}', ff_kind: 'creature', ff_power: '1', ff_toughness: '1', ff_hp: 70,
+    };
+    expect(toSummary(fila).facetas).toEqual({
+      manaCost: '{G}', kind: 'creature', power: '1', toughness: '1', loyalty: null,
+    });
   });
 });

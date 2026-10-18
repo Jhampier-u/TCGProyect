@@ -11,6 +11,7 @@ import {
   type CardRow,
   type CatalogQueryRepository,
 } from '../db/catalog-query-repository.js';
+import { GAME_CODES, GAME_IDS, rowFieldsOf } from '@tcg/shared';
 import { CARD_SUMMARY } from './schemas.js';
 
 /** Catalogo falso que registra la consulta recibida. */
@@ -50,9 +51,11 @@ const CARTA: CardDetail = {
   cardId: 7, oracleKey: '89631139', printId: 42, game: 'YGO', name: 'Blue-Eyes White Dragon',
   typeLine: 'Normal Monster', setCode: 'LOB', setName: 'Legend of Blue Eyes',
   collectorNumber: '001', rarity: 'ultra_rare',
-  // Facetas de Pokemon: nulas en una carta de Yu-Gi-Oh!, que es el caso que
-  // esta fixture representa (T-092).
-  hp: null, supertype: null, elemType: null, regMark: null,
+  // Los datos de fila de Yu-Gi-Oh! (H9f), que es lo que esta fixture representa.
+  facetas: {
+    kind: 'monster', attribute: 'LIGHT', frame: 'normal', level: 8, linkVal: null,
+    race: 'Dragon', atk: 3000, def: 2500,
+  },
   // La ficha no tiene usuario: no sabe si la tienes, y lo dice con null (T-093).
   owned: null,
   imagePath: 'ygo/lob/lob-en001-ultra_rare.245.webp',
@@ -132,6 +135,9 @@ describe('P-001: la respuesta no puede filtrar una URL externa', () => {
       const res = await app.inject({ method: 'GET', url });
       expect(res.body).not.toMatch(/https?:\/\//);
     }
+    // Y las facetas de la fila sobreviven a la serializacion (ADR-007).
+    const busqueda = await app.inject({ method: 'GET', url: '/api/cards' });
+    expect(busqueda.json().data[0].facetas).toMatchObject({ atk: 3000, attribute: 'LIGHT' });
     await app.close();
   });
 });
@@ -170,6 +176,41 @@ describe('validacion de entrada', () => {
     expect(ultimaConsulta()?.limit).toBe(40);
     await app.close();
   });
+
+  it('una faceta de otro juego es un 400 que la nombra, y no llega al repositorio', async () => {
+    const { catalog, ultimaConsulta } = fakeCatalog();
+    const app = buildServer({ catalog });
+    const res = await app.inject({ method: 'GET', url: '/api/cards?game=PTCG&color=U' });
+    expect(res.statusCode).toBe(400);
+    expect(res.json().message).toContain('"color"');
+    expect(ultimaConsulta()).toBeNull();
+    await app.close();
+  });
+
+  it('una faceta sin juego tambien es 400: no hay perfil contra el que mirarla', async () => {
+    const { catalog } = fakeCatalog();
+    const app = buildServer({ catalog });
+    expect((await app.inject({ method: 'GET', url: '/api/cards?kind=creature' })).statusCode).toBe(400);
+    await app.close();
+  });
+
+  it('las facetas del juego llegan juntas al repositorio, y el resto como siempre', async () => {
+    const { catalog, ultimaConsulta } = fakeCatalog();
+    const app = buildServer({ catalog });
+    const res = await app.inject({ method: 'GET', url: '/api/cards?game=MTG&set=blb&color=U&kind=creature' });
+    expect(res.statusCode).toBe(200);
+    expect(ultimaConsulta()?.facetas).toEqual({ color: 'U', kind: 'creature' });
+    expect(ultimaConsulta()?.set).toBe('blb');
+    expect(ultimaConsulta()?.game).toBe('MTG');
+    await app.close();
+  });
+
+  it('una clave que no es de ningun juego sigue siendo 400 por esquema', async () => {
+    const { catalog } = fakeCatalog();
+    const app = buildServer({ catalog });
+    expect((await app.inject({ method: 'GET', url: '/api/cards?game=MTG&colour=U' })).statusCode).toBe(400);
+    await app.close();
+  });
 });
 
 describe('rutas', () => {
@@ -198,37 +239,26 @@ describe('rutas', () => {
     await app.close();
   });
 
-  it('P-024: toSummary produce EXACTAMENTE los campos que declara el esquema', () => {
-    // El esquema declaraba `cardId` y el repositorio devolvia `id`: Fastify
-    // descartaba los dos en silencio y la API no expuso el id de la carta desde
-    // H3. TypeScript no lo detecta porque el esquema es un literal JSON, no un
-    // tipo, y los ficheros de test ni siquiera pasan por `tsc`.
-    //
-    // Por eso el test ejecuta la funcion de mapeo DE VERDAD y compara sus
-    // claves con las del esquema. Renombrar un campo en cualquiera de los dos
-    // lados lo rompe.
+  it('P-024: toSummary produce EXACTAMENTE los campos que declara el esquema, facetas incluidas', () => {
+    // El esquema es un literal JSON y TypeScript no lo relaciona con
+    // `CardSummary`: Fastify tira en silencio lo que no cuadra. Desde H9f la
+    // comprobacion baja un nivel: lo que lleva `facetas` en cada juego es lo que
+    // dice su perfil, y lo que declara el esquema es la union de los tres.
     const fila: CardRow = {
-      id: 7,
-      oracle_key: '89631139',
-      game_id: 2,
-      name: 'Blue-Eyes White Dragon',
-      type_line: 'Normal Monster',
-      set_code: 'LOB',
-      set_name: 'Legend of Blue Eyes',
-      hp: null,
-      supertype: null,
-      elem_type: null,
-      reg_mark: null,
-      print_id: 42,
-      collector_number: '001',
-      image_local_path: 'ygo/lob/x.245.webp',
-      rarity: 'ultra_rare',
+      id: 7, oracle_key: '89631139', game_id: 2, name: 'Blue-Eyes White Dragon',
+      type_line: 'Normal Monster', set_code: 'LOB', set_name: 'Legend of Blue Eyes',
+      print_id: 42, collector_number: '001', image_local_path: 'ygo/lob/x.245.webp', rarity: 'ultra_rare',
     };
-    const producido = toSummary(fila);
-
-    expect(Object.keys(producido).sort()).toEqual(Object.keys(CARD_SUMMARY.properties).sort());
-    expect(producido.cardId).toBe(7);
-    expect(producido.printId).toBe(42);
+    for (const game of GAME_CODES) {
+      const producido = toSummary({ ...fila, game_id: GAME_IDS[game] });
+      expect(Object.keys(producido).sort()).toEqual(Object.keys(CARD_SUMMARY.properties).sort());
+      expect(Object.keys(producido.facetas).sort(), game).toEqual([...rowFieldsOf(game)].sort());
+    }
+    const declaradas = Object.keys(CARD_SUMMARY.properties.facetas.properties).sort();
+    const union = [...new Set(GAME_CODES.flatMap((g) => rowFieldsOf(g)))].sort();
+    expect(declaradas).toEqual(union);
+    expect(toSummary(fila).cardId).toBe(7);
+    expect(toSummary(fila).printId).toBe(42);
   });
 
   it('NO expone endpoint de apertura de sobres (espera a H6)', async () => {

@@ -19,10 +19,7 @@ import type { CardQuery, FacetCounts } from '../db/catalog-query-repository.js';
 const SECRETO = 'un-secreto-suficientemente-largo-para-produccion-2026';
 
 const CON_TENENCIA: FacetCounts = {
-  types: [{ value: 'Grass', count: 23, owned: 12 }],
-  supertypes: [],
-  marks: [],
-  withoutMark: 0,
+  facetas: { type: [{ value: 'Grass', count: 23, owned: 12 }] },
   rarities: [],
   total: 23,
   ownedTotal: 12,
@@ -45,7 +42,7 @@ function catalogoEspia() {
       facetas.push([game, set, userId]);
       return userId !== undefined
         ? CON_TENENCIA
-        : { ...CON_TENENCIA, types: [{ value: 'Grass', count: 23, owned: null }], ownedTotal: null };
+        : { ...CON_TENENCIA, facetas: { type: [{ value: 'Grass', count: 23, owned: null }] }, ownedTotal: null };
     },
     findCard: async () => null,
   };
@@ -155,7 +152,7 @@ describe('la tenencia en los recuentos del rail', () => {
     expect(res.json().data).toMatchObject({
       total: 23,
       ownedTotal: 12,
-      types: [{ value: 'Grass', count: 23, owned: 12 }],
+      facetas: { type: [{ value: 'Grass', count: 23, owned: 12 }] },
     });
   });
 

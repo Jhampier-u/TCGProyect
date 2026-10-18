@@ -10,6 +10,8 @@
  * (P-001). Aqui no aparece, luego no puede salir.
  */
 
+import { FACET_KEYS, ROW_FIELDS, ROW_FIELD_KIND } from '@tcg/shared';
+
 /** Un valor de faceta con su recuento. */
 const RECUENTO = {
   type: 'object',
@@ -20,6 +22,23 @@ const RECUENTO = {
     owned: { type: ['integer', 'null'] },
   },
 } as const;
+
+/**
+ * Lo que una fila lleva bajo `facetas`: la UNION de los datos de fila de los
+ * tres perfiles (H9f). ADR-007 sigue mordiendo: un dato que falte aqui Fastify
+ * lo tira sin decir nada. La prueba de P-024 compara esta lista con los perfiles.
+ */
+const FACETAS_DE_FILA = {
+  type: 'object',
+  properties: Object.fromEntries(
+    ROW_FIELDS.map((f) => [f, { type: ROW_FIELD_KIND[f] === 'int' ? ['integer', 'null'] : ['string', 'null'] }]),
+  ) as Record<(typeof ROW_FIELDS)[number], { type: string[] }>,
+} as const;
+
+/** Cada clave de faceta como parametro plano de la URL (`?color=U&kind=creature`). */
+const PARAMETROS_DE_FACETA = Object.fromEntries(
+  FACET_KEYS.map((k) => [k, { type: 'string', maxLength: 32 }]),
+) as Record<(typeof FACET_KEYS)[number], { type: 'string'; maxLength: number }>;
 
 export const CARD_SUMMARY = {
   type: 'object',
@@ -37,17 +56,9 @@ export const CARD_SUMMARY = {
     rarity: { type: 'string' },
     // Ruta LOCAL, servida por nosotros. Jamas un dominio externo.
     imagePath: { type: ['string', 'null'] },
-    // Facetas de Pokemon (T-092), nulas en los otros dos juegos.
-    //
-    // AQUI ES DONDE MUERDE ADR-007. El repositorio ya las devuelve; si no se
-    // declaran, Fastify las descarta al serializar y la rejilla se queda sin
-    // PS, sin tipo y sin marca **sin un solo error**. Es exactamente como se
-    // perdio `cardId` durante tres hitos (P-024). Lo unico que lo impide es la
-    // prueba que ejecuta `toSummary` y compara sus claves con estas.
-    hp: { type: ['integer', 'null'] },
-    supertype: { type: ['string', 'null'] },
-    elemType: { type: ['string', 'null'] },
-    regMark: { type: ['string', 'null'] },
+    // Los datos de las celdas de la fila, por juego (H9f). Antes eran cuatro
+    // campos planos de Pokemon; ahora es la union de los tres perfiles.
+    facetas: FACETAS_DE_FILA,
     // Si quien mira la tiene (T-093). Nulo sin sesion y en la ficha.
     owned: { type: ['boolean', 'null'] },
   },
@@ -217,10 +228,10 @@ export const LIST_FACETS = {
         data: {
           type: 'object',
           properties: {
-            types: { type: 'array', items: RECUENTO },
-            supertypes: { type: 'array', items: RECUENTO },
-            marks: { type: 'array', items: RECUENTO },
-            withoutMark: { type: 'integer' },
+            facetas: {
+              type: 'object',
+              properties: Object.fromEntries(FACET_KEYS.map((k) => [k, { type: 'array', items: RECUENTO }])),
+            },
             rarities: { type: 'array', items: RECUENTO },
             total: { type: 'integer' },
             ownedTotal: { type: ['integer', 'null'] },
@@ -238,12 +249,11 @@ export const SEARCH_CARDS = {
       game: { type: 'string', enum: ['MTG', 'YGO', 'PTCG'] },
       set: { type: 'string', maxLength: 255 },
       rarity: { type: 'string', maxLength: 48 },
-      // Facetas de Pokemon (T-092). `additionalProperties: false` de abajo hace
-      // que una query no declarada sea un 400, no un filtro que se ignora en
-      // silencio: la superficie es exactamente la que se declara.
-      type: { type: 'string', maxLength: 24 },
-      supertype: { type: 'string', maxLength: 24 },
-      mark: { type: 'string', maxLength: 16 },
+      // Las facetas de los tres juegos (H9f). El esquema admite la UNION; que
+      // la clave sea del juego pedido lo comprueba la ruta y contesta 400.
+      // `additionalProperties: false` sigue haciendo 400 de lo que no es de
+      // ninguno.
+      ...PARAMETROS_DE_FACETA,
       // Las que tengo o las que me faltan (T-093). Exige sesion: el usuario
       // sale del token, y por eso aqui no hay ningun `userId` que declarar.
       owned: { type: 'string', enum: ['yes', 'no'] },
