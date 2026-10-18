@@ -1,9 +1,10 @@
 import { useId, type CSSProperties, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
+import type { GameCode } from '@tcg/shared';
+import { FACET_PROFILES } from '@tcg/shared';
 import type { FacetCount, FacetCounts } from '../lib/api.js';
-import { SIN_MARCA } from '../lib/api.js';
-import type { ClaveFiltro, FiltrosCatalogo } from '../lib/filtros-url.js';
-import { estiloDeTipo } from '../lib/tipos-pokemon.js';
+import { valorDe, type ClaveFiltro, type FiltrosCatalogo } from '../lib/filtros-url.js';
+import { PRESENTACION } from '../lib/facetas-web.js';
 import { ES } from '../i18n/es.js';
 
 interface Props {
@@ -11,6 +12,7 @@ interface Props {
   id: string;
   /** Solo cuenta en pantallas estrechas: en ancho el rail siempre se ve. */
   abierto: boolean;
+  juego: GameCode;
   facetas: FacetCounts | undefined;
   filtros: FiltrosCatalogo;
   /** Rarezas del juego en orden de `tier`, con su nombre legible. */
@@ -20,20 +22,16 @@ interface Props {
 }
 
 /**
- * El rail de estructura del set (T-093, D-5 del spec).
+ * El rail de estructura del set (T-093, D-5 del spec H9b; por perfil desde H9f).
  *
  * ES A LA VEZ NAVEGACION, INFORMACION Y FILTRO. Cada fila dice cuantas cartas
- * hay de ese valor -- y, con sesion, cuantas tienes -- antes de pulsarla. Una
- * lista que dice "Planta 2 de 35" ya ha contestado la pregunta del criterio de
- * aceptacion; pulsarla solo la convierte en filtro.
+ * hay de ese valor -- y, con sesion, cuantas tienes -- antes de pulsarla.
  *
- * Cada fila es un `button` con `aria-pressed`: es un interruptor, y asi lo
- * anuncia un lector de pantalla. Pulsar la fila activa la quita.
- *
- * Las secciones salen de los datos: si un juego no trae tipos, no hay seccion
- * de tipos. Es lo que deja que Magic reutilice esto sin un `if (juego)`.
+ * Las secciones salen del PERFIL del juego, en su orden, entre la tenencia y la
+ * rareza, que son de todos. Una seccion sin recuentos no se pinta. Cada fila es
+ * un `button` con `aria-pressed`: un interruptor, y asi lo anuncia un lector.
  */
-export function RailDeSet({ id, abierto, facetas, filtros, rarezas, conSesion, onAlternar }: Props) {
+export function RailDeSet({ id, abierto, juego, facetas, filtros, rarezas, conSesion, onAlternar }: Props) {
   const clase = abierto ? 'rail rail-abierto' : 'rail';
   if (!facetas) return <nav id={id} className={`${clase} rail-cargando`} aria-label={ES.rail.titulo} aria-busy="true" />;
 
@@ -42,10 +40,6 @@ export function RailDeSet({ id, abierto, facetas, filtros, rarezas, conSesion, o
     (a, b) => (porTier.get(a.value) ?? 999) - (porTier.get(b.value) ?? 999),
   );
   const nombreDeRareza = new Map(rarezas.map((r) => [r.code, r.label]));
-
-  const orden = ES.pokemon.ordenSupertipo as readonly string[];
-  const supertipos = [...facetas.supertypes].sort((a, b) => orden.indexOf(a.value) - orden.indexOf(b.value));
-  const marcas = [...facetas.marks].sort((a, b) => a.value.localeCompare(b.value));
 
   return (
     <nav id={id} className={clase} aria-label={ES.rail.titulo}>
@@ -72,35 +66,27 @@ export function RailDeSet({ id, abierto, facetas, filtros, rarezas, conSesion, o
         )}
       </Seccion>
 
-      {supertipos.length > 0 && (
-        <Seccion titulo={ES.rail.categoria}>
-          {supertipos.map((f) => (
-            <FilaDeFaceta
-              key={f.value}
-              faceta={f}
-              etiqueta={ES.pokemon.supertipo[f.value] ?? f.value}
-              activa={filtros.supertype === f.value}
-              onPulsar={() => onAlternar('supertype', f.value)}
-            />
-          ))}
-        </Seccion>
-      )}
-
-      {facetas.types.length > 0 && (
-        <Seccion titulo={ES.rail.tipo}>
-          {facetas.types.map((f) => (
-            <FilaDeFaceta
-              key={f.value}
-              faceta={f}
-              etiqueta={ES.pokemon.tipo[f.value] ?? f.value}
-              activa={filtros.type === f.value}
-              onPulsar={() => onAlternar('type', f.value)}
-              estilo={estiloDeTipo(f.value)}
-              punto
-            />
-          ))}
-        </Seccion>
-      )}
+      {FACET_PROFILES[juego].facets.map((def) => {
+        const filas = facetas.facetas[def.key] ?? [];
+        if (filas.length === 0) return null;
+        const p = PRESENTACION[def.key];
+        return (
+          <Seccion key={def.key} titulo={p.titulo(juego)}>
+            {filas.map((f) => (
+              <FilaDeFaceta
+                key={f.value}
+                faceta={f}
+                etiqueta={p.etiqueta(f.value)}
+                activa={valorDe(filtros, def.key) === f.value}
+                onPulsar={() => onAlternar(def.key, f.value)}
+                estilo={p.estilo?.(f.value)}
+                punto={p.estilo !== undefined}
+                nota={p.nota?.(f.value)}
+              />
+            ))}
+          </Seccion>
+        );
+      })}
 
       {rarezasOrdenadas.length > 0 && (
         <Seccion titulo={ES.rail.rareza}>
@@ -113,29 +99,6 @@ export function RailDeSet({ id, abierto, facetas, filtros, rarezas, conSesion, o
               onPulsar={() => onAlternar('rarity', f.value)}
             />
           ))}
-        </Seccion>
-      )}
-
-      {(marcas.length > 0 || facetas.withoutMark > 0) && (
-        <Seccion titulo={ES.rail.marca}>
-          {marcas.map((f) => (
-            <FilaDeFaceta
-              key={f.value}
-              faceta={f}
-              etiqueta={ES.pokemon.marca(f.value)}
-              activa={filtros.mark === f.value}
-              onPulsar={() => onAlternar('mark', f.value)}
-            />
-          ))}
-          {facetas.withoutMark > 0 && (
-            <Fila
-              activa={filtros.mark === SIN_MARCA}
-              onPulsar={() => onAlternar('mark', SIN_MARCA)}
-              etiqueta={ES.rail.sinMarca}
-              cuenta={facetas.withoutMark}
-              nota={ES.rail.sinMarcaNota}
-            />
-          )}
         </Seccion>
       )}
     </nav>
@@ -160,7 +123,8 @@ function FilaDeFaceta(props: {
   activa: boolean;
   onPulsar: () => void;
   estilo?: CSSProperties | undefined;
-  punto?: boolean;
+  punto?: boolean | undefined;
+  nota?: string | undefined;
 }) {
   const { faceta, ...resto } = props;
   return <Fila {...resto} cuenta={faceta.count} tengo={faceta.owned} />;
@@ -175,7 +139,7 @@ function Fila(props: {
   onPulsar: () => void;
   estilo?: CSSProperties | undefined;
   punto?: boolean | undefined;
-  nota?: string;
+  nota?: string | undefined;
 }) {
   const conTenencia = props.tengo !== undefined && props.tengo !== null;
   const proporcion = conTenencia && props.cuenta > 0 ? (props.tengo as number) / props.cuenta : 0;

@@ -1,18 +1,11 @@
+import type { GameCode } from '@tcg/shared';
+import { FACET_PROFILES } from '@tcg/shared';
 import type { CardSummary } from '../lib/api.js';
-import { imageUrl } from '../lib/api.js';
-import { estiloDeTipo } from '../lib/tipos-pokemon.js';
-import { ES } from '../i18n/es.js';
-
-/**
- * Tope de la barra de PS. 400 y no el maximo del set: la barra tiene que
- * comparar cartas de SETS DISTINTOS, y con una escala por set un 150 de 2003 y
- * un 150 de 2024 tendrian barras de distinto largo. El maximo del catalogo
- * entero es 380 (medido en S037).
- */
-const PS_TOPE = 400;
+import { CELDAS } from './celdas.js';
 
 interface Props {
   carta: CardSummary;
+  juego: GameCode;
   /** Abre la ficha (T-094). */
   onAbrir: () => void;
   rareza: string;
@@ -21,71 +14,21 @@ interface Props {
 }
 
 /**
- * Una fila del catalogo «Consulta» (T-093, D-3 del spec).
+ * Una fila del catalogo «Consulta» (T-093; por perfil desde H9f).
  *
- * Filas densas con las cifras alineadas, el PS como barra comparable y el tipo
- * como chip de color. Es una fila de TABLA, no una tarjeta: son datos tabulares
- * y un lector de pantalla anuncia cada celda con su cabecera.
+ * Es una fila de TABLA, no una tarjeta: son datos tabulares y un lector de
+ * pantalla anuncia cada celda con su cabecera. Que celdas tiene, y en que
+ * orden, lo dice el perfil del juego; como se pinta cada una, `celdas.tsx`.
  */
-export function FilaDeCarta({ carta, rareza, conSesion, onAbrir }: Props) {
-  const src = imageUrl(carta.imagePath);
-  const tipo = carta.elemType ? ES.pokemon.tipo[carta.elemType] ?? carta.elemType : null;
-
+export function FilaDeCarta({ carta, juego, rareza, conSesion, onAbrir }: Props) {
   return (
     <tr className={carta.owned === false ? 'fila-carta fila-falta' : 'fila-carta'}>
-      <td className="col-numero">{carta.collectorNumber}</td>
-      <td className="col-carta">
-        <div className="celda-carta">
-          <span className="carta-miniatura">
-            {src ? (
-              // Tamano declarado: sin el, cada imagen que llega empuja la tabla y
-              // la fila que estabas leyendo se mueve.
-              <img src={src} alt="" loading="lazy" decoding="async" width={34} height={47} />
-            ) : (
-              <span className="miniatura-hueco" aria-hidden="true" />
-            )}
-          </span>
-          <span className="carta-textos">
-            {/* El nombre ES el boton: es lo que se lee primero y lo que se
-                pulsa. Un boton aparte de "ver" en cada fila seria 300 botones
-                identicos para un lector de pantalla. */}
-            <button type="button" className="carta-nombre-fila" onClick={onAbrir}>
-              {carta.name}
-            </button>
-            {carta.typeLine && <span className="carta-linea">{carta.typeLine}</span>}
-          </span>
-        </div>
-      </td>
-      <td className="col-tipo">
-        {tipo ? (
-          <span className="chip-tipo" style={estiloDeTipo(carta.elemType)}>{tipo}</span>
-        ) : (
-          <span className="tenue">{ES.simbolo.vacio}</span>
-        )}
-      </td>
-      <td className="col-ps">
-        {carta.hp !== null ? (
-          <span className="ps" title={ES.catalogo.ps(carta.hp)}>
-            <span className="ps-cifra">{carta.hp}</span>
-            <span className="ps-barra" aria-hidden="true">
-              <span style={{ inlineSize: `${Math.min(100, (carta.hp / PS_TOPE) * 100)}%` }} />
-            </span>
-          </span>
-        ) : (
-          <span className="tenue">{ES.simbolo.vacio}</span>
-        )}
-      </td>
-      <td className="col-rareza">{rareza}</td>
-      <td className="col-marca">{carta.regMark ?? <span className="tenue">{ES.simbolo.vacio}</span>}</td>
-      {conSesion && (
-        <td className="col-tienes">
-          {carta.owned ? (
-            <span className="tienes-si" role="img" aria-label={ES.catalogo.laTienes}>{ES.simbolo.check}</span>
-          ) : (
-            <span className="tienes-no" role="img" aria-label={ES.catalogo.teFalta}>{ES.simbolo.vacio}</span>
-          )}
-        </td>
-      )}
+      {FACET_PROFILES[juego].cells
+        .filter((c) => conSesion || c !== 'owned')
+        .map((c) => {
+          const Celda = CELDAS[c];
+          return <Celda key={c} carta={carta} rareza={rareza} onAbrir={onAbrir} />;
+        })}
     </tr>
   );
 }

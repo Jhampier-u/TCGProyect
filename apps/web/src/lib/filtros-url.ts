@@ -1,3 +1,6 @@
+import type { FacetKey, GameCode } from '@tcg/shared';
+import { FACET_PROFILES } from '@tcg/shared';
+
 /**
  * El estado de los filtros del catalogo, en la URL (T-093).
  *
@@ -16,70 +19,88 @@ export interface FiltrosCatalogo {
   /** `externalId` del set. Vacio = todo el juego. */
   set: string;
   q: string;
-  type: string;
-  supertype: string;
   rarity: string;
-  /** Marca de regulacion, o `SIN_MARCA` para las anteriores a 2019. */
-  mark: string;
   owned: Tenencia;
+  /** Las facetas del perfil del juego (H9f): clave -> valor. */
+  facetas: Partial<Record<FacetKey, string>>;
 }
 
-/** Las claves, en el orden en que se escriben: una URL estable se comparte mejor. */
-export const CLAVES = ['set', 'q', 'type', 'supertype', 'rarity', 'mark', 'owned'] as const;
-export type ClaveFiltro = (typeof CLAVES)[number];
+export type ClaveFiltro = 'set' | 'q' | 'rarity' | 'owned' | FacetKey;
 
-export const SIN_FILTROS: FiltrosCatalogo = {
-  set: '', q: '', type: '', supertype: '', rarity: '', mark: '', owned: '',
-};
+export const SIN_FILTROS: FiltrosCatalogo = { set: '', q: '', rarity: '', owned: '', facetas: {} };
 
-export function leerFiltros(params: URLSearchParams): FiltrosCatalogo {
-  const owned = params.get('owned');
-  return {
-    set: params.get('set') ?? '',
-    q: params.get('q') ?? '',
-    type: params.get('type') ?? '',
-    supertype: params.get('supertype') ?? '',
-    rarity: params.get('rarity') ?? '',
-    mark: params.get('mark') ?? '',
+/**
+ * Las claves de un juego, en el orden en que se escriben: una URL estable se
+ * comparte mejor. Las facetas van en el orden del perfil.
+ */
+export function clavesDe(juego: GameCode): ClaveFiltro[] {
+  return ['set', 'q', ...FACET_PROFILES[juego].facets.map((f) => f.key), 'rarity', 'owned'];
+}
+
+export function valorDe(filtros: FiltrosCatalogo, clave: ClaveFiltro): string {
+  switch (clave) {
+    case 'set': return filtros.set;
+    case 'q': return filtros.q;
+    case 'rarity': return filtros.rarity;
+    case 'owned': return filtros.owned;
+    default: return filtros.facetas[clave] ?? '';
+  }
+}
+
+function conValor(filtros: FiltrosCatalogo, clave: ClaveFiltro, valor: string): FiltrosCatalogo {
+  switch (clave) {
+    case 'set': return { ...filtros, set: valor };
+    case 'q': return { ...filtros, q: valor };
+    case 'rarity': return { ...filtros, rarity: valor };
     // Un valor desconocido se descarta en vez de mandarse: la API lo
-    // rechazaria con un 400 y el catalogo se quedaria en blanco por un enlace
-    // mal copiado.
-    owned: owned === 'yes' || owned === 'no' ? owned : '',
-  };
+    // rechazaria con un 400 y el catalogo se quedaria en blanco.
+    case 'owned': return { ...filtros, owned: valor === 'yes' || valor === 'no' ? valor : '' };
+    default: {
+      const facetas = { ...filtros.facetas };
+      if (valor === '') delete facetas[clave];
+      else facetas[clave] = valor;
+      return { ...filtros, facetas };
+    }
+  }
 }
 
-export function escribirFiltros(filtros: FiltrosCatalogo): URLSearchParams {
+/** Solo se leen las claves del juego: una de otro juego en la URL se ignora. */
+export function leerFiltros(params: URLSearchParams, juego: GameCode): FiltrosCatalogo {
+  return clavesDe(juego).reduce((f, clave) => conValor(f, clave, params.get(clave) ?? ''), SIN_FILTROS);
+}
+
+export function escribirFiltros(filtros: FiltrosCatalogo, juego: GameCode): URLSearchParams {
   const params = new URLSearchParams();
-  for (const clave of CLAVES) {
-    const valor = filtros[clave].trim();
+  for (const clave of clavesDe(juego)) {
+    const valor = valorDe(filtros, clave).trim();
     if (valor !== '') params.set(clave, valor);
   }
   return params;
 }
 
 /**
- * Pulsar un filtro que ya esta puesto lo QUITA.
- *
- * Es lo que hace que el rail funcione como un interruptor: la misma fila que
- * pone "Planta" la quita, sin buscar otro boton.
+ * Pulsar un filtro que ya esta puesto lo QUITA: la misma fila del rail que pone
+ * "Planta" la quita, sin buscar otro boton.
  */
 export function alternar(filtros: FiltrosCatalogo, clave: ClaveFiltro, valor: string): FiltrosCatalogo {
-  return { ...filtros, [clave]: filtros[clave] === valor ? '' : valor };
+  return conValor(filtros, clave, valorDe(filtros, clave) === valor ? '' : valor);
 }
 
 export function quitar(filtros: FiltrosCatalogo, clave: ClaveFiltro): FiltrosCatalogo {
-  return { ...filtros, [clave]: '' };
+  return conValor(filtros, clave, '');
 }
 
 /**
- * Lo que se pinta como chip borrable: todo menos el set.
- *
- * El set no es un filtro mas, es el CONTEXTO -- el titulo de la pagina y el
- * ambito de los recuentos del rail --, y quitarlo con una cruz pequena entre
- * "Planta" y "Comun" seria facil de hacer sin querer.
+ * Lo que se pinta como chip borrable: todo menos el set, que es el CONTEXTO --
+ * el titulo de la pagina y el ambito de los recuentos --, no un filtro mas.
  */
-export function filtrosActivos(filtros: FiltrosCatalogo): Array<{ clave: ClaveFiltro; valor: string }> {
-  return CLAVES.filter((c) => c !== 'set' && filtros[c] !== '').map((c) => ({ clave: c, valor: filtros[c] }));
+export function filtrosActivos(
+  filtros: FiltrosCatalogo,
+  juego: GameCode,
+): Array<{ clave: ClaveFiltro; valor: string }> {
+  return clavesDe(juego)
+    .filter((c) => c !== 'set' && valorDe(filtros, c) !== '')
+    .map((c) => ({ clave: c, valor: valorDe(filtros, c) }));
 }
 
 /** Quita todos los filtros y conserva el set, por lo mismo que arriba. */

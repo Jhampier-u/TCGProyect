@@ -2,13 +2,16 @@ import { useEffect, useId, useMemo, useState } from 'react';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { useOutletContext, useSearchParams } from 'react-router-dom';
 import type { GameCode } from '@tcg/shared';
-import { api, imageUrl, SIN_MARCA } from '../lib/api.js';
+import { FACET_PROFILES, isFacetKey } from '@tcg/shared';
+import { api, imageUrl } from '../lib/api.js';
 import { useAuth } from '../lib/auth.js';
 import { consultaRarezas, consultaSets } from '../lib/consultas.js';
 import {
   alternar, escribirFiltros, filtrosActivos, leerFiltros, limpiar, quitar,
   type ClaveFiltro, type FiltrosCatalogo,
 } from '../lib/filtros-url.js';
+import { PRESENTACION } from '../lib/facetas-web.js';
+import { CABECERAS } from '../lib/celdas.js';
 import { SelectorDeSet } from '../components/SelectorDeSet.js';
 import { RailDeSet } from '../components/RailDeSet.js';
 import { FilaDeCarta } from '../components/FilaDeCarta.js';
@@ -36,7 +39,7 @@ export function Catalogo() {
   const { juego } = useOutletContext<{ juego: GameCode }>();
   const { user, token, cargando } = useAuth();
   const [params, setParams] = useSearchParams();
-  const filtros = leerFiltros(params);
+  const filtros = leerFiltros(params, juego);
   const conSesion = user !== null && token !== null;
 
   // "Me faltan" sin sesion no tiene coleccion contra la que comparar: la API
@@ -46,7 +49,7 @@ export function Catalogo() {
   const idRail = useId();
   const [railAbierto, setRailAbierto] = useState(false);
 
-  const fijar = (siguientes: FiltrosCatalogo) => setParams(escribirFiltros(siguientes));
+  const fijar = (siguientes: FiltrosCatalogo) => setParams(escribirFiltros(siguientes, juego));
 
   // La ficha abierta tambien va en la URL (T-094): se comparte con un enlace y
   // el boton de atras la cierra. Cambiar un filtro la cierra sola, porque
@@ -81,18 +84,24 @@ export function Catalogo() {
     enabled: !cargando,
   });
 
-  const { set, q, type, supertype, rarity, mark, owned } = efectivos;
+  // La clave de cache es la URL de los filtros efectivos: dos estados con la
+  // misma URL son la misma pregunta.
+  const claveDeFiltros = escribirFiltros(efectivos, juego).toString();
   const cartas = useInfiniteQuery({
-    queryKey: ['cartas', juego, set, q, type, supertype, rarity, mark, owned, user?.id ?? null],
+    queryKey: ['cartas', juego, claveDeFiltros, user?.id ?? null],
     queryFn: ({ pageParam }) =>
       api.cards(
-        { game: juego, set, q, type, supertype, rarity, mark, owned, cursor: pageParam, limit: POR_PAGINA },
+        {
+          game: juego, set: efectivos.set, q: efectivos.q, rarity: efectivos.rarity,
+          owned: efectivos.owned, facetas: efectivos.facetas, cursor: pageParam, limit: POR_PAGINA,
+        },
         token,
       ),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (ultima) => ultima.nextCursor ?? undefined,
     enabled: !cargando,
   });
+  const celdas = FACET_PROFILES[juego].cells.filter((c) => conSesion || c !== 'owned');
 
   const filas = cartas.data?.pages.flatMap((p) => p.data) ?? [];
   const setActual = sets.data?.find((s) => s.externalId === filtros.set) ?? null;
@@ -145,7 +154,7 @@ export function Catalogo() {
             aria-controls={idRail}
             onClick={() => setRailAbierto((a) => !a)}
           >
-            {ES.catalogo.filtros(filtrosActivos(efectivos).length)}
+            {ES.catalogo.filtros(filtrosActivos(efectivos, juego).length)}
           </button>
         </div>
       </header>
@@ -154,6 +163,7 @@ export function Catalogo() {
         <RailDeSet
           id={idRail}
           abierto={railAbierto}
+          juego={juego}
           facetas={facetas.data}
           filtros={efectivos}
           rarezas={rarezas.data ?? []}
@@ -164,6 +174,7 @@ export function Catalogo() {
         <section className="consulta-resultados" aria-live="polite" aria-busy={cartas.isFetching && !cartas.isFetchingNextPage}>
           <Chips
             filtros={efectivos}
+            juego={juego}
             nombreDeRareza={nombreDeRareza}
             onQuitar={(c) => fijar(quitar(filtros, c))}
             onLimpiar={() => fijar(limpiar(filtros))}
@@ -175,7 +186,7 @@ export function Catalogo() {
           {!cartas.isPending && filas.length === 0 && !cartas.isError && (
             <div className="vacio">
               <p>{ES.catalogo.sinResultados}</p>
-              {filtrosActivos(efectivos).length > 0 && <p className="tenue">{ES.catalogo.sinResultadosAyuda}</p>}
+              {filtrosActivos(efectivos, juego).length > 0 && <p className="tenue">{ES.catalogo.sinResultadosAyuda}</p>}
             </div>
           )}
 
@@ -185,13 +196,9 @@ export function Catalogo() {
               <table className="tabla-consulta">
                 <thead>
                   <tr>
-                    <th scope="col" className="col-numero">{ES.catalogo.columnas.numero}</th>
-                    <th scope="col" className="col-carta">{ES.catalogo.columnas.carta}</th>
-                    <th scope="col" className="col-tipo">{ES.catalogo.columnas.tipo}</th>
-                    <th scope="col" className="col-ps">{ES.catalogo.columnas.ps}</th>
-                    <th scope="col" className="col-rareza">{ES.catalogo.columnas.rareza}</th>
-                    <th scope="col" className="col-marca">{ES.catalogo.columnas.marca}</th>
-                    {conSesion && <th scope="col" className="col-tienes">{ES.catalogo.columnas.tienes}</th>}
+                    {celdas.map((c) => (
+                      <th key={c} scope="col" className={CABECERAS[c].clase}>{CABECERAS[c].etiqueta}</th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody>
@@ -199,6 +206,7 @@ export function Catalogo() {
                     <FilaDeCarta
                       key={c.printId}
                       carta={c}
+                      juego={juego}
                       onAbrir={() => abrirCarta(c.printId)}
                       rareza={nombreDeRareza.get(c.rarity) ?? c.rarity}
                       conSesion={conSesion}
@@ -275,22 +283,23 @@ function Buscador({ inicial, onBuscar }: { inicial: string; onBuscar: (q: string
 }
 
 function Chips({
-  filtros, nombreDeRareza, onQuitar, onLimpiar,
+  filtros, juego, nombreDeRareza, onQuitar, onLimpiar,
 }: {
   filtros: FiltrosCatalogo;
+  juego: GameCode;
   nombreDeRareza: Map<string, string>;
   onQuitar: (clave: ClaveFiltro) => void;
   onLimpiar: () => void;
 }) {
-  const activos = filtrosActivos(filtros);
+  const activos = filtrosActivos(filtros, juego);
   if (activos.length === 0) return null;
 
+  // La etiqueta de un chip es la de su fila en el rail: el mismo nombre en los
+  // dos sitios es lo que deja reconocer que filtro se esta quitando.
   const etiqueta = (clave: ClaveFiltro, valor: string): string => {
+    if (isFacetKey(clave)) return PRESENTACION[clave].etiqueta(valor);
     switch (clave) {
-      case 'type': return ES.pokemon.tipo[valor] ?? valor;
-      case 'supertype': return ES.pokemon.supertipo[valor] ?? valor;
       case 'rarity': return nombreDeRareza.get(valor) ?? valor;
-      case 'mark': return valor === SIN_MARCA ? ES.rail.sinMarca : ES.pokemon.marca(valor);
       case 'owned': return valor === 'no' ? ES.rail.meFaltan : ES.rail.lasTengo;
       case 'q': return ES.catalogo.busqueda(valor);
       default: return valor;

@@ -1,4 +1,4 @@
-import type { DeckLine, DeckValidation, DeckZone, GameCode, GameData } from '@tcg/shared';
+import type { DeckLine, DeckValidation, DeckZone, FacetKey, FacetValues, GameCode, GameData, RowFacets } from '@tcg/shared';
 
 /**
  * Cliente de la API.
@@ -40,14 +40,10 @@ export interface CardSummary {
   /** Ruta relativa dentro de nuestro almacen. Se sirve en `/images/...`. */
   imagePath: string | null;
   /**
-   * Facetas del juego (T-092). Hoy las de Pokemon; nulas en Magic y Yu-Gi-Oh!.
-   * Llegan en el resumen para que la rejilla no tenga que pedir la ficha de
-   * cada carta para pintar un chip.
+   * Los datos de las celdas de la fila de su juego (H9f). Llegan en el resumen
+   * para que la tabla no tenga que pedir la ficha de cada carta.
    */
-  hp: number | null;
-  supertype: string | null;
-  elemType: string | null;
-  regMark: string | null;
+  facetas: RowFacets;
   /** Si quien mira la tiene (T-093). `null` sin sesion: no se sabe, no es un no. */
   owned: boolean | null;
 }
@@ -61,19 +57,13 @@ export interface FacetCount {
 }
 
 export interface FacetCounts {
-  types: FacetCount[];
-  supertypes: FacetCount[];
-  marks: FacetCount[];
-  /** Cuantas NO tienen marca. Anteriores a 2019: no es un hueco. */
-  withoutMark: number;
+  /** Una lista por faceta del perfil, en el orden del perfil (H9f). */
+  facetas: Partial<Record<FacetKey, FacetCount[]>>;
   rarities: FacetCount[];
   /** Impresiones del contexto -- el set o el juego -- y cuantas tiene el usuario. */
   total: number;
   ownedTotal: number | null;
 }
-
-/** Valor de `mark` que pide las cartas SIN marca de regulacion. */
-export const SIN_MARCA = 'ninguna';
 
 export interface CardPage {
   data: CardSummary[];
@@ -301,17 +291,18 @@ export const api = {
     game?: GameCode | undefined;
     set?: string | undefined;
     rarity?: string | undefined;
-    type?: string | undefined;
-    supertype?: string | undefined;
-    mark?: string | undefined;
+    facetas?: FacetValues | undefined;
     /** Exige sesion: sin token la API contesta 401 (T-093). */
     owned?: 'yes' | 'no' | '' | undefined;
     q?: string | undefined;
     cursor?: string | undefined;
     limit?: number | undefined;
   }, token?: string | null) => {
+    const { facetas, ...resto } = params;
     const search = new URLSearchParams();
-    for (const [k, v] of Object.entries(params)) {
+    // Las facetas viajan como parametros planos (`?color=U&kind=creature`).
+    // Una vacia no se manda: la API contestaria 400 (T-110).
+    for (const [k, v] of Object.entries({ ...resto, ...(facetas ?? {}) })) {
       if (v !== undefined && v !== '') search.set(k, String(v));
     }
     return request<CardPage>(`/cards?${search.toString()}`, {}, token);

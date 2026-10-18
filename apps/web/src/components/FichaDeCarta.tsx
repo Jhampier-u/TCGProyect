@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState, type ReactElement } from 'react';
 import { Link } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { GameCode, PtcgGameData } from '@tcg/shared';
@@ -96,17 +96,33 @@ export function FichaDeCarta({ printId, juego, owned, onCerrar }: Props) {
   );
 }
 
+/**
+ * La ficha de cada juego, en tres piezas (H9f). El armazon -- dialogo, URL,
+ * foco, detalles comunes, mazo -- es comun; cada juego pone:
+ *  - `cabecera`: lo que va DENTRO de `<header>`, bajo la linea de tipo
+ *    (insignias, "evoluciona de", el coste de Magic);
+ *  - `cuerpo`: lo que va entre la cabecera y los detalles (ataques, reglas...);
+ *  - `detalles`: filas propias al principio de la lista de detalles (la marca
+ *    de regulacion de Pokemon).
+ * Con tres piezas el DOM de Pokemon queda EXACTAMENTE en el orden de T-094.
+ */
+type Pieza = (p: { carta: CardDetail }) => ReactElement | null;
+
+interface PiezasDeFicha {
+  cabecera: Pieza;
+  cuerpo: Pieza;
+  detalles: Pieza;
+}
+
 function Contenido({
   carta, juego, owned, idTitulo,
 }: { carta: CardDetail; juego: GameCode; owned: boolean | null; idTitulo: string }) {
   const src = imageUrl(carta.imagePath);
-  const datos = carta.gameData as PtcgGameData;
   // Misma clave que el catalogo: llega de la cache, no hace otra peticion.
   const rarezas = useQuery(consultaRarezas(juego));
   const rareza = rarezas.data?.find((r) => r.code === carta.rarity)?.label ?? carta.rarity;
   const tier = rarezas.data?.find((r) => r.code === carta.rarity)?.tier ?? 0;
-  const tipos = datos.types ?? [];
-  const nombreDeTipo = (t: string) => ES.pokemon.tipo[t] ?? t;
+  const { cabecera: Cabecera, cuerpo: Cuerpo, detalles: Detalles } = FICHAS[juego];
 
   return (
     <div className="ficha-rejilla">
@@ -123,86 +139,13 @@ function Contenido({
           </p>
           <h2 id={idTitulo}>{carta.name}</h2>
           {carta.typeLine && <p className="ficha-linea">{carta.typeLine}</p>}
-          <div className="ficha-insignias">
-            {tipos.map((t) => (
-              <span key={t} className="chip-tipo" style={estiloDeTipo(t)}>{nombreDeTipo(t)}</span>
-            ))}
-            {carta.hp !== null && (
-              <span className="ficha-ps"><strong>{carta.hp}</strong> {ES.ficha.ps}</span>
-            )}
-          </div>
-          {datos.evolves_from && <p className="ficha-linea">{ES.ficha.evolucionaDe(datos.evolves_from)}</p>}
+          <Cabecera carta={carta} />
         </header>
 
-        {datos.abilities && datos.abilities.length > 0 && (
-          <section className="ficha-seccion">
-            <h3>{ES.ficha.habilidades}</h3>
-            {datos.abilities.map((h) => (
-              <div key={h.name} className="ficha-ataque">
-                <p className="ficha-ataque-nombre">
-                  {h.type && <span className="ficha-habilidad-tipo">{h.type}</span>} {h.name}
-                </p>
-                {h.text && <p className="ficha-texto">{h.text}</p>}
-              </div>
-            ))}
-          </section>
-        )}
-
-        {datos.attacks && datos.attacks.length > 0 && (
-          <section className="ficha-seccion">
-            <h3>{ES.ficha.ataques}</h3>
-            {datos.attacks.map((a, i) => (
-              <div key={`${a.name}-${i}`} className="ficha-ataque">
-                <p className="ficha-ataque-nombre">
-                  <Coste tipos={a.cost ?? []} nombre={nombreDeTipo} />
-                  <span>{a.name}</span>
-                  {a.damage && <span className="ficha-dano">{a.damage}</span>}
-                </p>
-                {a.text && <p className="ficha-texto">{a.text}</p>}
-              </div>
-            ))}
-          </section>
-        )}
-
-        {/* Debilidad, resistencia y retirada son de los Pokemon: un Entrenador o
-            una Energia no las tienen, y pintar "Ninguna" tres veces seria ruido.
-            El valor se compara con el de `i18n` porque lleva tilde y el codigo
-            es ASCII. */}
-        {carta.supertype !== null && ES.pokemon.ordenSupertipo[0] === carta.supertype && (
-          <dl className="ficha-tira">
-            <div>
-              <dt>{ES.ficha.debilidad}</dt>
-              <dd>{lista(datos.weaknesses, nombreDeTipo)}</dd>
-            </div>
-            <div>
-              <dt>{ES.ficha.resistencia}</dt>
-              <dd>{lista(datos.resistances, nombreDeTipo)}</dd>
-            </div>
-            <div>
-              <dt>{ES.ficha.retirada}</dt>
-              <dd>
-                {datos.retreat_cost && datos.retreat_cost.length > 0
-                  ? <Coste tipos={datos.retreat_cost} nombre={nombreDeTipo} />
-                  : ES.ficha.ninguna}
-              </dd>
-            </div>
-          </dl>
-        )}
-
-        {carta.rulesText && (
-          <section className="ficha-seccion">
-            <h3>{ES.ficha.reglas}</h3>
-            {carta.rulesText.split('\n').map((linea, i) => (
-              <p key={i} className="ficha-texto">{linea}</p>
-            ))}
-          </section>
-        )}
+        <Cuerpo carta={carta} />
 
         <dl className="ficha-detalles">
-          <div>
-            <dt>{ES.ficha.marca}</dt>
-            <dd>{textoDeMarca(carta.regMark, carta.releasedAt)}</dd>
-          </div>
+          <Detalles carta={carta} />
           {carta.releasedAt && (
             <div>
               <dt>{ES.ficha.publicadaEtiqueta}</dt>
@@ -232,6 +175,131 @@ function Contenido({
     </div>
   );
 }
+
+/** El texto de la carta, linea a linea, con el titulo que le toque. */
+function Reglas({ titulo, texto }: { titulo: string; texto: string | null }) {
+  if (!texto) return null;
+  return (
+    <section className="ficha-seccion">
+      <h3>{titulo}</h3>
+      {texto.split('\n').map((linea, i) => (
+        <p key={i} className="ficha-texto">{linea}</p>
+      ))}
+    </section>
+  );
+}
+
+/** Una pieza vacia: el juego no pone nada en ese hueco. */
+function Nada(): null {
+  return null;
+}
+
+const nombreDeTipo = (t: string) => ES.pokemon.tipo[t] ?? t;
+
+/** Pokemon, dentro de la cabecera: los tipos, los PS y de quien evoluciona. Igual que en T-094. */
+function CabeceraPtcg({ carta }: { carta: CardDetail }) {
+  const datos = carta.gameData as PtcgGameData;
+  const tipos = datos.types ?? [];
+  return (
+    <>
+      <div className="ficha-insignias">
+        {tipos.map((t) => (
+          <span key={t} className="chip-tipo" style={estiloDeTipo(t)}>{nombreDeTipo(t)}</span>
+        ))}
+        {datos.hp !== undefined && (
+          <span className="ficha-ps"><strong>{datos.hp}</strong> {ES.ficha.ps}</span>
+        )}
+      </div>
+      {datos.evolves_from && <p className="ficha-linea">{ES.ficha.evolucionaDe(datos.evolves_from)}</p>}
+    </>
+  );
+}
+
+/** Pokemon, entre la cabecera y los detalles: habilidades, ataques, la tira y las reglas. */
+function CuerpoPtcg({ carta }: { carta: CardDetail }) {
+  const datos = carta.gameData as PtcgGameData;
+  return (
+    <>
+      {datos.abilities && datos.abilities.length > 0 && (
+        <section className="ficha-seccion">
+          <h3>{ES.ficha.habilidades}</h3>
+          {datos.abilities.map((h) => (
+            <div key={h.name} className="ficha-ataque">
+              <p className="ficha-ataque-nombre">
+                {h.type && <span className="ficha-habilidad-tipo">{h.type}</span>} {h.name}
+              </p>
+              {h.text && <p className="ficha-texto">{h.text}</p>}
+            </div>
+          ))}
+        </section>
+      )}
+
+      {datos.attacks && datos.attacks.length > 0 && (
+        <section className="ficha-seccion">
+          <h3>{ES.ficha.ataques}</h3>
+          {datos.attacks.map((a, i) => (
+            <div key={`${a.name}-${i}`} className="ficha-ataque">
+              <p className="ficha-ataque-nombre">
+                <Coste tipos={a.cost ?? []} nombre={nombreDeTipo} />
+                <span>{a.name}</span>
+                {a.damage && <span className="ficha-dano">{a.damage}</span>}
+              </p>
+              {a.text && <p className="ficha-texto">{a.text}</p>}
+            </div>
+          ))}
+        </section>
+      )}
+
+      {/* Debilidad, resistencia y retirada son de los Pokemon: un Entrenador o
+          una Energia no las tienen. El valor se compara con el de `i18n`
+          porque lleva tilde y el codigo es ASCII. */}
+      {datos.supertype !== undefined && ES.pokemon.ordenSupertipo[0] === datos.supertype && (
+        <dl className="ficha-tira">
+          <div>
+            <dt>{ES.ficha.debilidad}</dt>
+            <dd>{lista(datos.weaknesses, nombreDeTipo)}</dd>
+          </div>
+          <div>
+            <dt>{ES.ficha.resistencia}</dt>
+            <dd>{lista(datos.resistances, nombreDeTipo)}</dd>
+          </div>
+          <div>
+            <dt>{ES.ficha.retirada}</dt>
+            <dd>
+              {datos.retreat_cost && datos.retreat_cost.length > 0
+                ? <Coste tipos={datos.retreat_cost} nombre={nombreDeTipo} />
+                : ES.ficha.ninguna}
+            </dd>
+          </div>
+        </dl>
+      )}
+
+      <Reglas titulo={ES.ficha.reglas} texto={carta.rulesText} />
+    </>
+  );
+}
+
+/** Pokemon, primera fila de los detalles: la marca de regulacion, donde estaba. */
+function DetallesPtcg({ carta }: { carta: CardDetail }) {
+  const marca = typeof carta.facetas.mark === 'string' ? carta.facetas.mark : null;
+  return (
+    <div>
+      <dt>{ES.ficha.marca}</dt>
+      <dd>{textoDeMarca(marca, carta.releasedAt)}</dd>
+    </div>
+  );
+}
+
+/** Magic y Yu-Gi-Oh! hasta T-112 y T-113: el texto de la carta, sin mas. */
+function ReglasDeLaCarta({ carta }: { carta: CardDetail }) {
+  return <Reglas titulo={ES.ficha.reglas} texto={carta.rulesText} />;
+}
+
+const FICHAS: Readonly<Record<GameCode, PiezasDeFicha>> = {
+  PTCG: { cabecera: CabeceraPtcg, cuerpo: CuerpoPtcg, detalles: DetallesPtcg },
+  MTG: { cabecera: Nada, cuerpo: ReglasDeLaCarta, detalles: Nada },
+  YGO: { cabecera: Nada, cuerpo: ReglasDeLaCarta, detalles: Nada },
+};
 
 /** El coste como fila de puntos del color de cada tipo, con su lectura en texto. */
 function Coste({ tipos, nombre }: { tipos: string[]; nombre: (t: string) => string }) {

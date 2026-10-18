@@ -146,11 +146,21 @@ export const ES = {
       rareza: 'Rareza',
       marca: 'Marca',
       tienes: 'Tienes',
+      coste: 'Coste',
+      fr: 'F/R',
+      atributo: 'Atributo',
+      nivel: 'Nivel',
+      atkDef: 'ATK/DEF',
     },
     laTienes: 'La tienes',
     teFalta: 'Te falta',
     sinImagen: 'Sin imagen',
     ps: (n: number) => `${n} PS`,
+    lealtad: (l: string) => `Lealtad ${l}`,
+    atkDef: (atk: string, def: string) => `${atk}/${def}`,
+    /** "Dragon · Monstruo", "Quick-Play · Mágica". La raza llega en inglés, como el type_line. */
+    tipoYgo: (raza: string | null, clase: string | null) =>
+      [raza, clase].filter((x): x is string => x !== null && x !== '').join(' · '),
   },
 
   /**
@@ -181,6 +191,7 @@ export const ES = {
     error: 'No se pudo cargar esta carta.',
     numeroEnSet: (set: string, numero: string) => `${set} · nº ${numero}`,
     ps: 'PS',
+    fr: (fuerza: string, resistencia: string) => `${fuerza}/${resistencia}`,
     evolucionaDe: (nombre: string) => `Evoluciona de ${nombre}`,
     habilidades: 'Habilidades',
     ataques: 'Ataques',
@@ -238,6 +249,42 @@ export const ES = {
     /** Orden fijo de las categorías: que no bailen cuando cambian los recuentos. */
     ordenSupertipo: ['Pokémon', 'Trainer', 'Energy'],
     marca: (m: string) => `Marca ${m}`,
+  },
+
+  /**
+   * Las facetas de Magic y Yu-Gi-Oh! (H9f). La clave es el valor que guarda la
+   * base (columnas de la 0029); el valor es lo que se lee.
+   */
+  facetas: {
+    titulo: {
+      color: 'Color',
+      clase: 'Clase',
+      coste: 'Coste',
+      marco: 'Marco',
+      atributo: 'Atributo',
+      nivel: 'Nivel o rango',
+      link: 'Link',
+    },
+    color: {
+      W: 'Blanco', U: 'Azul', B: 'Negro', R: 'Rojo', G: 'Verde', C: 'Incoloro', M: 'Multicolor',
+    } as Record<string, string>,
+    kind: {
+      creature: 'Criatura', planeswalker: 'Planeswalker', land: 'Tierra', artifact: 'Artefacto',
+      enchantment: 'Encantamiento', instant: 'Instantáneo', sorcery: 'Conjuro', battle: 'Batalla',
+      other: 'Otra',
+      monster: 'Monstruo', spell: 'Mágica', trap: 'Trampa', skill: 'Habilidad', token: 'Ficha',
+    } as Record<string, string>,
+    frame: {
+      normal: 'Normal', effect: 'Efecto', ritual: 'Ritual', fusion: 'Fusión', synchro: 'Sincronía',
+      xyz: 'Xyz', pendulum: 'Péndulo', link: 'Link', token: 'Ficha',
+    } as Record<string, string>,
+    attribute: {
+      DARK: 'Oscuridad', LIGHT: 'Luz', EARTH: 'Tierra', WATER: 'Agua', FIRE: 'Fuego', WIND: 'Viento',
+      DIVINE: 'Divinidad',
+    } as Record<string, string>,
+    coste: (v: string) => `Coste ${v}`,
+    nivel: (v: string) => `Nivel o rango ${v}`,
+    link: (v: string) => `LINK-${v}`,
   },
 
   coleccion: {
