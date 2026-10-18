@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useRef } from 'react';
 import { useReducedMotion } from 'framer-motion';
 import type { Nivel } from '../../lib/rareza.js';
 import {
-  avanzarParticulas, limitarDpr, limitarParticulas, medidorNuevo, registrarFotograma,
+  avanzarParticulas, limitarDpr, limitarParticulas, medidorNuevo, origenRelativo, registrarFotograma,
   type Medidor, type Particula,
 } from '../../lib/efectos.js';
 
@@ -17,6 +17,11 @@ interface Props {
   /** Cambia cada vez que se revela una carta que merece efecto. */
   disparo: number;
   nivel: Nivel;
+  /**
+   * La carta recien revelada, leida en el momento del disparo: de su centro
+   * sale el estallido. Sin ella (o si no esta en el DOM), el centro del lienzo.
+   */
+  cartaRevelada?: () => Element | null;
 }
 
 /**
@@ -30,7 +35,7 @@ interface Props {
  * oculta, y si la media de los fotogramas cae por debajo de ~45 fps baja las
  * particulas: antes se degrada la luz que las cartas.
  */
-export function CapaDeEfectos({ disparo, nivel }: Props) {
+export function CapaDeEfectos({ disparo, nivel, cartaRevelada }: Props) {
   const reducido = useReducedMotion() ?? false;
   const lienzo = useRef<HTMLCanvasElement>(null);
   /** El nivel vigente; el efecto de disparo lo lee sin depender de el. */
@@ -38,6 +43,11 @@ export function CapaDeEfectos({ disparo, nivel }: Props) {
   /** Ultimo disparo atendido: nace con el valor de montaje, asi montar nunca dispara. */
   const ultimo = useRef(disparo);
   useLayoutEffect(() => { nivelActual.current = nivel; }, [nivel]);
+  /** Por ref, como el nivel: el padre rehace la funcion en cada render. */
+  const buscarCarta = useRef(cartaRevelada);
+  useLayoutEffect(() => { buscarCarta.current = cartaRevelada; }, [cartaRevelada]);
+  /** Centro de los rayos, en pixeles del lienzo: el de la carta que los disparo. */
+  const origenRayos = useRef<{ x: number; y: number } | null>(null);
   const particulas = useRef<Particula[]>([]);
   const rayosHasta = useRef(0);
   const colorRayos = useRef('');
@@ -77,7 +87,8 @@ export function CapaDeEfectos({ disparo, nivel }: Props) {
       const hayRayos = ahora < rayosHasta.current && colorRayos.current !== '';
       if (hayRayos) {
         ctx.save();
-        ctx.translate(c.width / 2, c.height / 2);
+        const o = origenRayos.current ?? { x: c.width / 2, y: c.height / 2 };
+        ctx.translate(o.x, o.y);
         ctx.rotate(ahora / 2400);
         ctx.globalAlpha = RAYOS_ALFA;
         ctx.fillStyle = colorRayos.current;
@@ -149,6 +160,13 @@ export function CapaDeEfectos({ disparo, nivel }: Props) {
     const estilo = getComputedStyle(c);
     const leer = (n: number) => estilo.getPropertyValue(`--nivel-${n}`).trim();
 
+    // El origen se mide AHORA, con la carta ya en la bandeja. Se usa el hueco y
+    // no el boton: el boton aun lleva la transformacion de su viaje desde el mazo.
+    const carta = buscarCarta.current?.();
+    const origen = carta?.isConnected
+      ? origenRelativo(carta.getBoundingClientRect(), c.getBoundingClientRect(), window.devicePixelRatio)
+      : { x: c.width / 2, y: c.height / 2 };
+
     const color = leer(nivelRevelado);
     const n = Math.round(PARTICULAS[nivelRevelado] * medidor.current.carga);
     if (color !== '') {
@@ -156,7 +174,7 @@ export function CapaDeEfectos({ disparo, nivel }: Props) {
         const angulo = Math.random() * Math.PI * 2;
         const fuerza = 1.5 + Math.random() * 4;
         particulas.current.push({
-          x: c.width / 2, y: c.height / 2,
+          x: origen.x, y: origen.y,
           vx: Math.cos(angulo) * fuerza, vy: Math.sin(angulo) * fuerza - 1,
           vida: 1, color,
         });
@@ -164,6 +182,7 @@ export function CapaDeEfectos({ disparo, nivel }: Props) {
     }
     if (nivelRevelado === 5) {
       colorRayos.current = leer(5);
+      origenRayos.current = origen;
       if (colorRayos.current !== '') rayosHasta.current = performance.now() + RAYOS_MS;
     }
     particulas.current = limitarParticulas(particulas.current);

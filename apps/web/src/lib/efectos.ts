@@ -83,3 +83,24 @@ export function avanzarParticulas(
   }
   return vivas;
 }
+
+/** Lo minimo de un DOMRect que hace falta: asi se prueba sin DOM. */
+export interface Caja {
+  readonly left: number; readonly top: number; readonly width: number; readonly height: number;
+}
+
+/**
+ * De donde sale el estallido: el centro de la carta recien revelada, relativo
+ * al lienzo y en SUS pixeles (CSS por el dpr, con el mismo tope que el lienzo).
+ * Con la bandeja alta, el centro del lienzo puede quedar muy lejos de la carta.
+ * Si la carta cae fuera del lienzo, el origen se pega a su borde: la luz nace
+ * donde se ve.
+ */
+export function origenRelativo(carta: Caja, lienzo: Caja, dpr: number): { x: number; y: number } {
+  const escala = limitarDpr(dpr);
+  const dentro = (v: number, max: number) => Math.min(Math.max(v, 0), max);
+  return {
+    x: dentro((carta.left + carta.width / 2 - lienzo.left) * escala, lienzo.width * escala),
+    y: dentro((carta.top + carta.height / 2 - lienzo.top) * escala, lienzo.height * escala),
+  };
+}

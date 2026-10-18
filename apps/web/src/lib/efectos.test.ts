@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   CARGA_MINIMA, FOTOGRAMAS_VENTANA, HUECO_MAXIMO, FOTOGRAMA_LENTO,
   medidorNuevo, registrarFotograma, avanzarParticulas, limitarParticulas, limitarDpr,
-  MAX_PARTICULAS, DPR_MAXIMO, type Particula,
+  MAX_PARTICULAS, DPR_MAXIMO, origenRelativo, type Particula,
 } from './efectos.js';
 
 function alimentar(n: number, dt: number, m = medidorNuevo()) {
@@ -121,5 +121,26 @@ describe('limitarDpr', () => {
     expect(limitarDpr(1.5)).toBe(1.5);
     expect(limitarDpr(0)).toBe(1);
     expect(limitarDpr(Number.NaN)).toBe(1);
+  });
+});
+
+describe('origenRelativo', () => {
+  const lienzo = { left: 100, top: 50, width: 800, height: 1200 };
+  const carta = (left: number, top: number) => ({ left, top, width: 140, height: 200 });
+
+  it('devuelve el centro de la carta relativo al lienzo, en pixeles del lienzo', () => {
+    // Centro de la carta: (300 + 70, 900 + 100) = (370, 1000); menos el lienzo: (270, 950).
+    expect(origenRelativo(carta(300, 900), lienzo, 1)).toEqual({ x: 270, y: 950 });
+  });
+
+  it('escala con el devicePixelRatio, con el mismo tope que el lienzo', () => {
+    expect(origenRelativo(carta(300, 900), lienzo, 2)).toEqual({ x: 540, y: 1900 });
+    expect(origenRelativo(carta(300, 900), lienzo, 3)).toEqual({ x: 540, y: 1900 });
+    expect(origenRelativo(carta(300, 900), lienzo, Number.NaN)).toEqual({ x: 270, y: 950 });
+  });
+
+  it('una carta fuera del lienzo deja el origen pegado a su borde', () => {
+    expect(origenRelativo(carta(-500, -500), lienzo, 1)).toEqual({ x: 0, y: 0 });
+    expect(origenRelativo(carta(5000, 5000), lienzo, 2)).toEqual({ x: 1600, y: 2400 });
   });
 });

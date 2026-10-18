@@ -242,7 +242,12 @@ export function Ritual({
       <p className="sr-solo" aria-live="polite">{anuncio}</p>
 
       <div className="ritual-escena">
-        <CapaDeEfectos disparo={disparo} nivel={ultimoNivel} />
+        {/* El hueco de la ultima carta de la bandeja: la recien revelada. */}
+        <CapaDeEfectos
+          disparo={disparo}
+          nivel={ultimoNivel}
+          cartaRevelada={() => bandejaRef.current?.lastElementChild ?? null}
+        />
 
         {sellado && set && (
           <>
