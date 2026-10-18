@@ -27,7 +27,7 @@ interface Props {
 
 /**
  * El sobre sellado (H9e-2): el arte de su epoca, tenido con la paleta del set,
- * con su icono y su nombre estampados.
+ * con su emblema (el icono, o la sigla en texto) y su nombre estampados.
  *
  * ES UN BOTON: Enter o Espacio lo rasgan, igual que un clic. El gesto de
  * arrastrar por el borde es una via MAS, no la unica, y por eso la tira es un
@@ -39,7 +39,10 @@ interface Props {
 export function Sobre({ juego, set, rasgando, onRasgar }: Props) {
   const reducido = useReducedMotion() ?? false;
   const arte = rutaDeArte(juego, set.artKey);
-  const icono = imageUrl(set.iconPath);
+  // Los "iconos" de set de Yu-Gi-Oh! son fotos del producto (la caja, el sobre):
+  // sobre el arte parecen pegatinas. En YGO, y en cualquier set sin icono, el
+  // emblema es la sigla del set en texto.
+  const icono = juego === 'YGO' ? null : imageUrl(set.iconPath);
 
   const estilo = {
     // Los tokens de dorso cuelgan de `data-juego` (lo pone el ritual); la segunda
@@ -79,7 +82,19 @@ export function Sobre({ juego, set, rasgando, onRasgar }: Props) {
         transition={{ duration: 0.6 }}
       >
         <span className="sobre-marca">{ES.navegacion.marca}</span>
-        {icono ? <img className="sobre-icono" src={icono} alt="" /> : <span className="sobre-icono" />}
+        {icono ? (
+          <img className="sobre-icono" src={icono} alt="" />
+        ) : (
+          // Decorativa: el nombre accesible del boton ya dice el set. La talla
+          // sale del largo de la sigla, para que de 2 a 6 o mas quepan en el circulo.
+          <span
+            className="sobre-icono sobre-sigla"
+            aria-hidden="true"
+            style={{ '--sigla-largo': Math.max(set.code.length, 1) } as CSSProperties}
+          >
+            {set.code}
+          </span>
+        )}
         <span className="sobre-nombre" data-talla={tallaDelNombre(set.name)}>
           {set.name}
         </span>

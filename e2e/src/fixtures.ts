@@ -103,6 +103,8 @@ export interface SetAbrible {
   id: number;
   /** Lo que lleva la URL del catalogo (`?set=`). */
   externalId: string;
+  /** La sigla del set: el emblema del sobre de Yu-Gi-Oh! (y de un set sin icono). */
+  code: string;
   name: string;
   poolSize: number;
   isOpenable: boolean;

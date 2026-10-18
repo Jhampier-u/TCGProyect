@@ -192,3 +192,19 @@ test('si la apertura falla, Reintentar repite la misma peticion', async ({ page,
   expect(cuerpos).toHaveLength(2);
   expect(cuerpos[1]).toBe(cuerpos[0]);
 });
+
+test('el sobre de Yu-Gi-Oh! lleva la sigla del set, no una foto de producto', async ({ page, request, usuario }) => {
+  // Se elige un set CON icono: asi se prueba que en YGO se descarta a proposito,
+  // no que falte. Los "iconos" de YGO son fotos de la caja o del sobre.
+  const res = await request.get(`${API}/api/games/YGO/sets`);
+  const { data } = (await res.json()) as { data: Array<SetAbrible & { iconPath: string | null }> };
+  const set = data.find((s) => s.poolSize > 0 && s.isOpenable && s.iconPath !== null);
+  expect(set, 'ningun set abrible de YGO tiene icono: lanza la cosecha de imagenes').toBeTruthy();
+  await iniciarSesion(page, usuario.token);
+  await abrir(page, 'YGO', set!);
+
+  const sellado = region(page).getByRole('button', { name: /^Rasgar el sobre/ });
+  await expect(sellado).toBeVisible();
+  await expect(sellado.locator('img')).toHaveCount(0);
+  await expect(sellado).toContainText(set!.code);
+});

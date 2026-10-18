@@ -116,6 +116,24 @@
 }
 .sobre-marca { font-size: 10px; letter-spacing: 0.24em; text-transform: uppercase; opacity: 0.8; }
 .sobre-icono { inline-size: 84px; block-size: 84px; object-fit: contain; filter: drop-shadow(0 0 14px var(--sobre-halo-icono)); }
+/* La sigla del set en lugar del icono: una insignia de cristal en el circulo del
+   emblema. El sobre es oscuro en los dos temas, asi que tira de los tokens
+   `--sobre-*` y no de los de cristal (que se aclaran en tema claro). La talla
+   baja con el largo: 104px / letras, con techo de 30px, deja hueco a 6 o mas. */
+.sobre-sigla {
+  display: grid; place-items: center; border-radius: 50%; overflow: hidden;
+  padding-inline: 6px; box-sizing: border-box;
+  font-family: var(--fuente-titulo); font-weight: 700; line-height: 1; letter-spacing: 0.04em;
+  font-size: min(30px, calc(104px / var(--sigla-largo, 4))); text-transform: uppercase;
+  color: var(--sobre-tinta); text-wrap: nowrap;
+  background:
+    linear-gradient(150deg, var(--sobre-reflejo), transparent 55%),
+    color-mix(in srgb, var(--sobre-oscuro) 45%, transparent);
+  border: 1px solid var(--sobre-halo-icono);
+  box-shadow: inset 0 1px 0 var(--sobre-reflejo), 0 0 18px color-mix(in srgb, var(--paleta-1) 45%, transparent);
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  filter: none;
+}
 .sobre-nombre {
   font-size: 18px; font-weight: 700; line-height: 1.15; text-align: center; text-wrap: balance;
   /* Tope de tres lineas: la franja tranquila del arte es el quinto inferior. El
