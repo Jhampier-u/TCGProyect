@@ -197,9 +197,10 @@ son útiles para la lógica, pero **la fidelidad de sus datos determina lo que e
 **Lo siguiente**, por este orden:
 
 1. **H9e está hecho** (T-098 a T-107) y fusionado en `main` en local; subirlo al remoto es decisión del usuario.
-   Las 25 ilustraciones de sobre las genera el usuario con Nano Banana Pro desde
-   `19_Prompts_Sobres.md`; cada una se deja en `apps/web/public/sobres/<juego>/` y su clave se añade a
-   `DISPONIBLES` en `apps/web/src/lib/arte-sobres.ts`. Hasta entonces, la reserva sin arte.
+   Las 25 ilustraciones de sobre están puestas (2026-10-17), una por época y línea, y cubren todos
+   los sets abribles de los tres juegos. Una nueva se convierte a WebP (640 px de ancho, calidad 82,
+   150 KB como mucho), se deja en `apps/web/public/sobres/<juego>/` y su clave va a `DISPONIBLES`;
+   `tools/arte-sobres.test.ts` comprueba que lista y disco coinciden.
 2. **Un perfil de facetas por juego** antes de la sección de Magic: la revisión de D-1 en S037
    concluye que, sin él, Magic sería copiar y pegar la API, el raíl y la fila.
 3. **T-097**, en cuanto haya clave de Pokémon en `.env` y tiempo para una reingesta larga.

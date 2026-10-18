@@ -113,6 +113,7 @@ C:\ProyectoTCG\
 │   ├── vault-consistency.test.ts  <- 16 comprobaciones, corren en `npm test`
 │   ├── contraste-tokens.test.ts   <- WCAG AA de la paleta, leyendo tokens.css (T-088)
 │   ├── ascii-fuente.test.ts       <- hace cumplir la regla de ASCII puro (T-089)
+│   ├── arte-sobres.test.ts        <- la lista de ilustraciones de sobre contra el disco (H9e)
 │   └── mutar-vault.mjs            <- `npm run vault:mutar`: demuestra que no es vacua
 │
 ├── db\                          <- esquema (fuera del Vault documental)

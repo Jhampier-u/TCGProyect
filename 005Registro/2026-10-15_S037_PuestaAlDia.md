@@ -417,3 +417,30 @@ Una revisión de la rama entera (`fee44dd..HEAD`) buscó lo que ninguna revisió
 - `pattern` en el esquema de `palette`.
 
 Ninguna rompe nada. Son el siguiente pulido.
+
+## Las 25 ilustraciones de sobre (2026-10-17)
+
+El usuario generó las 25 con Nano Banana Pro. Esa herramienta no ofrece la proporción 2:3, así que se
+pasó el prompt base a 9:16: con `cover` se pierde un 4 % arriba y otro abajo, frente al 9 % por lado
+que habría recortado 3:4.
+
+**Llegaron como JPEG de 1536 × 2752 con la extensión `.webp`**, unos 3,4 MB cada una y 80 MB en
+total. El navegador las habría pintado sin quejarse. Se convirtieron a WebP de verdad, a 640 px de
+ancho (de sobra para el sobre de 210 px en una pantalla 3×) y calidad 82: quedaron entre 69 y 146 KB,
+2,7 MB en total. Los originales no entran en el repositorio.
+
+Para que la lista escrita a mano no se desfase, `tools/arte-sobres.test.ts` comprueba tres cosas:
+- cada clave de `DISPONIBLES` tiene su fichero;
+- cada fichero tiene su clave;
+- cada fichero es WebP por su cabecera, no por su extensión, y pesa 150 KB como mucho.
+
+Se vio fallar de tres formas: con un JPEG original devuelto a su sitio, con un fichero que faltaba y
+con una clave borrada.
+
+Las 25 claves que devuelve la API para los sets abribles coinciden **exactamente** con las 25
+ilustraciones. Se miraron todas en pantalla, en una hoja de contacto con un sobre por época, y
+encajan con el emblema y el título.
+
+Dos cosas que ya venían de antes se ven ahora más:
+- el «icono» de set de Yu-Gi-Oh! es una foto del producto y parece una pegatina sobre el arte;
+- los nombres largos ocupan tres o cuatro líneas y se montan sobre la ilustración.
