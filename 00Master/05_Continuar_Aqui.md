@@ -201,8 +201,9 @@ son útiles para la lógica, pero **la fidelidad de sus datos determina lo que e
    los sets abribles de los tres juegos. Una nueva se convierte a WebP (640 px de ancho, calidad 82,
    150 KB como mucho), se deja en `apps/web/public/sobres/<juego>/` y su clave va a `DISPONIBLES`;
    `tools/arte-sobres.test.ts` comprueba que lista y disco coinciden.
-2. **Un perfil de facetas por juego** antes de la sección de Magic: la revisión de D-1 en S037
-   concluye que, sin él, Magic sería copiar y pegar la API, el raíl y la fila.
+2. **H9f, el perfil de facetas y los catálogos de Magic y Yu-Gi-Oh!**: spec escrito en S038
+   (`20_Spec_H9f_FacetasPorJuego.md`), decidido con el usuario sección a sección. Falta su revisión
+   escrita del spec y después el plan (será el documento 21), T-108 a T-115.
 3. **T-097**, en cuanto haya clave de Pokémon en `.env` y tiempo para una reingesta larga.
 
 **Cómo se ejecuta la suite:**

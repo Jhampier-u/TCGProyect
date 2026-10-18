@@ -2,7 +2,7 @@
 
 > **Rol:** Arquitecto Principal y Orquestador de Proyectos de Software.
 > **Producto:** Simulador de Apertura de Sobres + Constructor de Mazos unificado para MTG, Yu-Gi-Oh! y Pokémon TCG.
-> **Estado del Vault:** ACTIVO — última sesión S037 (2026-10-15)
+> **Estado del Vault:** ACTIVO — última sesión S038 (2026-10-18)
 
 ---
 
@@ -69,7 +69,8 @@ C:\ProyectoTCG\
 │   ├── 16_Plan_H9ab_Pokemon.md      <- plan de implementacion, 8 tareas (T-088 a T-095)
 │   ├── 17_Spec_H9e_HoloNoir.md      <- spec de H9e: Holo Noir, sobres, rarezas y ritual (S037)
 │   ├── 18_Plan_H9e_HoloNoir.md      <- plan de implementacion, 10 tareas (T-098 a T-107)
-│   └── 19_Prompts_Sobres.md         <- prompts de los 25 sobres para Nano Banana Pro (T-103)
+│   ├── 19_Prompts_Sobres.md         <- prompts de los 25 sobres para Nano Banana Pro (T-103)
+│   └── 20_Spec_H9f_FacetasPorJuego.md <- spec de H9f: perfil de facetas, catalogos de Magic y Yu-Gi-Oh!
 ├── 005Registro\
 │   ├── 2026-08-25_S001_Inicializacion.md
 │   ├── 2026-08-25_S002_DDL_MySQL.md
@@ -107,7 +108,8 @@ C:\ProyectoTCG\
 │   ├── 2026-08-28_S034_CimientosDeH9a.md
 │   ├── 2026-08-28_S035_FacetasIndexadas.md
 │   ├── 2026-08-28_S036_FacetasEnLaApi.md
-│   └── 2026-10-15_S037_PuestaAlDia.md
+│   ├── 2026-10-15_S037_PuestaAlDia.md
+│   └── 2026-10-18_S038_PerfilDeFacetas.md
 │
 ├── tools\                       <- comprobacion del propio Vault (T-087)
 │   ├── vault-consistency.test.ts  <- 16 comprobaciones, corren en `npm test`
