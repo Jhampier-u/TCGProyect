@@ -116,6 +116,18 @@
   --tipo-metal: #93a0af;
   --tipo-dragon: #c99a4e;
   --tipo-hada: #e07ab4;
+  /* ------------------------------------------------- mana de Magic (H9f)
+   * Los cinco colores y el incoloro, pintados en CSS a partir de "{2}{B}": nada
+   * de imagenes de terceros (F-9, P-001). El circulo es un grafico (3:1 contra
+   * la superficie) y la letra de encima es texto (4,5:1 contra cada color). En
+   * oscuro el negro es un gris lila: un circulo negro sobre negro no se ve. */
+  --mana-w: #efe3bf;
+  --mana-u: #6fb3ea;
+  --mana-b: #b9a8cf;
+  --mana-r: #f08a6c;
+  --mana-g: #6cc08a;
+  --mana-c: #bdb7ad;
+  --mana-tinta: #141722;
   /* ------------------------------------------------------- Holo Noir (H9e)
    * Luz ambiental: dos focos de color sobre el negro. En claro se apagan casi
    * del todo: el holografico es de la oscuridad. */
@@ -199,6 +211,13 @@
     --tipo-metal: #5c6673;
     --tipo-dragon: #856019;
     --tipo-hada: #a82f74;
+    --mana-w: #7d6a26;
+    --mana-u: #1d62a0;
+    --mana-b: #3f3650;
+    --mana-r: #a8361c;
+    --mana-g: #226b3c;
+    --mana-c: #5f5b55;
+    --mana-tinta: #ffffff;
     --luz-1: rgba(106, 63, 209, 0.07);
     --luz-2: rgba(14, 116, 144, 0.05);
     --cristal-borde: rgba(21, 22, 29, 0.08);
@@ -245,6 +264,13 @@
   --tipo-metal: #5c6673;
   --tipo-dragon: #856019;
   --tipo-hada: #a82f74;
+  --mana-w: #7d6a26;
+  --mana-u: #1d62a0;
+  --mana-b: #3f3650;
+  --mana-r: #a8361c;
+  --mana-g: #226b3c;
+  --mana-c: #5f5b55;
+  --mana-tinta: #ffffff;
   --luz-1: rgba(106, 63, 209, 0.07);
   --luz-2: rgba(14, 116, 144, 0.05);
   --cristal-borde: rgba(21, 22, 29, 0.08);

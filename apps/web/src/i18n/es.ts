@@ -37,6 +37,8 @@ export const ES = {
     check: '✓',
     /** Quitar un filtro. Va con su nombre accesible: la cruz sola no dice qué quita. */
     cerrar: '×',
+    /** Entre los dos costes de una carta de dos caras. */
+    caras: ' // ',
   },
 
   navegacion: {
@@ -192,6 +194,9 @@ export const ES = {
     numeroEnSet: (set: string, numero: string) => `${set} · nº ${numero}`,
     ps: 'PS',
     fr: (fuerza: string, resistencia: string) => `${fuerza}/${resistencia}`,
+    fuerzaResistencia: 'Fuerza/Resistencia',
+    lealtad: 'Lealtad',
+    otraCara: 'Esta carta tiene otra cara; aquí se muestra la primera.',
     evolucionaDe: (nombre: string) => `Evoluciona de ${nombre}`,
     habilidades: 'Habilidades',
     ataques: 'Ataques',
@@ -285,6 +290,16 @@ export const ES = {
     coste: (v: string) => `Coste ${v}`,
     nivel: (v: string) => `Nivel o rango ${v}`,
     link: (v: string) => `LINK-${v}`,
+  },
+
+  /** El coste en maná de Magic, en voz alta (H9f). */
+  mana: {
+    nombre: {
+      W: 'blanco', U: 'azul', B: 'negro', R: 'rojo', G: 'verde', C: 'incoloro', S: 'nieve',
+    } as Record<string, string>,
+    o: ' o ',
+    pirexiano: (color: string) => `${color} pirexiano`,
+    otraCara: 'y en la otra cara',
   },
 
   coleccion: {

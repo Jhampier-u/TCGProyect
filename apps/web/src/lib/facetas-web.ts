@@ -3,6 +3,7 @@ import type { FacetKey, GameCode } from '@tcg/shared';
 import { SIN_VALOR } from '@tcg/shared';
 import { ES } from '../i18n/es.js';
 import { estiloDeTipo } from './tipos-pokemon.js';
+import { estiloDeMana } from './colores-de-juego.js';
 
 /**
  * Cada clave del perfil, en la pantalla (H9f, F-2).
@@ -33,7 +34,7 @@ export const PRESENTACION: Readonly<Record<FacetKey, PresentacionDeFaceta>> = {
     // La ausencia se explica, no se pinta como hueco (spec H9b, seccion 2).
     nota: (v) => (v === SIN_VALOR ? ES.rail.sinMarcaNota : undefined),
   },
-  color: { titulo: () => ES.facetas.titulo.color, etiqueta: de(ES.facetas.color) },
+  color: { titulo: () => ES.facetas.titulo.color, etiqueta: de(ES.facetas.color), estilo: estiloDeMana },
   // Misma clave en dos juegos, con dos nombres: en Magic es el tipo, en
   // Yu-Gi-Oh! la clase (monstruo, magica, trampa...).
   kind: {

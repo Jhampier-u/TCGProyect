@@ -4,6 +4,7 @@ import { imageUrl, type CardSummary } from '../lib/api.js';
 import { CABECERAS } from '../lib/celdas.js';
 import { estiloDeTipo } from '../lib/tipos-pokemon.js';
 import { ES } from '../i18n/es.js';
+import { Mana } from './Mana.js';
 
 /**
  * Como se pinta cada celda de la fila (H9f, F-2).
@@ -109,7 +110,10 @@ export const CELDAS: Readonly<Record<CellKey, (p: PropsDeCelda) => ReactElement>
 
   mark: ({ carta }) => <Td celda="mark">{texto(carta.facetas.mark) ?? <Vacio />}</Td>,
 
-  manaCost: ({ carta }) => <Td celda="manaCost">{texto(carta.facetas.manaCost) ?? <Vacio />}</Td>,
+  manaCost: ({ carta }) => {
+    const c = texto(carta.facetas.manaCost);
+    return <Td celda="manaCost">{c ? <Mana coste={c} /> : <Vacio />}</Td>;
+  },
 
   mtgKind: ({ carta }) => {
     const k = texto(carta.facetas.kind);

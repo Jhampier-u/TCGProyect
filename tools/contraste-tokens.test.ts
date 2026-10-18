@@ -111,6 +111,9 @@ const TIPOS = [
   'rayo', 'oscuro', 'metal', 'dragon', 'hada',
 ] as const;
 
+/** Los cinco colores de Magic y el incoloro (H9f, F-9). */
+const MANA = ['w', 'u', 'b', 'r', 'g', 'c'] as const;
+
 describe.each([
   ['oscuro', OSCURO],
   ['claro', CLARO],
@@ -124,6 +127,21 @@ describe.each([
     const flojos = TIPOS.map((t) => ({ t, r: razon(valor(tema, `tipo-${t}`), valor(tema, 'superficie')) }))
       .filter((x) => x.r < 3)
       .map((x) => `${x.t} ${x.r.toFixed(2)}:1`);
+    expect(flojos).toEqual([]);
+  });
+
+  it('los seis manas se ven sobre la superficie, y su letra se lee encima', () => {
+    // El circulo es un grafico (1.4.11: 3:1 contra la superficie) y la letra de
+    // dentro es texto (4,5:1 contra cada color).
+    const flojos = MANA.flatMap((m) => {
+      const color = valor(tema, `mana-${m}`);
+      const circulo = razon(color, valor(tema, 'superficie'));
+      const letra = razon(valor(tema, 'mana-tinta'), color);
+      return [
+        ...(circulo < 3 ? [`mana-${m} sobre superficie ${circulo.toFixed(2)}:1`] : []),
+        ...(letra < 4.5 ? [`letra sobre mana-${m} ${letra.toFixed(2)}:1`] : []),
+      ];
+    });
     expect(flojos).toEqual([]);
   });
 });

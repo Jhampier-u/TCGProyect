@@ -706,6 +706,29 @@ a.tarjeta-juego:hover { border-color: var(--juego-acento, var(--acento)); text-d
   background: var(--tipo, var(--texto-tenue));
 }
 
+/* ------------------------------------------------- simbolos de mana (H9f)
+ * Un circulo por simbolo, con su letra. El hibrido es un circulo partido en
+ * diagonal: `--mana-1` y `--mana-2` los pone el componente, y sin color cae al
+ * incoloro. */
+.mana { display: inline-flex; align-items: center; gap: 2px; flex-wrap: wrap; }
+.mana-cara { display: inline-flex; align-items: center; gap: 2px; }
+.mana-simbolo {
+  inline-size: 17px; block-size: 17px; border-radius: 50%;
+  display: inline-grid; place-items: center;
+  font: 700 10px/1 var(--fuente-datos); color: var(--mana-tinta);
+  background: linear-gradient(
+    135deg,
+    var(--mana-1, var(--mana-c)) 50%,
+    var(--mana-2, var(--mana-1, var(--mana-c))) 50%
+  );
+  box-shadow: inset 0 0 0 1px var(--velo-suave);
+}
+.mana-caras { color: var(--texto-tenue); font-size: var(--paso-00); padding-inline: 2px; }
+.ficha-insignias .mana-simbolo { inline-size: 22px; block-size: 22px; font-size: 12px; }
+.col-mana { inline-size: 7em; }
+.col-fr { inline-size: 4.5em; text-align: center; }
+.tabla-consulta th.col-fr { text-align: center; }
+
 .ps { display: grid; grid-template-columns: 2.6em 1fr; align-items: center; gap: var(--e2); }
 .ps-cifra { text-align: right; }
 .ps-barra { block-size: 4px; border-radius: 999px; background: var(--borde); overflow: hidden; }
@@ -716,7 +739,8 @@ a.tarjeta-juego:hover { border-color: var(--juego-acento, var(--acento)); text-d
 
 /* En estrecho la tabla se queda en lo esencial: numero, carta, tipo y tienes. */
 @media (max-width: 640px) {
-  .tabla-consulta .col-ps, .tabla-consulta .col-rareza, .tabla-consulta .col-marca { display: none; }
+  .tabla-consulta .col-ps, .tabla-consulta .col-rareza, .tabla-consulta .col-marca,
+  .tabla-consulta .col-fr { display: none; }
 }
 
 /* Texto que solo oye un lector de pantalla: la etiqueta de un control cuyo

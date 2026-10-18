@@ -1,7 +1,7 @@
 import { useEffect, useId, useRef, useState, type ReactElement } from 'react';
 import { Link } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { GameCode, PtcgGameData } from '@tcg/shared';
+import type { GameCode, MtgGameData, PtcgGameData } from '@tcg/shared';
 import { api, imageUrl, type CardDetail } from '../lib/api.js';
 import { useAuth } from '../lib/auth.js';
 import { consultaRarezas } from '../lib/consultas.js';
@@ -10,6 +10,7 @@ import { estiloDeTipo } from '../lib/tipos-pokemon.js';
 import { nivelDe } from '../lib/rareza.js';
 import { ES } from '../i18n/es.js';
 import { CartaConBrillo } from './apertura/CartaConBrillo.js';
+import { Mana } from './Mana.js';
 
 /**
  * Primer dia con marca de regulacion: el de Sword & Shield. Una carta sin marca
@@ -290,14 +291,49 @@ function DetallesPtcg({ carta }: { carta: CardDetail }) {
   );
 }
 
-/** Magic y Yu-Gi-Oh! hasta T-112 y T-113: el texto de la carta, sin mas. */
+/** Scryfall separa en el texto de reglas las dos caras con una linea "//". */
+const OTRA_CARA_EN_REGLAS = '\n//\n';
+
+/**
+ * Magic, dentro de la cabecera (H9f): coste, F/R o lealtad, y una nota si hay
+ * otra cara. La otra cara completa queda fuera del spec: se avisa y se ensena
+ * la primera.
+ */
+function CabeceraMtg({ carta }: { carta: CardDetail }) {
+  const datos = carta.gameData as MtgGameData;
+  const dosCaras = (carta.typeLine ?? '').includes(' // ');
+  return (
+    <>
+      <div className="ficha-insignias">
+        {datos.mana_cost && <Mana coste={datos.mana_cost} />}
+        {datos.power !== undefined && datos.toughness !== undefined && (
+          <span className="ficha-ps">
+            <strong>{ES.ficha.fr(datos.power, datos.toughness)}</strong> {ES.ficha.fuerzaResistencia}
+          </span>
+        )}
+        {datos.loyalty !== undefined && (
+          <span className="ficha-ps"><strong>{datos.loyalty}</strong> {ES.ficha.lealtad}</span>
+        )}
+      </div>
+      {dosCaras && <p className="ficha-linea">{ES.ficha.otraCara}</p>}
+    </>
+  );
+}
+
+/** Magic, el cuerpo: las reglas de la primera cara. */
+function CuerpoMtg({ carta }: { carta: CardDetail }) {
+  const reglas = carta.rulesText ? carta.rulesText.split(OTRA_CARA_EN_REGLAS)[0] ?? null : null;
+  return <Reglas titulo={ES.ficha.reglas} texto={reglas} />;
+}
+
+/** Yu-Gi-Oh! hasta T-113: el texto de la carta, sin mas. */
 function ReglasDeLaCarta({ carta }: { carta: CardDetail }) {
   return <Reglas titulo={ES.ficha.reglas} texto={carta.rulesText} />;
 }
 
 const FICHAS: Readonly<Record<GameCode, PiezasDeFicha>> = {
   PTCG: { cabecera: CabeceraPtcg, cuerpo: CuerpoPtcg, detalles: DetallesPtcg },
-  MTG: { cabecera: Nada, cuerpo: ReglasDeLaCarta, detalles: Nada },
+  MTG: { cabecera: CabeceraMtg, cuerpo: CuerpoMtg, detalles: Nada },
   YGO: { cabecera: Nada, cuerpo: ReglasDeLaCarta, detalles: Nada },
 };
 
