@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { leerCoste, partirCoste } from './mana.js';
+import { leerCoste, partirCoste, tieneSimbolos } from './mana.js';
 import { ES } from '../i18n/es.js';
 
 describe('el coste en mana de Magic, de "{2}{B}" a simbolos (H9f, F-9)', () => {
@@ -28,9 +28,37 @@ describe('el coste en mana de Magic, de "{2}{B}" a simbolos (H9f, F-9)', () => {
   });
 
   it('se lee en voz alta, cara a cara', () => {
-    expect(leerCoste(partirCoste('{2}{B}'))).toEqual(['2', ES.mana.nombre.B]);
+    expect(leerCoste(partirCoste('{2}{B}'))).toEqual([ES.mana.generico('2'), ES.mana.nombre.B]);
     expect(leerCoste(partirCoste('{G/W}'))).toEqual([`${ES.mana.nombre.G}${ES.mana.o}${ES.mana.nombre.W}`]);
     expect(leerCoste(partirCoste('{B/P}'))).toEqual([ES.mana.pirexiano(ES.mana.nombre.B!)]);
-    expect(leerCoste(partirCoste('{1}{R} // {R}'))).toEqual(['1', ES.mana.nombre.R, ES.mana.otraCara, ES.mana.nombre.R]);
+    expect(leerCoste(partirCoste('{1}{R} // {R}'))).toEqual([ES.mana.generico('1'), ES.mana.nombre.R, ES.mana.otraCara, ES.mana.nombre.R]);
+  });
+
+  it('una cara vacia no deja separador ni "y en la otra cara" colgando', () => {
+    expect(partirCoste('{1}{R} // ')).toHaveLength(1);
+    expect(partirCoste(' // {R}')).toHaveLength(1);
+    expect(leerCoste(partirCoste('{1}{R} // '))).toEqual([ES.mana.generico('1'), ES.mana.nombre.R]);
+  });
+
+  it('lo mal formado no es un simbolo: "{", "{}", "{{B}" y la llave sin cerrar', () => {
+    expect(partirCoste('{')).toEqual([]);
+    expect(partirCoste('{}')).toEqual([]);
+    expect(partirCoste('{{B}').flat().map((s) => s.crudo)).toEqual(['B']);
+    expect(partirCoste('{2}{B').flat().map((s) => s.crudo)).toEqual(['2']);
+  });
+
+  it('tieneSimbolos dice si hay algo que dibujar', () => {
+    expect(tieneSimbolos('{2}{B}')).toBe(true);
+    expect(tieneSimbolos('{2}{B')).toBe(true);
+    expect(tieneSimbolos('{')).toBe(false);
+    expect(tieneSimbolos('{}')).toBe(false);
+    expect(tieneSimbolos(' // ')).toBe(false);
+    expect(tieneSimbolos(null)).toBe(false);
+  });
+
+  it('el coste tiene su propio nombre accesible', () => {
+    expect(ES.mana.coste([ES.mana.generico('2'), ES.mana.nombre.B!])).toBe(
+      `${ES.mana.costeEtiqueta}${ES.mana.generico('2')}, ${ES.mana.nombre.B}`,
+    );
   });
 });

@@ -300,6 +300,11 @@ export const ES = {
     o: ' o ',
     pirexiano: (color: string) => `${color} pirexiano`,
     otraCara: 'y en la otra cara',
+    /** Un numero de mana generico: "2 genérico". */
+    generico: (n: string) => `${n} genérico`,
+    costeEtiqueta: 'Coste: ',
+    /** El nombre accesible del coste entero, simbolo a simbolo. */
+    coste: (lecturas: string[]) => `Coste: ${lecturas.join(', ')}`,
   },
 
   coleccion: {

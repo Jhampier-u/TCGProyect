@@ -11,13 +11,13 @@ function estilo(s: SimboloDeMana): CSSProperties | undefined {
 
 /**
  * El coste en mana como circulos con su letra (H9f, F-9). Una sola imagen para
- * el lector de pantalla, con el coste leido: "Coste: 2, negro".
+ * el lector de pantalla, con el coste leido: "Coste: 2 generico, negro".
  */
 export function Mana({ coste }: { coste: string }) {
   const caras = partirCoste(coste);
-  if (caras.every((c) => c.length === 0)) return null;
+  if (caras.length === 0) return null;
   return (
-    <span className="mana" role="img" aria-label={ES.ficha.coste(leerCoste(caras))}>
+    <span className="mana" role="img" aria-label={ES.mana.coste(leerCoste(caras))}>
       {caras.map((cara, i) => (
         <span key={i} className="mana-cara" aria-hidden="true">
           {i > 0 && <span className="mana-caras">{ES.simbolo.caras}</span>}
