@@ -430,49 +430,68 @@ export class CatalogQueryRepository {
     const filtro = where.join(' AND ');
 
     // Con sesion, cada fila dice ademas cuantas tiene (T-093): "Planta 12/23"
-    // contesta la pregunta del criterio de aceptacion antes de pulsar nada. El
-    // parametro del usuario va PRIMERO porque su `?` esta en el SELECT, antes
-    // que los del WHERE.
+    // contesta la pregunta del criterio de aceptacion antes de pulsar nada.
+    //
+    // LA TENENCIA VA EN UNA CONSULTA APARTE QUE PARTE DE LA COLECCION. Un
+    // EXISTS por impresion obligaba a mirar `user_collection` 117.152 veces en
+    // Magic sin set: 0,43-0,51 s por recuento con una coleccion de 8.406
+    // entradas (medido en T-110). Partiendo de la coleccion se recorren solo
+    // las impresiones que el usuario tiene, y el resultado es el mismo:
+    // DISTINCT porque la entrada es unica por (usuario, impresion, acabado) y
+    // una carta en normal y en foil es UNA impresion tenida, como con EXISTS.
     const conTenencia = userId !== undefined;
-    const tengo = conTenencia ? `, SUM(${TENENCIA}) AS tengo` : '';
-    const argumentos = conTenencia ? [userId, ...params] : params;
-
-    const contar = async (expresion: string) =>
-      this.db.select<FilaDeRecuento>(
-        `SELECT ${expresion} AS valor, COUNT(*) AS n${tengo}
-           FROM cards c
+    const DESDE_EL_CATALOGO = `FROM cards c
            JOIN card_prints p ON p.card_id = c.id
-           JOIN sets s ON s.id = p.set_id
+           JOIN sets s ON s.id = p.set_id`;
+    const DESDE_LA_COLECCION = `FROM (SELECT DISTINCT uc.card_print_id FROM user_collection uc WHERE uc.user_id = ? AND uc.quantity > 0) u
+           JOIN card_prints p ON p.id = u.card_print_id
+           JOIN cards c ON c.id = p.card_id
+           JOIN sets s ON s.id = p.set_id`;
+
+    const contar = (expresion: string, desde: string, medida: 'n' | 'tengo') =>
+      `SELECT ${expresion} AS valor, COUNT(*) AS ${medida}
+           ${desde}
           WHERE ${filtro}
-          GROUP BY valor`,
-        argumentos,
-      );
+          GROUP BY valor`;
 
     // La rareza se agrupa por id y solo despues se une a su codigo: una
     // subconsulta correlacionada por impresion costaba 0,40 s en Magic sin set
-    // (el presupuesto entero del rail); asi son 0,19 s (medido en T-110). El
-    // `?` de la tenencia sigue en el SELECT interior, antes que los del WHERE,
-    // asi que `argumentos` vale tal cual.
-    const contarRarezas = async () =>
-      this.db.select<FilaDeRecuento>(
-        `SELECT r.code AS valor, x.n${conTenencia ? ', x.tengo' : ''}
-           FROM (SELECT p.rarity_id, COUNT(*) AS n${tengo}
-                   FROM cards c
-                   JOIN card_prints p ON p.card_id = c.id
-                   JOIN sets s ON s.id = p.set_id
+    // (el presupuesto entero del rail); asi son 0,19 s (medido en T-110).
+    const contarRarezas = (desde: string, medida: 'n' | 'tengo') =>
+      `SELECT r.code AS valor, x.${medida}
+           FROM (SELECT p.rarity_id, COUNT(*) AS ${medida}
+                   ${desde}
                   WHERE ${filtro}
                   GROUP BY p.rarity_id) x
-           JOIN rarities r ON r.id = x.rarity_id`,
-        argumentos,
-      );
+           JOIN rarities r ON r.id = x.rarity_id`;
+
+    /**
+     * Un recuento y, con sesion, su pareja de tenencia, en paralelo. Se cruzan
+     * por el valor del grupo: la pareja solo trae los grupos donde el usuario
+     * tiene algo, y uno ausente es un cero.
+     */
+    const contarConTenencia = async (base: (desde: string, medida: 'n' | 'tengo') => string) => {
+      const [filas, mias] = await Promise.all([
+        this.db.select<FilaDeRecuento>(base(DESDE_EL_CATALOGO, 'n'), params),
+        conTenencia
+          ? this.db.select<FilaDeRecuento>(base(DESDE_LA_COLECCION, 'tengo'), [userId, ...params])
+          : Promise.resolve([]),
+      ]);
+      if (!conTenencia) return filas;
+      const clave = (v: FilaDeRecuento['valor']) => (v === null ? '\u0000' : String(v));
+      const tenidas = new Map(mias.map((f) => [clave(f.valor), Number(f.tengo ?? 0)]));
+      return filas.map((f) => ({ ...f, tengo: tenidas.get(clave(f.valor)) ?? 0 }));
+    };
 
     // Una consulta por faceta del perfil, mas la de rareza, en paralelo: cuatro
-    // en Pokemon y en Magic, seis en Yu-Gi-Oh!. El orden ya no lo pone MySQL:
-    // lo pone el perfil (`repartir`).
+    // en Pokemon y en Magic, seis en Yu-Gi-Oh!, el doble con sesion. El orden
+    // ya no lo pone MySQL: lo pone el perfil (`repartir`).
     const perfil = FACET_PROFILES[game];
     const [rarezas = [], ...porFaceta] = await Promise.all([
-      contarRarezas(),
-      ...perfil.facets.map((f) => contar(FACET_SQL[f.key].grupo)),
+      contarConTenencia(contarRarezas),
+      ...perfil.facets.map((f) =>
+        contarConTenencia((desde, medida) => contar(FACET_SQL[f.key].grupo, desde, medida)),
+      ),
     ]);
 
     const facetas: Partial<Record<FacetKey, FacetCount[]>> = {};

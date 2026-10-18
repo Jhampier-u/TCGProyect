@@ -215,14 +215,30 @@ describe('"las que me faltan" (T-093)', () => {
     expect(sql).not.toContain('OFFSET');
   });
 
-  it('con usuario, cada recuento del rail dice tambien cuantas tiene', async () => {
+  it('con usuario, cada recuento del rail tiene su pareja que cuenta lo que tiene', async () => {
     // "Planta 23" informa; "Planta 12/23" contesta ya la pregunta del criterio.
+    // La tenencia NO se mira impresion a impresion (un EXISTS por fila costaba
+    // 0,5 s en Magic sin set): sale de una segunda consulta que parte de la
+    // coleccion del usuario, mucho mas pequena que el catalogo (T-110).
     const { repo, consultas } = repoEspia();
     await repo.listFacets('PTCG', 'sv1', 7);
-    expect(consultas.length).toBeGreaterThan(0);
-    for (const c of consultas) {
-      expect(c.sql).toContain(`SUM(EXISTS (SELECT 1 ${TENENCIA}))`);
-      expect(c.params[0]).toBe(7);
+    const base = consultas.filter((c) => !c.sql.includes('user_collection'));
+    const tengo = consultas.filter((c) => c.sql.includes('user_collection'));
+    expect(base).toHaveLength(4);
+    expect(tengo).toHaveLength(4);
+    for (const c of base) expect(c.params).toEqual([3, 'sv1']);
+    for (const c of tengo) {
+      // Una vez por IMPRESION aunque la tenga en varios acabados: la entrada
+      // es unica por (usuario, impresion, acabado), y sin DISTINCT una carta en
+      // normal y en foil contaria dos.
+      expect(c.sql).toContain(
+        'FROM (SELECT DISTINCT uc.card_print_id FROM user_collection uc WHERE uc.user_id = ? AND uc.quantity > 0) u',
+      );
+      expect(c.sql).toContain('JOIN card_prints p ON p.id = u.card_print_id');
+      expect(c.sql).toContain('p.withdrawn_at IS NULL');
+      expect(c.sql).toContain('s.external_id = ?');
+      expect(c.sql).not.toContain('EXISTS');
+      expect(c.params).toEqual([7, 3, 'sv1']);
     }
   });
 
@@ -239,28 +255,39 @@ describe('"las que me faltan" (T-093)', () => {
     // y la rareza si: toda impresion tiene exactamente una (`rarity_id NOT NULL`).
     // Asi no hace falta una consulta mas.
     const db = {
-      select: async (sql: string) =>
-        sql.includes('r.code')
-          ? [
-              { valor: 'common', n: 120, tengo: 30 },
-              { valor: 'rare', n: 42, tengo: 6 },
-            ]
-          : sql.includes('c.supertype AS valor')
-            ? [
-                { valor: 'Trainer', n: 40, tengo: 5 },
-                { valor: 'Pokémon', n: 120, tengo: 30 },
-                { valor: null, n: 2, tengo: 1 },
-              ]
-            : [],
+      select: async (sql: string) => {
+        const mia = sql.includes('user_collection');
+        if (sql.includes('r.code')) {
+          return mia
+            ? [{ valor: 'common', tengo: 30 }, { valor: 'rare', tengo: 6 }]
+            : [{ valor: 'common', n: 120 }, { valor: 'rare', n: 42 }];
+        }
+        if (sql.includes('c.supertype AS valor')) {
+          // La pareja de tenencia solo trae los grupos donde tiene algo: un
+          // grupo ausente es un cero, no un hueco.
+          return mia
+            ? [{ valor: 'Pok\u00e9mon', tengo: 30 }, { valor: null, tengo: 1 }]
+            : [
+                { valor: 'Trainer', n: 40 },
+                { valor: 'Pok\u00e9mon', n: 120 },
+                { valor: null, n: 2 },
+              ];
+        }
+        return [];
+      },
     } as unknown as Database;
     const r = await new CatalogQueryRepository(db).listFacets('PTCG', 'sv1', 7);
     expect(r.total).toBe(162);
     expect(r.ownedTotal).toBe(36);
+    expect(r.rarities).toEqual([
+      { value: 'common', count: 120, owned: 30 },
+      { value: 'rare', count: 42, owned: 6 },
+    ]);
     // El orden es el del perfil, no el de la consulta; y un NULL en una faceta
     // sin "sin valor" no se pinta.
     expect(r.facetas.supertype).toEqual([
-      { value: 'Pokémon', count: 120, owned: 30 },
-      { value: 'Trainer', count: 40, owned: 5 },
+      { value: 'Pok\u00e9mon', count: 120, owned: 30 },
+      { value: 'Trainer', count: 40, owned: 0 },
     ]);
   });
 });
@@ -292,17 +319,28 @@ describe('Magic y Yu-Gi-Oh! en la busqueda y en el rail (H9f)', () => {
   it('la rareza se cuenta por id y despues se une a su codigo, no con una subconsulta por fila', async () => {
     // Medido en T-110 sobre Magic sin set: la subconsulta correlacionada por
     // impresion tardaba 0,40 s, justo el presupuesto del rail; agrupar por
-    // `p.rarity_id` y unir seis filas despues, 0,19 s.
+    // `p.rarity_id` y unir seis filas despues, 0,19 s. Vale igual para su
+    // pareja de tenencia.
     for (const userId of [undefined, 7]) {
       const { repo, consultas } = repoEspia();
       await repo.listFacets('MTG', 'LOB', userId);
-      const rareza = consultas.find((c) => c.sql.includes('rarities r'))!;
-      expect(rareza.sql).toContain('GROUP BY p.rarity_id');
-      expect(rareza.sql).toContain('JOIN rarities r ON r.id = x.rarity_id');
-      expect(rareza.sql).not.toContain('(SELECT r.code FROM rarities r WHERE r.id = p.rarity_id)');
-      expect(rareza.sql).toContain('s.external_id = ?');
-      expect(rareza.params).toEqual(userId === undefined ? [1, 'LOB'] : [7, 1, 'LOB']);
+      const rarezas = consultas.filter((c) => c.sql.includes('rarities r'));
+      expect(rarezas).toHaveLength(userId === undefined ? 1 : 2);
+      for (const rareza of rarezas) {
+        expect(rareza.sql).toContain('GROUP BY p.rarity_id');
+        expect(rareza.sql).toContain('JOIN rarities r ON r.id = x.rarity_id');
+        expect(rareza.sql).not.toContain('(SELECT r.code FROM rarities r WHERE r.id = p.rarity_id)');
+        expect(rareza.sql).toContain('s.external_id = ?');
+        expect(rareza.params).toEqual(rareza.sql.includes('user_collection') ? [7, 1, 'LOB'] : [1, 'LOB']);
+      }
     }
+  });
+
+  it('con usuario, el rail de Magic son ocho consultas: cuatro recuentos y sus cuatro parejas', async () => {
+    const { repo, consultas } = repoEspia();
+    await repo.listFacets('MTG', undefined, 7);
+    expect(consultas).toHaveLength(8);
+    expect(consultas.filter((c) => c.sql.includes('user_collection'))).toHaveLength(4);
   });
 
   it('una fila de Magic lleva sus datos y no los de Pokemon', () => {
