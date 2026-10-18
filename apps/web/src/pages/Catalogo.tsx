@@ -2,7 +2,7 @@ import { useEffect, useId, useMemo, useState } from 'react';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { useOutletContext, useSearchParams } from 'react-router-dom';
 import type { GameCode } from '@tcg/shared';
-import { FACET_PROFILES, isFacetKey } from '@tcg/shared';
+import { isFacetKey } from '@tcg/shared';
 import { api, imageUrl } from '../lib/api.js';
 import { useAuth } from '../lib/auth.js';
 import { consultaRarezas, consultaSets } from '../lib/consultas.js';
@@ -11,7 +11,7 @@ import {
   type ClaveFiltro, type FiltrosCatalogo,
 } from '../lib/filtros-url.js';
 import { PRESENTACION } from '../lib/facetas-web.js';
-import { CABECERAS } from '../lib/celdas.js';
+import { CABECERAS, celdasDe } from '../lib/celdas.js';
 import { SelectorDeSet } from '../components/SelectorDeSet.js';
 import { RailDeSet } from '../components/RailDeSet.js';
 import { FilaDeCarta } from '../components/FilaDeCarta.js';
@@ -101,7 +101,7 @@ export function Catalogo() {
     getNextPageParam: (ultima) => ultima.nextCursor ?? undefined,
     enabled: !cargando,
   });
-  const celdas = FACET_PROFILES[juego].cells.filter((c) => conSesion || c !== 'owned');
+  const celdas = celdasDe(juego, conSesion);
 
   const filas = cartas.data?.pages.flatMap((p) => p.data) ?? [];
   const setActual = sets.data?.find((s) => s.externalId === filtros.set) ?? null;
@@ -206,10 +206,9 @@ export function Catalogo() {
                     <FilaDeCarta
                       key={c.printId}
                       carta={c}
-                      juego={juego}
+                      celdas={celdas}
                       onAbrir={() => abrirCarta(c.printId)}
                       rareza={nombreDeRareza.get(c.rarity) ?? c.rarity}
-                      conSesion={conSesion}
                     />
                   ))}
                 </tbody>

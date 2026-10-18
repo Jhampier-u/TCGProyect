@@ -47,7 +47,11 @@ export function valorDe(filtros: FiltrosCatalogo, clave: ClaveFiltro): string {
   }
 }
 
-function conValor(filtros: FiltrosCatalogo, clave: ClaveFiltro, valor: string): FiltrosCatalogo {
+function conValor(filtros: FiltrosCatalogo, clave: ClaveFiltro, crudo: string): FiltrosCatalogo {
+  // Se recorta al entrar: lo que se guarda es lo que se escribe en la URL y lo
+  // que se manda a la API, asi que la clave de cache y la peticion coinciden.
+  // Un valor en blanco es un filtro quitado.
+  const valor = crudo.trim();
   switch (clave) {
     case 'set': return { ...filtros, set: valor };
     case 'q': return { ...filtros, q: valor };

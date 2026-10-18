@@ -38,6 +38,16 @@ describe('la web cubre el perfil, ni mas ni menos (F-2)', () => {
     }
   });
 
+  it('dentro de un juego ningun chip de faceta se lee igual que otro', () => {
+    // Un chip dice el valor sin su seccion: "Ficha" como clase y como marco
+    // serian dos chips iguales que quitan filtros distintos.
+    for (const g of GAME_CODES) {
+      const etiquetas = FACET_PROFILES[g].facets.flatMap((f) => f.values.map((v) => PRESENTACION[f.key].etiqueta(v)));
+      const repetidas = etiquetas.filter((e, i) => etiquetas.indexOf(e) !== i);
+      expect(repetidas, g).toEqual([]);
+    }
+  });
+
   it('Pokemon conserva los nombres de seccion de los que depende la suite E2E', () => {
     expect(FACET_PROFILES.PTCG.facets.map((f) => PRESENTACION[f.key].titulo('PTCG')))
       .toEqual([ES.rail.categoria, ES.rail.tipo, ES.rail.marca]);

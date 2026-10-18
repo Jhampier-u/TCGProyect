@@ -1,4 +1,5 @@
-import type { CellKey } from '@tcg/shared';
+import type { CellKey, GameCode } from '@tcg/shared';
+import { FACET_PROFILES } from '@tcg/shared';
 import { ES } from '../i18n/es.js';
 
 /**
@@ -21,3 +22,12 @@ export const CABECERAS: Readonly<Record<CellKey, { etiqueta: string; clase: stri
   ygoType: { etiqueta: ES.catalogo.columnas.tipo, clase: 'col-tipo' },
   atkDef: { etiqueta: ES.catalogo.columnas.atkDef, clase: 'col-atkdef' },
 };
+
+/**
+ * Las celdas visibles de la fila de un juego, en orden. Sin sesion no hay
+ * columna "Tienes". Se calcula en un solo sitio para que la cabecera y las
+ * filas no puedan discrepar.
+ */
+export function celdasDe(juego: GameCode, conSesion: boolean): CellKey[] {
+  return FACET_PROFILES[juego].cells.filter((c) => conSesion || c !== 'owned');
+}

@@ -303,7 +303,8 @@ export const api = {
     // Las facetas viajan como parametros planos (`?color=U&kind=creature`).
     // Una vacia no se manda: la API contestaria 400 (T-110).
     for (const [k, v] of Object.entries({ ...resto, ...(facetas ?? {}) })) {
-      if (v !== undefined && v !== '') search.set(k, String(v));
+      const valor = v === undefined ? '' : String(v).trim();
+      if (valor !== '') search.set(k, valor);
     }
     return request<CardPage>(`/cards?${search.toString()}`, {}, token);
   },

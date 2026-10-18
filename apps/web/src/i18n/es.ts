@@ -276,7 +276,7 @@ export const ES = {
     } as Record<string, string>,
     frame: {
       normal: 'Normal', effect: 'Efecto', ritual: 'Ritual', fusion: 'Fusión', synchro: 'Sincronía',
-      xyz: 'Xyz', pendulum: 'Péndulo', link: 'Link', token: 'Ficha',
+      xyz: 'Xyz', pendulum: 'Péndulo', link: 'Link', token: 'Ficha (marco)',
     } as Record<string, string>,
     attribute: {
       DARK: 'Oscuridad', LIGHT: 'Luz', EARTH: 'Tierra', WATER: 'Agua', FIRE: 'Fuego', WIND: 'Viento',

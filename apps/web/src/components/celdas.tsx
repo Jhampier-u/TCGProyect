@@ -35,7 +35,7 @@ function Vacio() {
 }
 
 /** Un dato de la fila como texto, o null si no lo tiene. */
-export function texto(v: string | number | null | undefined): string | null {
+function texto(v: string | number | null | undefined): string | null {
   return v === null || v === undefined ? null : String(v);
 }
 

@@ -206,7 +206,7 @@ function CabeceraPtcg({ carta }: { carta: CardDetail }) {
         {tipos.map((t) => (
           <span key={t} className="chip-tipo" style={estiloDeTipo(t)}>{nombreDeTipo(t)}</span>
         ))}
-        {datos.hp !== undefined && (
+        {typeof datos.hp === 'number' && (
           <span className="ficha-ps"><strong>{datos.hp}</strong> {ES.ficha.ps}</span>
         )}
       </div>

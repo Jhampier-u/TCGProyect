@@ -1,16 +1,14 @@
-import type { GameCode } from '@tcg/shared';
-import { FACET_PROFILES } from '@tcg/shared';
+import type { CellKey } from '@tcg/shared';
 import type { CardSummary } from '../lib/api.js';
 import { CELDAS } from './celdas.js';
 
 interface Props {
   carta: CardSummary;
-  juego: GameCode;
+  /** Las celdas visibles, en orden (`celdasDe`): las mismas que la cabecera. */
+  celdas: readonly CellKey[];
   /** Abre la ficha (T-094). */
   onAbrir: () => void;
   rareza: string;
-  /** Con sesion se pinta la columna "Tienes". Sin ella, ni la columna. */
-  conSesion: boolean;
 }
 
 /**
@@ -20,15 +18,13 @@ interface Props {
  * pantalla anuncia cada celda con su cabecera. Que celdas tiene, y en que
  * orden, lo dice el perfil del juego; como se pinta cada una, `celdas.tsx`.
  */
-export function FilaDeCarta({ carta, juego, rareza, conSesion, onAbrir }: Props) {
+export function FilaDeCarta({ carta, celdas, rareza, onAbrir }: Props) {
   return (
     <tr className={carta.owned === false ? 'fila-carta fila-falta' : 'fila-carta'}>
-      {FACET_PROFILES[juego].cells
-        .filter((c) => conSesion || c !== 'owned')
-        .map((c) => {
-          const Celda = CELDAS[c];
-          return <Celda key={c} carta={carta} rareza={rareza} onAbrir={onAbrir} />;
-        })}
+      {celdas.map((c) => {
+        const Celda = CELDAS[c];
+        return <Celda key={c} carta={carta} rareza={rareza} onAbrir={onAbrir} />;
+      })}
     </tr>
   );
 }
