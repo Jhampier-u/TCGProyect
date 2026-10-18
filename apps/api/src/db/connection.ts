@@ -21,7 +21,10 @@ export class Database implements MigrationConnection {
   constructor(config: DbConfig) {
     this.#pool = mysql.createPool({
       uri: config.url,
-      connectionLimit: config.connectionLimit ?? 10,
+      // 16 y no los 10 de antes: el rail de Yu-Gi-Oh! con sesion lanza 12
+      // recuentos en paralelo (seis y sus parejas de tenencia, T-110). Con 10,
+      // dos esperaban a que acabara otro, y un solo usuario agotaba el pool.
+      connectionLimit: config.connectionLimit ?? 16,
       multipleStatements: true,
       // El driver devuelve DECIMAL y BIGINT como cadena por defecto para no
       // perder precision. Se dejan como estan y se convierten donde importa:

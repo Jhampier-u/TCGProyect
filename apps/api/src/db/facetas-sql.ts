@@ -70,13 +70,16 @@ const color: FacetSql = {
   },
   // Se agrupa por tipo y lista de colores a la vez: unas cien combinaciones,
   // y de cada una salen los valores en que cuenta. Una sola pasada.
-  grupo: "CONCAT_WS('|', c.kind, CAST(JSON_EXTRACT(c.game_data, '$.colors') AS CHAR))",
+  // COALESCE porque CONCAT_WS se salta los NULL: un `kind` nulo perderia el
+  // separador y su lista de colores se leeria como el tipo. Con '' el tipo
+  // vacio no es incoloro, igual que en el filtro, que descarta el NULL.
+  grupo: "CONCAT_WS('|', COALESCE(c.kind, ''), CAST(JSON_EXTRACT(c.game_data, '$.colors') AS CHAR))",
   valores: (crudo) => {
     const corte = crudo.indexOf('|');
     const kind = corte < 0 ? crudo : crudo.slice(0, corte);
     const lista = corte < 0 ? [] : (JSON.parse(crudo.slice(corte + 1)) as string[]);
     const fuera = lista.filter((c) => COLORES.includes(c));
-    if (lista.length === 0 && kind !== 'other') fuera.push('C');
+    if (lista.length === 0 && kind !== 'other' && kind !== '') fuera.push('C');
     if (lista.length >= 2) fuera.push('M');
     return fuera;
   },

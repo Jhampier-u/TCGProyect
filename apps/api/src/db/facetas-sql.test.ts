@@ -81,6 +81,15 @@ describe('el SQL de cada faceta (H9f)', () => {
     expect(FACET_SQL.color.valores('other|["R"]')).toEqual(['R']);
   });
 
+  it('una carta sin tipo no cuenta como incolora: el filtro tampoco la daria', () => {
+    // `CONCAT_WS` se salta los NULL: sin COALESCE, un `kind` nulo con `[]`
+    // llegaria como "[]" y se leeria como un tipo llamado asi, incoloro. El
+    // filtro (`c.kind <> 'other'`) descarta el NULL, y el rail diria otro numero.
+    expect(FACET_SQL.color.grupo).toContain("COALESCE(c.kind, '')");
+    expect(FACET_SQL.color.valores('|[]')).toEqual([]);
+    expect(FACET_SQL.color.valores('|["U"]')).toEqual(['U']);
+  });
+
   it('repartir ordena por el perfil, deja los desconocidos al final y "sin valor" el ultimo', () => {
     const marca = facetOf('PTCG', 'mark')!;
     const r = repartir(

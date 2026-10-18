@@ -262,6 +262,11 @@ describe('"las que me faltan" (T-093)', () => {
             ? [{ valor: 'common', tengo: 30 }, { valor: 'rare', tengo: 6 }]
             : [{ valor: 'common', n: 120 }, { valor: 'rare', n: 42 }];
         }
+        if (sql.includes('c.reg_mark AS valor')) {
+          // El grupo NULL es "sin marca": su tenencia tambien tiene que
+          // cruzarse, aunque su clave no sea una cadena.
+          return mia ? [{ valor: null, tengo: 2 }] : [{ valor: null, n: 5 }];
+        }
         if (sql.includes('c.supertype AS valor')) {
           // La pareja de tenencia solo trae los grupos donde tiene algo: un
           // grupo ausente es un cero, no un hueco.
@@ -289,6 +294,7 @@ describe('"las que me faltan" (T-093)', () => {
       { value: 'Pok\u00e9mon', count: 120, owned: 30 },
       { value: 'Trainer', count: 40, owned: 0 },
     ]);
+    expect(r.facetas.mark).toContainEqual({ value: SIN_VALOR, count: 5, owned: 2 });
   });
 });
 
