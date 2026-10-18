@@ -7,12 +7,12 @@ import { useAuth } from '../lib/auth.js';
 import { consultaRarezas } from '../lib/consultas.js';
 import { addCard, fromDeckDetail, toPayload } from '../lib/deck-draft.js';
 import { estiloDeTipo } from '../lib/tipos-pokemon.js';
-import { nivelDe } from '../lib/rareza.js';
+import { etiquetaDeRareza, nivelDe } from '../lib/rareza.js';
 import { ES } from '../i18n/es.js';
 import { CartaConBrillo } from './apertura/CartaConBrillo.js';
 import { Mana } from './Mana.js';
 import { estiloDeAtributo } from '../lib/colores-de-juego.js';
-import { cifraDeCombate } from '../lib/ygo.js';
+import { cifraDeCombate, nombreDeRaza } from '../lib/ygo.js';
 import { FlechasLink, NivelYgo } from './NivelYgo.js';
 
 /**
@@ -124,8 +124,9 @@ function Contenido({
   const src = imageUrl(carta.imagePath);
   // Misma clave que el catalogo: llega de la cache, no hace otra peticion.
   const rarezas = useQuery(consultaRarezas(juego));
-  const rareza = rarezas.data?.find((r) => r.code === carta.rarity)?.label ?? carta.rarity;
-  const tier = rarezas.data?.find((r) => r.code === carta.rarity)?.tier ?? 0;
+  const encontrada = rarezas.data?.find((r) => r.code === carta.rarity);
+  const rareza = encontrada ? etiquetaDeRareza(encontrada) : carta.rarity;
+  const tier = encontrada?.tier ?? 0;
   const { cabecera: Cabecera, cuerpo: Cuerpo, detalles: Detalles } = FICHAS[juego];
 
   return (
@@ -348,7 +349,7 @@ function CabeceraYgo({ carta }: { carta: CardDetail }) {
   const kind = textoDe(f.kind);
   const atributo = textoDe(f.attribute);
   const linkVal = numeroDe(f.linkVal);
-  const tipo = ES.catalogo.tipoYgo(textoDe(f.race), kind ? ES.facetas.kind[kind] ?? kind : null);
+  const tipo = ES.catalogo.tipoYgo(nombreDeRaza(textoDe(f.race)), kind ? ES.facetas.kind[kind] ?? kind : null);
   // Una magica o una trampa no tiene atributo ni nivel: no se pinta un hueco.
   const esMonstruo = atributo !== null || numeroDe(f.level) !== null || linkVal !== null;
   return (

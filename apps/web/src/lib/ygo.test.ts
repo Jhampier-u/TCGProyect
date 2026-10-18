@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { cifraDeCombate, flechasDeLink, marcaDeNivel } from './ygo.js';
+import { cifraDeCombate, flechasDeLink, marcaDeNivel, nombreDeRaza } from './ygo.js';
 import { ES } from '../i18n/es.js';
 
 describe('nivel, rango y link de Yu-Gi-Oh! (H9f)', () => {
@@ -47,5 +47,35 @@ describe('nivel, rango y link de Yu-Gi-Oh! (H9f)', () => {
       'Top-Left', 'Top', 'Top-Right', 'Left', 'Right', 'Bottom-Left', 'Bottom', 'Bottom-Right',
     ]).filter((f) => !ES.ygo.flecha[f]);
     expect(sinTexto).toEqual([]);
+  });
+});
+
+/**
+ * Las razas y subtipos REALES de la base el 2026-10-18 (H9f), medidos con
+ * `SELECT DISTINCT game_data->>'$.race'` sobre las cartas de Yu-Gi-Oh! que no
+ * son de habilidad (en las de habilidad, `race` es el nombre de un personaje).
+ */
+const RAZAS_MEDIDAS = [
+  'Aqua', 'Beast', 'Beast-Warrior', 'Cyberse', 'Dinosaur', 'Divine-Beast', 'Dragon', 'Fairy',
+  'Fiend', 'Fish', 'Illusion', 'Insect', 'Machine', 'Plant', 'Psychic', 'Pyro', 'Reptile', 'Rock',
+  'Sea Serpent', 'Spellcaster', 'Thunder', 'Warrior', 'Winged Beast', 'Wyrm', 'Zombie',
+];
+const SUBTIPOS_MEDIDOS = ['Continuous', 'Counter', 'Equip', 'Field', 'Normal', 'Quick-Play', 'Ritual'];
+
+describe('la raza y el subtipo de Yu-Gi-Oh!, en castellano (H9f)', () => {
+  it('cada valor medido en la base tiene su nombre propio', () => {
+    const sinNombre = [...RAZAS_MEDIDAS, ...SUBTIPOS_MEDIDOS].filter((r) => !(r in ES.facetas.raza));
+    expect(sinNombre).toEqual([]);
+  });
+
+  it('se traduce lo conocido', () => {
+    expect(nombreDeRaza('Fiend')).toBe('Demonio');
+    expect(nombreDeRaza('Quick-Play')).toBe('Rápida');
+    expect(nombreDeRaza('Counter')).toBe('Contraefecto');
+  });
+
+  it('lo desconocido (el personaje de una habilidad) sale tal cual, y null es null', () => {
+    expect(nombreDeRaza('Yami Marik')).toBe('Yami Marik');
+    expect(nombreDeRaza(null)).toBeNull();
   });
 });

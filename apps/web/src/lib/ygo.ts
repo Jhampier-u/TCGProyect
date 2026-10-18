@@ -42,3 +42,12 @@ export function flechasDeLink(markers: readonly string[] | null | undefined): st
   if (!markers) return [];
   return FLECHAS.filter((f): f is NonNullable<typeof f> => f !== null && markers.includes(f));
 }
+
+/**
+ * La raza de un monstruo, o el subtipo de una magica o trampa, en castellano
+ * (H9f). Lo que no tiene nombre -- el personaje de una habilidad -- sale tal cual.
+ */
+export function nombreDeRaza(raza: string | null): string | null {
+  if (raza === null) return null;
+  return ES.facetas.raza[raza] ?? raza;
+}

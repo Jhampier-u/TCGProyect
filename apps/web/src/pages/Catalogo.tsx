@@ -16,6 +16,7 @@ import { SelectorDeSet } from '../components/SelectorDeSet.js';
 import { RailDeSet } from '../components/RailDeSet.js';
 import { FilaDeCarta } from '../components/FilaDeCarta.js';
 import { FichaDeCarta } from '../components/FichaDeCarta.js';
+import { nombresDeRareza } from '../lib/rareza.js';
 import { ES } from '../i18n/es.js';
 
 /**
@@ -106,7 +107,7 @@ export function Catalogo() {
   const filas = cartas.data?.pages.flatMap((p) => p.data) ?? [];
   const setActual = sets.data?.find((s) => s.externalId === filtros.set) ?? null;
   const nombreDeRareza = useMemo(
-    () => new Map((rarezas.data ?? []).map((r) => [r.code, r.label])),
+    () => nombresDeRareza(rarezas.data ?? []),
     [rarezas.data],
   );
 

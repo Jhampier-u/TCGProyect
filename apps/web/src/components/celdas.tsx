@@ -7,7 +7,7 @@ import { ES } from '../i18n/es.js';
 import { Mana } from './Mana.js';
 import { tieneSimbolos } from '../lib/mana.js';
 import { estiloDeAtributo } from '../lib/colores-de-juego.js';
-import { cifraDeCombate } from '../lib/ygo.js';
+import { cifraDeCombate, nombreDeRaza } from '../lib/ygo.js';
 import { NivelYgo } from './NivelYgo.js';
 
 /**
@@ -161,7 +161,7 @@ export const CELDAS: Readonly<Record<CellKey, (p: PropsDeCelda) => ReactElement>
 
   ygoType: ({ carta }) => {
     const k = texto(carta.facetas.kind);
-    const t = ES.catalogo.tipoYgo(texto(carta.facetas.race), k ? ES.facetas.kind[k] ?? k : null);
+    const t = ES.catalogo.tipoYgo(nombreDeRaza(texto(carta.facetas.race)), k ? ES.facetas.kind[k] ?? k : null);
     return <Td celda="ygoType">{t !== '' ? t : <Vacio />}</Td>;
   },
 

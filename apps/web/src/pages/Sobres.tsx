@@ -6,6 +6,7 @@ import { useAuth } from '../lib/auth.js';
 import { consultaRarezas, consultaSets } from '../lib/consultas.js';
 import { Ritual } from '../components/apertura/Ritual.js';
 import { SelectorDeSet } from '../components/SelectorDeSet.js';
+import { nombresDeRareza } from '../lib/rareza.js';
 import { ES } from '../i18n/es.js';
 
 /**
@@ -57,7 +58,7 @@ export function Sobres() {
     ...consultaRarezas(game),
   });
   const tiers = useMemo(() => new Map((rarezas.data ?? []).map((r) => [r.code, r.tier])), [rarezas.data]);
-  const etiquetas = useMemo(() => new Map((rarezas.data ?? []).map((r) => [r.code, r.label])), [rarezas.data]);
+  const etiquetas = useMemo(() => nombresDeRareza(rarezas.data ?? []), [rarezas.data]);
 
   // Solo se ofrecen sets ABRIBLES, y hacen falta las dos condiciones:
   //

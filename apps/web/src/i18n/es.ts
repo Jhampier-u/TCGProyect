@@ -119,6 +119,18 @@ export const ES = {
     },
   },
 
+  /**
+   * Cómo se PRESENTA una rareza cuya etiqueta en la base es su código en bruto.
+   *
+   * Pasa con las de Magic: la 0002 sembró `label = code` («rare», «mythic»),
+   * mientras Pokémon y Yu-Gi-Oh! traen su nombre impreso («Double Rare»). Se
+   * presentan con el nombre impreso en la carta, en inglés como los otros dos.
+   */
+  rarezaPresentacion: {
+    common: 'Common', uncommon: 'Uncommon', rare: 'Rare', mythic: 'Mythic Rare',
+    special: 'Special', bonus: 'Bonus',
+  } as Record<string, string>,
+
   /** La portada por año de Magic y Yu-Gi-Oh! (H9f, F-8). */
   portadaAnio: {
     entradilla: (sets: number, anios: number) =>
@@ -299,6 +311,22 @@ export const ES = {
     attribute: {
       DARK: 'Oscuridad', LIGHT: 'Luz', EARTH: 'Tierra', WATER: 'Agua', FIRE: 'Fuego', WIND: 'Viento',
       DIVINE: 'Divinidad',
+    } as Record<string, string>,
+    /**
+     * La raza de un monstruo y el subtipo de una mágica o trampa de Yu-Gi-Oh!
+     * (los dos llegan en `race`), con su nombre oficial del TCG en castellano.
+     * Lo que no está aquí —el personaje de una carta de habilidad— sale tal cual.
+     */
+    raza: {
+      Warrior: 'Guerrero', Machine: 'Máquina', Fiend: 'Demonio', Dragon: 'Dragón',
+      Spellcaster: 'Lanzador de Conjuros', Fairy: 'Hada', Beast: 'Bestia', 'Winged Beast': 'Bestia Alada',
+      Cyberse: 'Ciberso', Aqua: 'Aqua', Zombie: 'Zombi', 'Beast-Warrior': 'Guerrero-Bestia',
+      Rock: 'Roca', Insect: 'Insecto', Plant: 'Planta', Psychic: 'Psíquico', Reptile: 'Reptil',
+      Pyro: 'Piro', Thunder: 'Trueno', Dinosaur: 'Dinosaurio', Fish: 'Pez', Wyrm: 'Wyrm',
+      'Sea Serpent': 'Serpiente Marina', Illusion: 'Ilusión', 'Divine-Beast': 'Bestia Divina',
+      'Creator-God': 'Dios Creador',
+      Normal: 'Normal', 'Quick-Play': 'Rápida', Continuous: 'Continua', Field: 'Campo',
+      Equip: 'Equipo', Ritual: 'Ritual', Counter: 'Contraefecto',
     } as Record<string, string>,
     coste: (v: string) => `Coste ${v}`,
     nivel: (v: string) => `Nivel o rango ${v}`,

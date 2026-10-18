@@ -5,6 +5,7 @@ import { FACET_PROFILES } from '@tcg/shared';
 import type { FacetCount, FacetCounts } from '../lib/api.js';
 import { valorDe, type ClaveFiltro, type FiltrosCatalogo } from '../lib/filtros-url.js';
 import { PRESENTACION } from '../lib/facetas-web.js';
+import { nombresDeRareza } from '../lib/rareza.js';
 import { ES } from '../i18n/es.js';
 
 interface Props {
@@ -39,7 +40,7 @@ export function RailDeSet({ id, abierto, juego, facetas, filtros, rarezas, conSe
   const rarezasOrdenadas = [...facetas.rarities].sort(
     (a, b) => (porTier.get(a.value) ?? 999) - (porTier.get(b.value) ?? 999),
   );
-  const nombreDeRareza = new Map(rarezas.map((r) => [r.code, r.label]));
+  const nombreDeRareza = nombresDeRareza(rarezas);
 
   return (
     <nav id={id} className={clase} aria-label={ES.rail.titulo}>

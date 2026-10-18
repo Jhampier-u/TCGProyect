@@ -1,4 +1,5 @@
 import type { GameCode } from '@tcg/shared';
+import { ES } from '../i18n/es.js';
 
 /**
  * Los cinco niveles de espectaculo de H9e (spec, seccion 6).
@@ -33,4 +34,19 @@ export function tiersConNivel(juego: GameCode): number[] {
 /** `foil` es una propiedad fisica, no de rareza: no sube el nivel. */
 export function acabadoDe(finish: string): Acabado {
   return finish === 'foil' ? 'foil' : 'normal';
+}
+
+/**
+ * El nombre que se ensena de una rareza (H9f). Su etiqueta de la base, salvo
+ * cuando la etiqueta es el codigo en bruto (Magic, 0002): entonces su
+ * presentacion, y si no la hay, el codigo tal cual.
+ */
+export function etiquetaDeRareza(r: { code: string; label: string }): string {
+  if (r.label !== r.code) return r.label;
+  return ES.rarezaPresentacion[r.code] ?? r.code;
+}
+
+/** Codigo -> nombre, para la fila, el rail y la ficha. */
+export function nombresDeRareza(rarezas: readonly { code: string; label: string }[]): Map<string, string> {
+  return new Map(rarezas.map((r) => [r.code, etiquetaDeRareza(r)]));
 }

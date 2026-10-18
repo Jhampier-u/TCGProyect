@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { acabadoDe, nivelDe, tiersConNivel } from './rareza.js';
+import { acabadoDe, etiquetaDeRareza, nivelDe, nombresDeRareza, tiersConNivel } from './rareza.js';
 
 /**
  * Los tiers REALES de la base el 2026-10-15 (S037), por juego. Si una migracion
@@ -40,5 +40,27 @@ describe('nivel de espectaculo por rareza (H9e)', () => {
     expect(acabadoDe('foil')).toBe('foil');
     expect(acabadoDe('nonfoil')).toBe('normal');
     expect(acabadoDe('lo que sea')).toBe('normal');
+  });
+});
+
+describe('el nombre de una rareza (H9f)', () => {
+  it('una etiqueta de verdad se respeta tal cual (Pokemon, Yu-Gi-Oh!)', () => {
+    expect(etiquetaDeRareza({ code: 'double_rare', label: 'Double Rare' })).toBe('Double Rare');
+    expect(etiquetaDeRareza({ code: 'common', label: 'Common' })).toBe('Common');
+  });
+
+  it('una etiqueta que es el codigo en bruto se presenta (Magic, 0002)', () => {
+    expect(etiquetaDeRareza({ code: 'rare', label: 'rare' })).toBe('Rare');
+    expect(etiquetaDeRareza({ code: 'mythic', label: 'mythic' })).toBe('Mythic Rare');
+  });
+
+  it('un codigo sin presentacion sale como llega', () => {
+    expect(etiquetaDeRareza({ code: 'rara_nueva', label: 'rara_nueva' })).toBe('rara_nueva');
+  });
+
+  it('las seis de Magic, tal como estan en la base, tienen nombre presentable', () => {
+    const mtg = ['common', 'uncommon', 'rare', 'mythic', 'special', 'bonus'];
+    const nombres = nombresDeRareza(mtg.map((code) => ({ code, label: code })));
+    for (const code of mtg) expect(nombres.get(code)).not.toBe(code);
   });
 });
