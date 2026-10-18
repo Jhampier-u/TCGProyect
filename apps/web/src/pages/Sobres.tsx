@@ -38,6 +38,8 @@ export function Sobres() {
   /** Indices de los sobres que ya llegaron al resumen. */
   const [terminados, setTerminados] = useState<ReadonlySet<number>>(new Set());
   const [error, setError] = useState<string | null>(null);
+  /** La peticion que fallo: "Reintentar" la repite tal cual (juego, set, cantidad). */
+  const [fallida, setFallida] = useState<Peticion | null>(null);
   const cliente = useQueryClient();
   // El juego vigente, para la respuesta que llegue tarde: si el usuario cambio
   // de juego mientras se abria, ese lote ya no es de esta pantalla.
@@ -112,6 +114,7 @@ export function Sobres() {
       setAperturas(r.data.map((apertura) => ({ apertura, peticion })));
       setTerminados(new Set());
       setError(null);
+      setFallida(null);
       // La coleccion ha cambiado: se invalida para que al navegar alli no se
       // muestren datos viejos.
       void cliente.invalidateQueries({ queryKey: ['collection'] });
@@ -121,6 +124,7 @@ export function Sobres() {
     onError: (e: unknown, peticion) => {
       if (peticion.game !== juegoActual.current) return;
       setError(e instanceof ApiError ? e.message : 'No se pudo abrir el sobre');
+      setFallida(peticion);
     },
   });
 
@@ -136,7 +140,12 @@ export function Sobres() {
         <select
           aria-label={ES.semantica.juego}
           value={game}
-          onChange={(e) => { setGame(e.target.value as GameCode); setSetId(null); setAperturas([]); }}
+          onChange={(e) => {
+            // El error de otro juego se va con el: reintentarlo abriria un sobre
+            // que la guarda de juego descartaria al llegar.
+            setGame(e.target.value as GameCode); setSetId(null); setAperturas([]);
+            setError(null); setFallida(null);
+          }}
         >
           <option value="MTG">Magic: The Gathering</option>
           <option value="YGO">Yu-Gi-Oh!</option>
@@ -194,7 +203,24 @@ export function Sobres() {
         </div>
       )}
 
-      {error && <div className="aviso error">{error}</div>}
+      {error && (
+        <div className="aviso error">
+          {error}
+          {fallida && (
+            <>
+              {' '}
+              {/* aria-disabled y no disabled: mientras se repite, conserva el foco. */}
+              <button
+                type="button"
+                aria-disabled={abrir.isPending}
+                onClick={() => { if (!abrir.isPending) pedir(fallida); }}
+              >
+                {ES.ritual.reintentar}
+              </button>
+            </>
+          )}
+        </div>
+      )}
 
       {aperturas.length === 0 && !abrir.isPending && (
         <div className="vacio">

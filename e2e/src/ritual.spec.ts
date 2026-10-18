@@ -160,3 +160,35 @@ test('un set sin paleta no deja el sobre transparente', async ({ page, request, 
   expect(fondo.imagen).not.toBe('none');
   expect(fondo.color).not.toBe('rgba(0, 0, 0, 0)');
 });
+
+test('si la apertura falla, Reintentar repite la misma peticion', async ({ page, request, usuario }) => {
+  // El primer intento recibe un 500; los siguientes pasan al servidor real.
+  let fallos = 0;
+  const cuerpos: string[] = [];
+  await page.route('**/api/packs/open', async (ruta) => {
+    cuerpos.push(ruta.request().postData() ?? '');
+    if (fallos === 0) {
+      fallos += 1;
+      await ruta.fulfill({ status: 500, json: { error: 'internal', message: 'Fallo simulado' } });
+      return;
+    }
+    await ruta.continue();
+  });
+  const set = await setAbribleDeYgo(request);
+  await iniciarSesion(page, usuario.token);
+  await page.goto('/sobres');
+  await page.getByRole('combobox', { name: 'Juego' }).selectOption('YGO');
+  await page.getByRole('combobox', { name: 'Cantidad de sobres' }).selectOption('1');
+  await page.getByRole('button', { name: /^Set:/ }).click();
+  await page.getByRole('listbox', { name: 'Set' }).getByRole('option', { name: set.name }).first().click();
+  await page.getByRole('button', { name: 'Abrir', exact: true }).click();
+
+  await expect(page.getByText('Fallo simulado')).toBeVisible();
+  await expect(region(page)).toHaveCount(0);
+  await page.getByRole('button', { name: 'Reintentar' }).click();
+  await expect(region(page)).toBeVisible();
+  await expect(page.getByText('Fallo simulado')).toHaveCount(0);
+  // La misma peticion: mismo set y misma cantidad.
+  expect(cuerpos).toHaveLength(2);
+  expect(cuerpos[1]).toBe(cuerpos[0]);
+});
