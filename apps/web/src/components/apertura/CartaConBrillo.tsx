@@ -1,4 +1,4 @@
-import { useRef, type PointerEvent } from 'react';
+import { useEffect, useRef, type PointerEvent } from 'react';
 import { imageUrl } from '../../lib/api.js';
 import type { Acabado, Nivel } from '../../lib/rareza.js';
 
@@ -33,6 +33,9 @@ export function CartaConBrillo({ imagePath, nombre, nivel, acabado }: Props) {
   const caja = useRef<DOMRect | null>(null);
   const cuadro = useRef(0);
   const src = imageUrl(imagePath);
+
+  // Un cuadro pendiente al desmontar escribiria en un elemento que ya no esta.
+  useEffect(() => () => cancelAnimationFrame(cuadro.current), []);
 
   // El rect se lee una vez al entrar, no en cada movimiento.
   const entrar = () => {

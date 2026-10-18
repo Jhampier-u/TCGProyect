@@ -121,7 +121,12 @@ export const LIST_SETS = {
               poolSize: { type: 'integer' },
               palette: {
                 type: ['object', 'null'],
-                properties: { primario: { type: 'string' }, secundario: { type: 'string' } },
+                // El mismo formato que exige `paletaValida` en el repositorio: el
+                // contrato lo dice aunque la serializacion no lo compruebe.
+                properties: {
+                  primario: { type: 'string', pattern: '^#[0-9a-fA-F]{6}$' },
+                  secundario: { type: 'string', pattern: '^#[0-9a-fA-F]{6}$' },
+                },
                 required: ['primario', 'secundario'],
                 additionalProperties: false,
               },
