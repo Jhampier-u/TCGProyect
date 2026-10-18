@@ -448,12 +448,30 @@ export class CatalogQueryRepository {
         argumentos,
       );
 
+    // La rareza se agrupa por id y solo despues se une a su codigo: una
+    // subconsulta correlacionada por impresion costaba 0,40 s en Magic sin set
+    // (el presupuesto entero del rail); asi son 0,19 s (medido en T-110). El
+    // `?` de la tenencia sigue en el SELECT interior, antes que los del WHERE,
+    // asi que `argumentos` vale tal cual.
+    const contarRarezas = async () =>
+      this.db.select<FilaDeRecuento>(
+        `SELECT r.code AS valor, x.n${conTenencia ? ', x.tengo' : ''}
+           FROM (SELECT p.rarity_id, COUNT(*) AS n${tengo}
+                   FROM cards c
+                   JOIN card_prints p ON p.card_id = c.id
+                   JOIN sets s ON s.id = p.set_id
+                  WHERE ${filtro}
+                  GROUP BY p.rarity_id) x
+           JOIN rarities r ON r.id = x.rarity_id`,
+        argumentos,
+      );
+
     // Una consulta por faceta del perfil, mas la de rareza, en paralelo: cuatro
     // en Pokemon y en Magic, seis en Yu-Gi-Oh!. El orden ya no lo pone MySQL:
     // lo pone el perfil (`repartir`).
     const perfil = FACET_PROFILES[game];
     const [rarezas = [], ...porFaceta] = await Promise.all([
-      contar('(SELECT r.code FROM rarities r WHERE r.id = p.rarity_id)'),
+      contarRarezas(),
       ...perfil.facets.map((f) => contar(FACET_SQL[f.key].grupo)),
     ]);
 

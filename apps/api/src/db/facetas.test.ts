@@ -289,6 +289,22 @@ describe('Magic y Yu-Gi-Oh! en la busqueda y en el rail (H9f)', () => {
     for (const c of ygo.consultas) expect(c.sql).toContain('s.external_id = ?');
   });
 
+  it('la rareza se cuenta por id y despues se une a su codigo, no con una subconsulta por fila', async () => {
+    // Medido en T-110 sobre Magic sin set: la subconsulta correlacionada por
+    // impresion tardaba 0,40 s, justo el presupuesto del rail; agrupar por
+    // `p.rarity_id` y unir seis filas despues, 0,19 s.
+    for (const userId of [undefined, 7]) {
+      const { repo, consultas } = repoEspia();
+      await repo.listFacets('MTG', 'LOB', userId);
+      const rareza = consultas.find((c) => c.sql.includes('rarities r'))!;
+      expect(rareza.sql).toContain('GROUP BY p.rarity_id');
+      expect(rareza.sql).toContain('JOIN rarities r ON r.id = x.rarity_id');
+      expect(rareza.sql).not.toContain('(SELECT r.code FROM rarities r WHERE r.id = p.rarity_id)');
+      expect(rareza.sql).toContain('s.external_id = ?');
+      expect(rareza.params).toEqual(userId === undefined ? [1, 'LOB'] : [7, 1, 'LOB']);
+    }
+  });
+
   it('una fila de Magic lleva sus datos y no los de Pokemon', () => {
     const fila = {
       id: 1, oracle_key: 'o', game_id: 1, name: 'Llanowar Elves', type_line: 'Creature - Elf Druid',
