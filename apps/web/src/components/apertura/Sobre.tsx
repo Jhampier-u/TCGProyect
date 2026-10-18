@@ -5,6 +5,19 @@ import { imageUrl, type SetSummary } from '../../lib/api.js';
 import { rutaDeArte } from '../../lib/arte-sobres.js';
 import { ES } from '../../i18n/es.js';
 
+/**
+ * Talla del nombre segun su longitud. Los nombres van de "151" a 65 caracteres
+ * ("THE CHRONICLES DECK: ... (All-Foil Edition)"), y a una sola talla los largos
+ * ocupaban cuatro lineas y se montaban sobre la ilustracion. Los cortes estan
+ * medidos con los 757 sets abribles en el navegador: ninguno pasa de tres lineas.
+ */
+export function tallaDelNombre(nombre: string): 'corto' | 'medio' | 'largo' | 'muy-largo' {
+  if (nombre.length <= 18) return 'corto';
+  if (nombre.length <= 28) return 'medio';
+  if (nombre.length <= 42) return 'largo';
+  return 'muy-largo';
+}
+
 interface Props {
   juego: GameCode;
   set: SetSummary;
@@ -67,7 +80,9 @@ export function Sobre({ juego, set, rasgando, onRasgar }: Props) {
       >
         <span className="sobre-marca">{ES.navegacion.marca}</span>
         {icono ? <img className="sobre-icono" src={icono} alt="" /> : <span className="sobre-icono" />}
-        <span className="sobre-nombre">{set.name}</span>
+        <span className="sobre-nombre" data-talla={tallaDelNombre(set.name)}>
+          {set.name}
+        </span>
       </motion.button>
     </div>
   );

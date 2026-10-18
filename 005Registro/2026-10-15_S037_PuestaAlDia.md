@@ -444,3 +444,29 @@ encajan con el emblema y el título.
 Dos cosas que ya venían de antes se ven ahora más:
 - el «icono» de set de Yu-Gi-Oh! es una foto del producto y parece una pegatina sobre el arte;
 - los nombres largos ocupan tres o cuatro líneas y se montan sobre la ilustración.
+
+### Los nombres largos, que ya caben (2026-10-17)
+
+Antes todos los nombres iban a 18 px y sin tope de líneas. Los sets abribles van de «151» a 65
+caracteres, y Yu-Gi-Oh! tiene 79 de más de 28. Por eso los largos ocupaban cuatro líneas y se
+montaban sobre la ilustración.
+
+Ahora la talla baja según la longitud (`tallaDelNombre`):
+
+| Longitud | Talla |
+|---|---|
+| hasta 18 caracteres | 18 px |
+| hasta 28 | 15 px |
+| hasta 42 | 13 px |
+| más | 11,5 px |
+
+Además hay un tope de tres líneas con puntos suspensivos. El nombre completo sigue en el nombre
+accesible del botón.
+
+**Medido en el navegador con los 757 nombres**, con la fuente real:
+- 555 caben en una línea;
+- 198 en dos;
+- los 4 más largos en tres;
+- ninguno llega a recortarse.
+
+Revisado en pantalla: todos quedan dentro de la franja tranquila del arte.

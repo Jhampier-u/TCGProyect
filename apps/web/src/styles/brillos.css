@@ -116,7 +116,16 @@
 }
 .sobre-marca { font-size: 10px; letter-spacing: 0.24em; text-transform: uppercase; opacity: 0.8; }
 .sobre-icono { inline-size: 84px; block-size: 84px; object-fit: contain; filter: drop-shadow(0 0 14px var(--sobre-halo-icono)); }
-.sobre-nombre { font-size: 18px; font-weight: 700; text-align: center; text-wrap: balance; }
+.sobre-nombre {
+  font-size: 18px; font-weight: 700; line-height: 1.15; text-align: center; text-wrap: balance;
+  /* Tope de tres lineas: la franja tranquila del arte es el quinto inferior. El
+     nombre entero sigue en el nombre accesible del boton. */
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; line-clamp: 3; overflow: hidden;
+  inline-size: 100%; overflow-wrap: anywhere;
+}
+.sobre-nombre[data-talla="medio"] { font-size: 15px; }
+.sobre-nombre[data-talla="largo"] { font-size: 13px; }
+.sobre-nombre[data-talla="muy-largo"] { font-size: 11.5px; letter-spacing: -0.01em; }
 .sobre-tira {
   position: absolute; inset-block-start: 18px; inset-inline: 0; margin-inline: auto; inline-size: 210px; block-size: 18px; z-index: 2;
   background: repeating-linear-gradient(90deg, var(--sobre-tira) 0 6px, transparent 6px 10px);
